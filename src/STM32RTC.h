@@ -92,6 +92,8 @@ public:
   void begin(bool resetTime, RTCHourFormats_t format = HOUR_24);
   void begin(RTCHourFormats_t format = HOUR_24);
 
+  void end(void);
+
   void setClockSource(RTC_sourceClock_t source);
 
   void enableAlarm(Alarm_Match match);

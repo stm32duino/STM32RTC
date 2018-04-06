@@ -96,6 +96,19 @@ void STM32RTC::begin(RTCHourFormats_t format)
 }
 
 /**
+  * @brief Deinitialize and stop the RTC
+  * @param None
+  * @retval None
+  */
+void STM32RTC::end(void)
+{
+  if(_configured == true) {
+    RTC_DeInit();
+    _configured = false;
+  }
+}
+
+/**
   * @brief set the RTC clock source. By default LSI clock is selected. This
   * method must be called before begin().
   * @param source: clock source: RTC_LSI_CLOCK, RTC_LSE_CLOCK or RTC_HSE_CLOCK
