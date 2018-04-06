@@ -69,6 +69,7 @@ typedef enum {
 
 #define IS_CLOCK_SOURCE(SRC) (((SRC) == RTC_LSI_CLOCK) || ((SRC) == RTC_LSE_CLOCK) ||\
                               ((SRC) == RTC_HSE_CLOCK))
+#define IS_HOUR_FORMAT(FMT)  (((FMT) == HOUR_12) || ((FMT) == HOUR_24))
 
 class STM32RTC {
 public:
