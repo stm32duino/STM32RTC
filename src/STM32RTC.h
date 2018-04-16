@@ -193,6 +193,10 @@ private:
   RTC_AM_PM   _alarmPeriod;
 
   RTC_Source_Clock _clockSource;
+
+  void syncTime(void);
+  void syncDate(void);
+  void syncAlarmTime(void);
 };
 
 #endif // __STM32_RTC_H
