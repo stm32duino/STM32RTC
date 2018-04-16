@@ -48,31 +48,24 @@
 
 typedef void(*voidFuncPtr)(void *);
 
-// Hour format: 12 or 24 hours
-typedef enum {
-  HOUR_12,
-  HOUR_24
-} RTCHourFormats_t;
-
-//Time AM/PM definition
-typedef enum {
-  HOUR12_AM,
-  HOUR12_PM
-} Hour12_AM_PM_t;
-
-// Clock source selection
-typedef enum {
-  RTC_LSI_CLOCK,
-  RTC_LSE_CLOCK,
-  RTC_HSE_CLOCK
-} RTC_sourceClock_t;
-
-#define IS_CLOCK_SOURCE(SRC) (((SRC) == RTC_LSI_CLOCK) || ((SRC) == RTC_LSE_CLOCK) ||\
-                              ((SRC) == RTC_HSE_CLOCK))
-#define IS_HOUR_FORMAT(FMT)  (((FMT) == HOUR_12) || ((FMT) == HOUR_24))
+#define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::RTC_LSI_CLOCK) || ((SRC) == STM32RTC::RTC_LSE_CLOCK) ||\
+                              ((SRC) == STM32RTC::RTC_HSE_CLOCK))
+#define IS_HOUR_FORMAT(FMT)  (((FMT) == STM32RTC::RTC_HOUR_12) || ((FMT) == STM32RTC::RTC_HOUR_24))
 
 class STM32RTC {
 public:
+
+  enum RTC_Hour_Format : uint8_t
+  {
+    RTC_HOUR_12 = HOUR_FORMAT_12,
+    RTC_HOUR_24 = HOUR_FORMAT_24
+  };
+
+  enum RTC_AM_PM : uint8_t
+  {
+    RTC_AM = AM,
+    RTC_PM = PM
+  };
 
   enum Alarm_Match: uint8_t
   {
@@ -88,14 +81,21 @@ public:
     MATCH_YYMMDDHHMMSS = 6
   };
 
+  enum RTC_Source_Clock: uint8_t
+  {
+    RTC_LSI_CLOCK = LSI_CLOCK,
+    RTC_LSE_CLOCK = LSE_CLOCK,
+    RTC_HSE_CLOCK = HSE_CLOCK
+  };
+
   STM32RTC();
 
-  void begin(bool resetTime, RTCHourFormats_t format = HOUR_24);
-  void begin(RTCHourFormats_t format = HOUR_24);
+  void begin(bool resetTime, RTC_Hour_Format format = RTC_HOUR_24);
+  void begin(RTC_Hour_Format format = RTC_HOUR_24);
 
   void end(void);
 
-  void setClockSource(RTC_sourceClock_t source);
+  void setClockSource(RTC_Source_Clock source);
 
   void enableAlarm(Alarm_Match match);
   void disableAlarm(void);
@@ -112,7 +112,7 @@ public:
   uint8_t getSeconds(void);
   uint8_t getMinutes(void);
   uint8_t getHours(void);
-  uint8_t getHours(Hour12_AM_PM_t *format);
+  uint8_t getHours(RTC_AM_PM *period);
 
   uint8_t getWeekDay(void);
   uint8_t getDay(void);
@@ -123,7 +123,7 @@ public:
   uint8_t getAlarmSeconds(void);
   uint8_t getAlarmMinutes(void);
   uint8_t getAlarmHours(void);
-  uint8_t getAlarmHours(Hour12_AM_PM_t *format);
+  uint8_t getAlarmHours(RTC_AM_PM *period);
 
   uint8_t getAlarmDay(void);
 
@@ -137,9 +137,9 @@ public:
   void setSeconds(uint8_t seconds);
   void setMinutes(uint8_t minutes);
   void setHours(uint8_t hours);
-  void setHours(uint8_t hours, Hour12_AM_PM_t format);
+  void setHours(uint8_t hours, RTC_AM_PM period);
   void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
-  void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, Hour12_AM_PM_t format);
+  void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, RTC_AM_PM period);
 
   void setWeekDay(uint8_t weekDay);
   void setDay(uint8_t day);
@@ -151,9 +151,9 @@ public:
   void setAlarmSeconds(uint8_t seconds);
   void setAlarmMinutes(uint8_t minutes);
   void setAlarmHours(uint8_t hours);
-  void setAlarmHours(uint8_t hours, Hour12_AM_PM_t format);
+  void setAlarmHours(uint8_t hours, RTC_AM_PM period);
   void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
-  void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, Hour12_AM_PM_t format);
+  void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, RTC_AM_PM period);
 
   void setAlarmDay(uint8_t day);
 
@@ -177,7 +177,7 @@ public:
 private:
   static bool _configured;
 
-  Hour12_AM_PM_t _hoursFormat;
+  RTC_AM_PM   _hoursPeriod;
   uint8_t     _hours;
   uint8_t     _minutes;
   uint8_t     _seconds;
@@ -192,9 +192,9 @@ private:
   uint8_t     _alarmMinutes;
   uint8_t     _alarmSeconds;
   uint32_t    _alarmSubSeconds;
-  Hour12_AM_PM_t _alarmFormat;
+  RTC_AM_PM   _alarmPeriod;
 
-  RTC_sourceClock_t _clockSource;
+  RTC_Source_Clock _clockSource;
 };
 
 #endif // __STM32_RTC_H

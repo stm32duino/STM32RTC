@@ -54,10 +54,10 @@ STM32RTC::STM32RTC(void): _clockSource(RTC_LSI_CLOCK)
 /**
   * @brief initializes the RTC
   * @param resetTime: if true reconfigures the RTC
-  * @param format: hour format: HOUR_12 or HOUR_24(default)
+  * @param format: hour format: RTC_HOUR_12 or RTC_HOUR_24(default)
   * @retval None
   */
-void STM32RTC::begin(bool resetTime, RTCHourFormats_t format)
+void STM32RTC::begin(bool resetTime, RTC_Hour_Format format)
 {
   if(resetTime == true) {
     _configured = false;
@@ -67,16 +67,18 @@ void STM32RTC::begin(bool resetTime, RTCHourFormats_t format)
 
 /**
   * @brief initializes the RTC
-  * @param format: hour format: HOUR_12 or HOUR_24(default)
+  * @param format: hour format: RTC_HOUR_12 or RTC_HOUR_24(default)
   * @retval None
   */
-void STM32RTC::begin(RTCHourFormats_t format)
+void STM32RTC::begin(RTC_Hour_Format format)
 {
   if(_configured == false) {
-    RTC_init((hourFormat_t)format, (sourceClock_t)_clockSource);
+    RTC_init((format == RTC_HOUR_12)? HOUR_FORMAT_12: HOUR_FORMAT_24,
+             (_clockSource == RTC_LSE_CLOCK)? LSE_CLOCK:
+             (_clockSource == RTC_HSE_CLOCK)? HSE_CLOCK : LSI_CLOCK);
   }
 
-  _hoursFormat = HOUR12_AM;
+  _hoursPeriod = RTC_AM;
   _hours = 0;
   _minutes = 0;
   _seconds = 0;
@@ -90,7 +92,7 @@ void STM32RTC::begin(RTCHourFormats_t format)
   _alarmMinutes = 0;
   _alarmSeconds = 0;
   _alarmSubSeconds = 0;
-  _alarmFormat = HOUR12_AM;
+  _alarmPeriod = RTC_AM;
 
   _configured = true;
 }
@@ -114,7 +116,7 @@ void STM32RTC::end(void)
   * @param source: clock source: RTC_LSI_CLOCK, RTC_LSE_CLOCK or RTC_HSE_CLOCK
   * @retval None
   */
-void STM32RTC::setClockSource(RTC_sourceClock_t source)
+void STM32RTC::setClockSource(RTC_Source_Clock source)
 {
   if(IS_CLOCK_SOURCE(source)) {
     _clockSource = source;
@@ -128,14 +130,13 @@ void STM32RTC::setClockSource(RTC_sourceClock_t source)
   */
 void STM32RTC::enableAlarm(Alarm_Match match)
 {
-  Hour12_AM_PM_t format;
+  hourAM_PM_t period;
   uint8_t date, hours, minutes, seconds;
   uint32_t subSeconds;
 
   if(_configured) {
-    RTC_GetTime(&hours, &minutes, &seconds, &subSeconds, (hourAM_PM_t*)&format);
+    RTC_GetTime(&hours, &minutes, &seconds, &subSeconds, &period);
     date = getDay();
-
     switch (match) {
       case MATCH_OFF:
         RTC_StopAlarm();
@@ -146,12 +147,12 @@ void STM32RTC::enableAlarm(Alarm_Match match)
         date = _alarmDate;
       case MATCH_HHMMSS:
         hours = _alarmHours;
-        format = _alarmFormat;
+        period = (_alarmPeriod == RTC_AM)? AM: PM;
       case MATCH_MMSS:
         minutes = _alarmMinutes;
       case MATCH_SS:
         seconds = _alarmSeconds;
-        RTC_StartAlarm(date, hours, minutes, seconds, subSeconds, (hourAM_PM_t)format);
+        RTC_StartAlarm(date, hours, minutes, seconds, subSeconds, period);
         break;
       default:
       break;
@@ -206,7 +207,9 @@ void STM32RTC::standbyMode(void)
 uint32_t STM32RTC::getSubSeconds(void)
 {
   if(_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _subSeconds;
 }
@@ -218,7 +221,9 @@ uint32_t STM32RTC::getSubSeconds(void)
 uint8_t STM32RTC::getSeconds(void)
 {
   if(_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _seconds;
 }
@@ -230,7 +235,9 @@ uint8_t STM32RTC::getSeconds(void)
 uint8_t STM32RTC::getMinutes(void)
 {
   if(_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _minutes;
 }
@@ -242,7 +249,9 @@ uint8_t STM32RTC::getMinutes(void)
 uint8_t STM32RTC::getHours(void)
 {
   if(_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _hours;
 }
@@ -252,13 +261,15 @@ uint8_t STM32RTC::getHours(void)
   * @param  format: pointer to the current hour format set in the RTC: AM or PM
   * @retval return the current hours from the RTC.
   */
-uint8_t STM32RTC::getHours(Hour12_AM_PM_t *format)
+uint8_t STM32RTC::getHours(RTC_AM_PM *period)
 {
   if(_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
 
-    if(format != NULL) {
-      *format = _hoursFormat;
+    if(period != NULL) {
+      *period = _hoursPeriod;
     }
   }
   return _hours;
@@ -319,7 +330,9 @@ uint8_t STM32RTC::getYear(void)
 uint32_t STM32RTC::getAlarmSubSeconds(void)
 {
   if(_configured) {
-    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, (hourAM_PM_t*)&_alarmFormat);
+    hourAM_PM_t p;
+    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
+    _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _alarmSubSeconds;
 }
@@ -331,7 +344,9 @@ uint32_t STM32RTC::getAlarmSubSeconds(void)
 uint8_t STM32RTC::getAlarmSeconds(void)
 {
   if(_configured) {
-    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, (hourAM_PM_t*)&_alarmFormat);
+    hourAM_PM_t p;
+    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
+    _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _alarmSeconds;
 }
@@ -343,7 +358,9 @@ uint8_t STM32RTC::getAlarmSeconds(void)
 uint8_t STM32RTC::getAlarmMinutes(void)
 {
   if(_configured) {
-    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, (hourAM_PM_t*)&_alarmFormat);
+    hourAM_PM_t p;
+    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
+    _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _alarmMinutes;
 }
@@ -355,7 +372,9 @@ uint8_t STM32RTC::getAlarmMinutes(void)
 uint8_t STM32RTC::getAlarmHours(void)
 {
   if(_configured) {
-    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, (hourAM_PM_t*)&_alarmFormat);
+    hourAM_PM_t p;
+    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
+    _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _alarmHours;
 }
@@ -365,13 +384,15 @@ uint8_t STM32RTC::getAlarmHours(void)
   * @param  format: pointer to the current hour format: AM or PM
   * @retval return the current alarm hour.
   */
-uint8_t STM32RTC::getAlarmHours(Hour12_AM_PM_t *format)
+uint8_t STM32RTC::getAlarmHours(RTC_AM_PM *period)
 {
   if(_configured) {
-    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, (hourAM_PM_t*)&_alarmFormat);
+    hourAM_PM_t p;
+    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
+    _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
 
-    if(format != NULL) {
-      *format = _alarmFormat;
+    if(period != NULL) {
+      *period = _alarmPeriod;
     }
   }
   return _alarmHours;
@@ -384,7 +405,9 @@ uint8_t STM32RTC::getAlarmHours(Hour12_AM_PM_t *format)
 uint8_t STM32RTC::getAlarmDay(void)
 {
   if(_configured) {
-    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, (hourAM_PM_t*)&_alarmFormat);
+    hourAM_PM_t p;
+    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
+    _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
   return _alarmDate;
 }
@@ -423,11 +446,14 @@ uint8_t STM32RTC::getAlarmYear(void)
 void STM32RTC::setSubSeconds(uint32_t subSeconds)
 {
  if (_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
+
     if(subSeconds < 1000) {
     _subSeconds = subSeconds;
     }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (hourAM_PM_t)_hoursFormat);
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, p);
  }
 }
 
@@ -439,11 +465,13 @@ void STM32RTC::setSubSeconds(uint32_t subSeconds)
 void STM32RTC::setSeconds(uint8_t seconds)
 {
   if (_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
     if(seconds < 60) {
       _seconds = seconds;
     }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (hourAM_PM_t)_hoursFormat);
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, p);
   }
 }
 
@@ -455,11 +483,13 @@ void STM32RTC::setSeconds(uint8_t seconds)
 void STM32RTC::setMinutes(uint8_t minutes)
 {
   if (_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
     if(minutes < 60) {
       _minutes = minutes;
     }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (hourAM_PM_t)_hoursFormat);
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, p);
   }
 }
 
@@ -471,11 +501,13 @@ void STM32RTC::setMinutes(uint8_t minutes)
 void STM32RTC::setHours(uint8_t hours)
 {
   if (_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
     if(hours < 24) {
       _hours = hours;
     }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (hourAM_PM_t)_hoursFormat);
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, p);
   }
 }
 
@@ -485,15 +517,17 @@ void STM32RTC::setHours(uint8_t hours)
   * @param  hours format: AM or PM
   * @retval none
   */
-void STM32RTC::setHours(uint8_t hours, Hour12_AM_PM_t format)
+void STM32RTC::setHours(uint8_t hours, RTC_AM_PM period)
 {
   if (_configured) {
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    hourAM_PM_t p;
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
     if(hours < 24) {
       _hours = hours;
     }
-    _hoursFormat = format;
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (hourAM_PM_t)_hoursFormat);
+    _hoursPeriod = period;
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, p);
   }
 }
 
@@ -521,13 +555,13 @@ void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
   * @param  hour format: AM or PM
   * @retval none
   */
-void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, Hour12_AM_PM_t format)
+void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, RTC_AM_PM period)
 {
   if (_configured) {
     setSubSeconds(subSeconds);
     setSeconds(seconds);
     setMinutes(minutes);
-    setHours(hours, format);
+    setHours(hours, period);
   }
 }
 
@@ -677,13 +711,13 @@ void STM32RTC::setAlarmHours(uint8_t hours)
   * @param  hour format: AM or PM
   * @retval none
   */
-void STM32RTC::setAlarmHours(uint8_t hours, Hour12_AM_PM_t format)
+void STM32RTC::setAlarmHours(uint8_t hours, RTC_AM_PM period)
 {
   if (_configured) {
     if(hours < 24) {
       _alarmHours = hours;
     }
-    _alarmFormat = format;
+    _alarmPeriod = period;
   }
 }
 
@@ -711,10 +745,10 @@ void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
   * @param  hour format: AM or PM
   * @retval none
   */
-void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, Hour12_AM_PM_t format)
+void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, RTC_AM_PM period)
 {
   if (_configured) {
-    setAlarmHours(hours, format);
+    setAlarmHours(hours, period);
     setAlarmMinutes(minutes);
     setAlarmSeconds(seconds);
   }
@@ -781,8 +815,10 @@ uint32_t STM32RTC::getEpoch(void)
   struct tm tm;
 
   if(_configured) {
+    hourAM_PM_t p;
     RTC_GetDate(&_year, &_month, &_date, &_day);
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, (hourAM_PM_t*)&_hoursFormat);
+    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
   }
 
   tm.tm_isdst = -1;
@@ -852,7 +888,7 @@ void STM32RTC::setEpoch(uint32_t ts)
     _seconds = tmp->tm_sec;
 
     RTC_SetDate(_year, _month, _date, _day);
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (hourAM_PM_t)_hoursFormat);
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == RTC_AM)? AM : PM);
   }
 }
 
