@@ -76,25 +76,22 @@ void STM32RTC::begin(RTC_Hour_Format format)
     RTC_init((format == RTC_HOUR_12)? HOUR_FORMAT_12: HOUR_FORMAT_24,
              (_clockSource == RTC_LSE_CLOCK)? LSE_CLOCK:
              (_clockSource == RTC_HSE_CLOCK)? HSE_CLOCK : LSI_CLOCK);
+    // Must be set before call of sync methods
+    _configured = true;
+    syncTime();
+    syncDate();
+    // Use current time to init alarm members
+    _alarmDate  = _date;
+    _alarmHours = _hours;
+    _alarmMinutes = _minutes;
+    _alarmSeconds = _seconds;
+    _alarmSubSeconds = _subSeconds;
+    _alarmPeriod = _hoursPeriod;
+  } else {
+    syncTime();
+    syncDate();
+    syncAlarmTime();
   }
-
-  _hoursPeriod = RTC_AM;
-  _hours = 0;
-  _minutes = 0;
-  _seconds = 0;
-  _subSeconds = 0;
-  _year = 0;
-  _month = 0;
-  _date = 0;
-  _day = 0;
-  _alarmDate = 0;
-  _alarmHours = 0;
-  _alarmMinutes = 0;
-  _alarmSeconds = 0;
-  _alarmSubSeconds = 0;
-  _alarmPeriod = RTC_AM;
-
-  _configured = true;
 }
 
 /**
