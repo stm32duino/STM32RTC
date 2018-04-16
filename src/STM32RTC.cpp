@@ -244,21 +244,8 @@ uint8_t STM32RTC::getMinutes(void)
 
 /**
   * @brief  get RTC hours.
-  * @retval return the current hours from the RTC.
-  */
-uint8_t STM32RTC::getHours(void)
-{
-  if(_configured) {
-    hourAM_PM_t p;
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
-    _hoursPeriod = (p == AM)? RTC_AM : RTC_PM;
-  }
-  return _hours;
-}
-
-/**
-  * @brief  get RTC hours.
-  * @param  format: pointer to the current hour format set in the RTC: AM or PM
+  * @param  format: optional (default: NULL)
+  *         pointer to the current hour format set in the RTC: AM or PM
   * @retval return the current hours from the RTC.
   */
 uint8_t STM32RTC::getHours(RTC_AM_PM *period)
@@ -367,21 +354,8 @@ uint8_t STM32RTC::getAlarmMinutes(void)
 
 /**
   * @brief  get RTC alarm hour.
-  * @retval return the current alarm hour.
-  */
-uint8_t STM32RTC::getAlarmHours(void)
-{
-  if(_configured) {
-    hourAM_PM_t p;
-    RTC_GetAlarm(&_alarmDate, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
-    _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
-  }
-  return _alarmHours;
-}
-
-/**
-  * @brief  get RTC alarm hour.
-  * @param  format: pointer to the current hour format: AM or PM
+  * @param  format: optional (default: NULL)
+  *         pointer to the current hour format set in the RTC: AM or PM
   * @retval return the current alarm hour.
   */
 uint8_t STM32RTC::getAlarmHours(RTC_AM_PM *period)

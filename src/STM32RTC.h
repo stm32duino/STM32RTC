@@ -111,8 +111,7 @@ public:
   uint32_t getSubSeconds(void);
   uint8_t getSeconds(void);
   uint8_t getMinutes(void);
-  uint8_t getHours(void);
-  uint8_t getHours(RTC_AM_PM *period);
+  uint8_t getHours(RTC_AM_PM *period = NULL);
 
   uint8_t getWeekDay(void);
   uint8_t getDay(void);
@@ -122,8 +121,7 @@ public:
   uint32_t getAlarmSubSeconds(void);
   uint8_t getAlarmSeconds(void);
   uint8_t getAlarmMinutes(void);
-  uint8_t getAlarmHours(void);
-  uint8_t getAlarmHours(RTC_AM_PM *period);
+  uint8_t getAlarmHours(RTC_AM_PM *period = NULL);
 
   uint8_t getAlarmDay(void);
 
