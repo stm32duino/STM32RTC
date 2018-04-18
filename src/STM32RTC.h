@@ -182,10 +182,10 @@ private:
   uint32_t    _subSeconds;
   uint8_t     _year;
   uint8_t     _month;
-  uint8_t     _date;
   uint8_t     _day;
+  uint8_t     _wday;
 
-  uint8_t     _alarmDate;
+  uint8_t     _alarmDay;
   uint8_t     _alarmHours;
   uint8_t     _alarmMinutes;
   uint8_t     _alarmSeconds;
