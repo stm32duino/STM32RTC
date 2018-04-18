@@ -127,13 +127,8 @@ void STM32RTC::setClockSource(RTC_Source_Clock source)
   */
 void STM32RTC::enableAlarm(Alarm_Match match)
 {
-  hourAM_PM_t period;
-  uint8_t day, hours, minutes, seconds;
-  uint32_t subSeconds;
-
   if(_configured) {
-    RTC_GetTime(&hours, &minutes, &seconds, &subSeconds, &period);
-    day = getDay();
+    _alarmMatch = match;
     switch (match) {
       case MATCH_OFF:
         RTC_StopAlarm();
@@ -141,15 +136,12 @@ void STM32RTC::enableAlarm(Alarm_Match match)
       case MATCH_YYMMDDHHMMSS://kept for compatibility
       case MATCH_MMDDHHMMSS:  //kept for compatibility
       case MATCH_DHHMMSS:
-        day = _alarmDay;
       case MATCH_HHMMSS:
-        hours = _alarmHours;
-        period = (_alarmPeriod == RTC_AM)? AM: PM;
       case MATCH_MMSS:
-        minutes = _alarmMinutes;
       case MATCH_SS:
-        seconds = _alarmSeconds;
-        RTC_StartAlarm(day, hours, minutes, seconds, subSeconds, period);
+        RTC_StartAlarm(_alarmDay, _alarmHours, _alarmMinutes, _alarmSeconds,
+                       _alarmSubSeconds, (_alarmPeriod == RTC_AM)? AM: PM,
+                       static_cast<uint8_t>(_alarmMatch));
         break;
       default:
       break;
@@ -757,7 +749,7 @@ uint32_t STM32RTC::getY2kEpoch(void)
   * @brief  set RTC alarm from epoch time
   * @param  epoch time in seconds
   */
-void STM32RTC::setAlarmEpoch(uint32_t ts)
+void STM32RTC::setAlarmEpoch(uint32_t ts, Alarm_Match match)
 {
   if (_configured) {
     if (ts < EPOCH_TIME_OFF) {
@@ -771,7 +763,7 @@ void STM32RTC::setAlarmEpoch(uint32_t ts)
     setAlarmHours(tmp->tm_hour);
     setAlarmMinutes(tmp->tm_min);
     setAlarmSeconds(tmp->tm_sec);
-    enableAlarm(MATCH_DHHMMSS);
+    enableAlarm(match);
   }
 }
 
@@ -845,7 +837,23 @@ void STM32RTC::syncAlarmTime(void)
 {
   if(_configured) {
     hourAM_PM_t p = AM;
-    RTC_GetAlarm(&_alarmDay, &_alarmHours, &_alarmMinutes, &_alarmSeconds, &_alarmSubSeconds, &p);
+    uint8_t match;
+    RTC_GetAlarm(&_alarmDay, &_alarmHours, &_alarmMinutes, &_alarmSeconds,
+                 &_alarmSubSeconds, &p, &match);
     _alarmPeriod = (p == AM)? RTC_AM : RTC_PM;
+    switch (static_cast<Alarm_Match>(match)) {
+      case MATCH_OFF:
+      case MATCH_YYMMDDHHMMSS://kept for compatibility
+      case MATCH_MMDDHHMMSS:  //kept for compatibility
+      case MATCH_DHHMMSS:
+      case MATCH_HHMMSS:
+      case MATCH_MMSS:
+      case MATCH_SS:
+        _alarmMatch = static_cast<Alarm_Match>(match);
+        break;
+      default:
+        _alarmMatch = MATCH_OFF;
+      break;
+    }
   }
 }

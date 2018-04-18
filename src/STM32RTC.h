@@ -69,17 +69,15 @@ public:
 
   enum Alarm_Match: uint8_t
   {
-    MATCH_OFF          = 0, // Never
-    MATCH_SS           = 1, // Every Minute
-    MATCH_MMSS         = 2, // Every Hour
-    MATCH_HHMMSS       = 3, // Every Day
-    MATCH_DHHMMSS      = 4, // Every Month
-
+    MATCH_OFF          = OFF_MSK,                          // Never
+    MATCH_SS           = SS_MSK,                           // Every Minute
+    MATCH_MMSS         = SS_MSK | MM_MSK,                  // Every Hour
+    MATCH_HHMMSS       = SS_MSK | MM_MSK | HH_MSK,         // Every Day
+    MATCH_DHHMMSS      = SS_MSK | MM_MSK | HH_MSK | D_MSK, // Every Month
     /* NOTE: STM32 RTC can't assign a month or a year to an alarm. Those enum
     are kept for compatibility but are ignored inside enableAlarm(). */
-    MATCH_MMDDHHMMSS   = 5,
-    MATCH_YYMMDDHHMMSS = 6
-  };
+    MATCH_MMDDHHMMSS   = SS_MSK | MM_MSK | HH_MSK | D_MSK | M_MSK,
+    MATCH_YYMMDDHHMMSS = SS_MSK | MM_MSK | HH_MSK | D_MSK | M_MSK | Y_MSK  };
 
   enum RTC_Source_Clock: uint8_t
   {
@@ -166,7 +164,7 @@ public:
   uint32_t getY2kEpoch(void);
   void setEpoch(uint32_t ts);
   void setY2kEpoch(uint32_t ts);
-  void setAlarmEpoch(uint32_t ts);
+  void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS);
 
   bool isConfigured(void) {
     return _configured;
@@ -191,6 +189,7 @@ private:
   uint8_t     _alarmSeconds;
   uint32_t    _alarmSubSeconds;
   RTC_AM_PM   _alarmPeriod;
+  Alarm_Match _alarmMatch;
 
   RTC_Source_Clock _clockSource;
 
