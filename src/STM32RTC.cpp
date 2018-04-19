@@ -117,7 +117,35 @@ void STM32RTC::setClockSource(RTC_Source_Clock source)
 {
   if(IS_CLOCK_SOURCE(source)) {
     _clockSource = source;
+    RTC_SetClockSource((_clockSource == RTC_LSE_CLOCK)? LSE_CLOCK:
+             (_clockSource == RTC_HSE_CLOCK)? HSE_CLOCK : LSI_CLOCK);
   }
+}
+
+/**
+  * @brief  get user (a)synchronous prescaler values if set else computed
+  *         ones for the current clock source.
+  * @param  predivA: pointer to the current Asynchronous prescaler value
+  * @param  predivS: pointer to the current Synchronous prescaler value
+  * @retval None
+  */
+void STM32RTC::getPrediv(int8_t *predivA, int16_t *predivS)
+{
+  if((predivA != NULL) && (predivS != NULL)) {
+    RTC_getPrediv(predivA, predivS);
+  }
+}
+
+/**
+  * @brief  set user (a)synchronous prescalers value.
+  * @note   This method must be called before begin().
+  * @param  predivA: Asynchronous prescaler value. Reset value: -1
+  * @param  predivS: Synchronous prescaler value. Reset value: -1
+  * @retval None
+  */
+void STM32RTC::setPrediv(int8_t predivA, int16_t predivS)
+{
+  RTC_setPrediv(predivA, predivS);
 }
 
 /**

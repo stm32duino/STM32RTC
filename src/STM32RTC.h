@@ -166,6 +166,9 @@ public:
   void setY2kEpoch(uint32_t ts);
   void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS);
 
+  void getPrediv(int8_t *predivA, int16_t *predivS);
+  void setPrediv(int8_t predivA, int16_t predivS);
+
   bool isConfigured(void) {
     return _configured;
   }
