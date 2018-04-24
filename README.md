@@ -21,7 +21,11 @@ _RTC hours mode (12 or 24)_
 * **`void begin(RTC_Hour_Format format)`**
 
 _RTC clock source_
-* **`void setClockSource(RTC_Source_Clock source)`** : this function must be called before `begin()`
+* **`void setClockSource(RTC_Source_Clock source)`** : this function must be called before `begin()`.
+
+_RTC Asynchronous and Synchronous prescaler_
+* **`void getPrediv(int8_t *predivA, int16_t *predivS)`** : get user (a)synchronous prescaler values if set else computed ones for the current clock source.
+* **`void setPrediv(int8_t predivA, int16_t predivS)`** : set user (a)synchronous prescaler values.  This function must be called before `begin()`. Use -1 to reset value and use computed ones.
 
 _SubSeconds management_
 * **`uint32_t getSubSeconds(void)`**
