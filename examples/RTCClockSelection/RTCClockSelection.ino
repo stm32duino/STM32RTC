@@ -60,7 +60,7 @@ void setup()
 
   // Select RTC clock source: RTC_LSI_CLOCK, RTC_LSE_CLOCK or RTC_HSE_CLOCK.
   // By default the LSI is selected as source.
-  rtc.setClockSource(RTC_LSE_CLOCK);
+  rtc.setClockSource(STM32RTC::RTC_LSE_CLOCK);
 
   rtc.begin(); // initialize RTC 24H format
 

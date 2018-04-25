@@ -18,22 +18,26 @@ The following functions are not supported:
 The following functions have been added to support specific STM32 RTC features:
 
 _RTC hours mode (12 or 24)_
-* **`void begin(RTCHourFormats_t format)`**
+* **`void begin(RTC_Hour_Format format)`**
 
 _RTC clock source_
-* **`void setClockSource(sourceClock_t source)`** : this function must be called before `begin()`
+* **`void setClockSource(RTC_Source_Clock source)`** : this function must be called before `begin()`.
+
+_RTC Asynchronous and Synchronous prescaler_
+* **`void getPrediv(int8_t *predivA, int16_t *predivS)`** : get user (a)synchronous prescaler values if set else computed ones for the current clock source.
+* **`void setPrediv(int8_t predivA, int16_t predivS)`** : set user (a)synchronous prescaler values.  This function must be called before `begin()`. Use -1 to reset value and use computed ones.
 
 _SubSeconds management_
 * **`uint32_t getSubSeconds(void)`**
 * **`void setSubSeconds(uint32_t subSeconds)`**
 
 _Hour format (AM or PM)_
-* **`uint8_t getHours(Hour12_AM_PM_t *format)`**
-* **`void setHours(uint8_t hours, Hour12_AM_PM_t format)`**
-* **`void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, Hour12_AM_PM_t format)`**
-* **`void setAlarmHours(uint8_t hours, Hour12_AM_PM_t format)`**
-* **`uint8_t getAlarmHours(Hour12_AM_PM_t *format)`**
-* **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, Hour12_AM_PM_t format)`**
+* **`uint8_t getHours(RTC_AM_PM *period)`**
+* **`void setHours(uint8_t hours, RTC_AM_PM period)`**
+* **`void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, RTC_AM_PM period)`**
+* **`void setAlarmHours(uint8_t hours, RTC_AM_PM period)`**
+* **`uint8_t getAlarmHours(RTC_AM_PM *period)`**
+* **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, RTC_AM_PM period)`**
 
 _Week day configuration_
 * **`uint8_t getWeekDay(void)`**
