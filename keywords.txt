@@ -20,6 +20,8 @@ getHours		KEYWORD2
 getMinutes		KEYWORD2
 getSeconds 		KEYWORD2
 getSubSeconds		KEYWORD2
+getTime		KEYWORD2
+getDate		KEYWORD2
 
 setWeekDay		KEYWORD2
 setDay			KEYWORD2
@@ -61,6 +63,7 @@ disableAlarm 		KEYWORD2
 attachInterrupt		KEYWORD2
 detachInterrupt		KEYWORD2
 
+getClockSource		KEYWORD2
 setClockSource		KEYWORD2
 isConfigured	KEYWORD2
 

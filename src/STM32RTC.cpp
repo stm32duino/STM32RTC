@@ -108,6 +108,15 @@ void STM32RTC::end(void)
 }
 
 /**
+  * @brief get the RTC clock source.
+  * @retval clock source: RTC_LSI_CLOCK, RTC_LSE_CLOCK or RTC_HSE_CLOCK
+  */
+STM32RTC::RTC_Source_Clock STM32RTC::getClockSource(void)
+{
+  return _clockSource;
+}
+
+/**
   * @brief set the RTC clock source. By default LSI clock is selected. This
   * method must be called before begin().
   * @param source: clock source: RTC_LSI_CLOCK, RTC_LSE_CLOCK or RTC_HSE_CLOCK
@@ -250,7 +259,7 @@ uint8_t STM32RTC::getMinutes(void)
 /**
   * @brief  get RTC hours.
   * @param  format: optional (default: NULL)
-  *         pointer to the current hour format set in the RTC: AM or PM
+  *         pointer to the current hour period set in the RTC: AM or PM
   * @retval return the current hours from the RTC.
   */
 uint8_t STM32RTC::getHours(RTC_AM_PM *period)
@@ -260,6 +269,36 @@ uint8_t STM32RTC::getHours(RTC_AM_PM *period)
     *period = _hoursPeriod;
   }
   return _hours;
+}
+
+/**
+  * @brief  get RTC time.
+  * @param  hours: pointer to the current hours
+  * @param  minutes: pointer to the current minutes
+  * @param  seconds: pointer to the current seconds
+  * @param  subSeconds: pointer to the current subSeconds
+  * @param  period: optional (default: NULL)
+  *         pointer to the current hour period set in the RTC: AM or PM
+  * @retval none
+  */
+void STM32RTC::getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, RTC_AM_PM *period)
+{
+  syncTime();
+  if(hours != NULL) {
+    *hours = _hours;
+  }
+  if(minutes != NULL) {
+    *minutes = _minutes;
+  }
+  if(seconds != NULL) {
+    *seconds = _seconds;
+  }
+  if(subSeconds != NULL) {
+    *subSeconds = _subSeconds;
+  }
+  if(period != NULL) {
+    *period = _hoursPeriod;
+  }
 }
 
 /**
@@ -300,6 +339,31 @@ uint8_t STM32RTC::getYear(void)
 {
   syncDate();
   return _year;
+}
+
+/**
+  * @brief  get RTC time.
+  * @param  weekDay: pointer to the current weekDay
+  * @param  day: pointer to the current day
+  * @param  month: pointer to the current month
+  * @param  year: pointer to the current year
+  * @retval none
+  */
+void STM32RTC::getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year)
+{
+  syncDate();
+  if(weekDay != NULL) {
+    *weekDay = _wday;
+  }
+  if(day != NULL) {
+    *day = _day;
+  }
+  if(month != NULL) {
+    *month = _month;
+  }
+  if(year != NULL) {
+    *year = _year;
+  }
 }
 
 /**

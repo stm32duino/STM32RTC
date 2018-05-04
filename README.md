@@ -21,6 +21,7 @@ _RTC hours mode (12 or 24)_
 * **`void begin(RTC_Hour_Format format)`**
 
 _RTC clock source_
+* **`RTC_Source_Clock setClockSource(void)`** : get current clock source.
 * **`void setClockSource(RTC_Source_Clock source)`** : this function must be called before `begin()`.
 
 _RTC Asynchronous and Synchronous prescaler_
@@ -43,6 +44,10 @@ _Week day configuration_
 * **`uint8_t getWeekDay(void)`**
 * **`void setWeekDay(uint8_t weekDay)`**
 * **`void setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year)`**
+
+_Time and date configuration (added for convenience)_
+* **`void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, RTC_AM_PM *period = NULL)`**
+* **`void getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year)`**
 
 Refer to the Arduino RTC documentation for the other functions  
 http://arduino.cc/en/Reference/RTC

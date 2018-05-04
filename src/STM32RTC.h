@@ -93,6 +93,7 @@ public:
 
   void end(void);
 
+  RTC_Source_Clock getClockSource(void);
   void setClockSource(RTC_Source_Clock source);
 
   void enableAlarm(Alarm_Match match);
@@ -110,11 +111,13 @@ public:
   uint8_t getSeconds(void);
   uint8_t getMinutes(void);
   uint8_t getHours(RTC_AM_PM *period = NULL);
+  void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, RTC_AM_PM *period = NULL);
 
   uint8_t getWeekDay(void);
   uint8_t getDay(void);
   uint8_t getMonth(void);
   uint8_t getYear(void);
+  void getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year);
 
   uint32_t getAlarmSubSeconds(void);
   uint8_t getAlarmSeconds(void);
