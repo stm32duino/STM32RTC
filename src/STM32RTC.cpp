@@ -46,11 +46,6 @@
 // Initialize static variable
 bool STM32RTC::_configured = false;
 
-STM32RTC::STM32RTC(void): _clockSource(RTC_LSI_CLOCK)
-{
-
-}
-
 /**
   * @brief initializes the RTC
   * @param resetTime: if true reconfigures the RTC

@@ -86,7 +86,14 @@ public:
     RTC_HSE_CLOCK = HSE_CLOCK
   };
 
-  STM32RTC();
+  static STM32RTC& getInstance() {
+    static STM32RTC instance; // Guaranteed to be destroyed.
+                              // Instantiated on first use.
+    return instance;
+  }
+
+  STM32RTC(STM32RTC const&)        = delete;
+  void operator=(STM32RTC const&)  = delete;
 
   void begin(bool resetTime, RTC_Hour_Format format = RTC_HOUR_24);
   void begin(RTC_Hour_Format format = RTC_HOUR_24);
@@ -177,6 +184,8 @@ public:
   }
 
 private:
+  STM32RTC(void): _clockSource(RTC_LSI_CLOCK) {}
+
   static bool _configured;
 
   RTC_AM_PM   _hoursPeriod;
@@ -202,6 +211,7 @@ private:
   void syncTime(void);
   void syncDate(void);
   void syncAlarmTime(void);
+
 };
 
 #endif // __STM32_RTC_H
