@@ -893,6 +893,39 @@ void STM32RTC::setY2kEpoch(uint32_t ts)
 }
 
 /**
+  * @brief  configure RTC source clock for low power
+  * @param  none
+  */
+void STM32RTC::configForLowPower(void)
+{
+#if defined(HAL_PWR_MODULE_ENABLED)
+  if (!_configured){
+    // LSE must be selected as clock source to wakeup the device from shutdown mode
+    _clockSource = RTC_LSE_CLOCK;
+    // Enable RTC
+    begin();
+  } else {
+    if (_clockSource != RTC_LSE_CLOCK) {
+      // Save current config
+      RTC_AM_PM period;
+      uint32_t subSeconds;
+      uint8_t seconds, minutes, hours, weekDay, day, month, years;
+      getDate(&weekDay, &day, &month, &years);
+      getTime(&seconds, &minutes, &hours, &subSeconds, &period);
+      end();
+      // LSE must be selected as clock source to wakeup the device from shutdown mode
+      _clockSource = RTC_LSE_CLOCK;
+      // Enable RTC
+      begin(period);
+      // Restore config
+      setTime(seconds, minutes, hours, subSeconds, period);
+      setDate(weekDay, day, month, years);
+    }
+  }
+#endif
+}
+
+/**
   * @brief  synchronise the time from the current RTC one
   * @param  none
   */
