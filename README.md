@@ -6,6 +6,12 @@ A RTC library for STM32.
 This library is based on the Arduino RTCZero library.
 The library allows to take control of the internal RTC of the STM32 boards.
 
+Singleton design pattern is used to ensure that only one STM32RTC instance is instantiated:
+```
+/* Get the rtc object */
+STM32RTC& rtc = STM32RTC::getInstance();
+```
+
 The following functions are not supported:
 
 * **`void standbyMode()`**: use the STM32 Low Power library instead.

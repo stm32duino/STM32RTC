@@ -12,6 +12,8 @@ STM32RTC	KEYWORD1
 # Methods and Functions (KEYWORD2)
 #######################################
 
+getInstance		KEYWORD2
+
 getWeekDay		KEYWORD2
 getDay			KEYWORD2
 getMonth		KEYWORD2
