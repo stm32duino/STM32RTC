@@ -183,6 +183,8 @@ public:
     return _configured;
   }
 
+  friend class STM32LowPower;
+
 private:
   STM32RTC(void): _clockSource(RTC_LSI_CLOCK) {}
 
@@ -207,6 +209,8 @@ private:
   Alarm_Match _alarmMatch;
 
   RTC_Source_Clock _clockSource;
+
+  void configForLowPower(void);
 
   void syncTime(void);
   void syncDate(void);
