@@ -73,5 +73,6 @@ void loop()
 
 void alarmMatch(void *data)
 {
+  UNUSED(data);
   Serial.println("Alarm Match!");
 }
