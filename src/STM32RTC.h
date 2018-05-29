@@ -213,7 +213,7 @@ private:
 
   RTC_Source_Clock _clockSource;
 
-  void configForLowPower(void);
+  void configForLowPower(RTC_Source_Clock source);
 
   void syncTime(void);
   void syncDate(void);

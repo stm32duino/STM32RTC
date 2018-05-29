@@ -936,30 +936,43 @@ void STM32RTC::setY2kEpoch(uint32_t ts)
   * @brief  configure RTC source clock for low power
   * @param  none
   */
-void STM32RTC::configForLowPower(void)
+void STM32RTC::configForLowPower(RTC_Source_Clock source)
 {
 #if defined(HAL_PWR_MODULE_ENABLED)
   if (!_configured){
-    // LSE must be selected as clock source to wakeup the device from shutdown mode
-    _clockSource = RTC_LSE_CLOCK;
+    _clockSource = source;
     // Enable RTC
     begin();
   } else {
-    if (_clockSource != RTC_LSE_CLOCK) {
+    if (_clockSource != source) {
       // Save current config
-      RTC_AM_PM period;
+      RTC_AM_PM period, alarmPeriod = _alarmPeriod;
       uint32_t subSeconds;
       uint8_t seconds, minutes, hours, weekDay, day, month, years;
+      uint8_t alarmSeconds, alarmMinutes, alarmHours, alarmDay;
+      Alarm_Match alarmMatch = _alarmMatch;
+      bool alarmEnabled = _alarmEnabled;
+
+      alarmDay = _alarmDay;
+      alarmHours = _alarmHours;
+      alarmMinutes = _alarmMinutes;
+      alarmSeconds = _alarmSeconds;
+
       getDate(&weekDay, &day, &month, &years);
       getTime(&seconds, &minutes, &hours, &subSeconds, &period);
+
       end();
-      // LSE must be selected as clock source to wakeup the device from shutdown mode
-      _clockSource = RTC_LSE_CLOCK;
+      _clockSource = source;
       // Enable RTC
       begin(period);
       // Restore config
       setTime(seconds, minutes, hours, subSeconds, period);
       setDate(weekDay, day, month, years);
+      setAlarmTime(alarmHours, alarmMinutes, alarmSeconds, alarmPeriod);
+      setAlarmDay(alarmDay);
+      if(alarmEnabled) {
+        enableAlarm(alarmMatch);
+      }
     }
   }
 #endif
