@@ -182,7 +182,9 @@ public:
   bool isConfigured(void) {
     return _configured;
   }
-
+  bool isAlarmEnabled(void) {
+    return _alarmEnabled;
+  }
   friend class STM32LowPower;
 
 private:
@@ -207,6 +209,7 @@ private:
   uint32_t    _alarmSubSeconds;
   RTC_AM_PM   _alarmPeriod;
   Alarm_Match _alarmMatch;
+  bool        _alarmEnabled;
 
   RTC_Source_Clock _clockSource;
 

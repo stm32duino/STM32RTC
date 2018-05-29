@@ -56,6 +56,7 @@ void STM32RTC::begin(bool resetTime, RTC_Hour_Format format)
 {
   if(resetTime == true) {
     _configured = false;
+    _alarmEnabled = false;
   }
   begin(format);
 }
@@ -99,6 +100,7 @@ void STM32RTC::end(void)
   if(_configured == true) {
     RTC_DeInit();
     _configured = false;
+    _alarmEnabled = false;
   }
 }
 
@@ -174,6 +176,7 @@ void STM32RTC::enableAlarm(Alarm_Match match)
         RTC_StartAlarm(_alarmDay, _alarmHours, _alarmMinutes, _alarmSeconds,
                        _alarmSubSeconds, (_alarmPeriod == RTC_AM)? AM: PM,
                        static_cast<uint8_t>(_alarmMatch));
+       _alarmEnabled = true;
         break;
       default:
       break;
@@ -189,6 +192,7 @@ void STM32RTC::disableAlarm(void)
 {
   if(_configured) {
     RTC_StopAlarm();
+    _alarmEnabled = false;
   }
 }
 
