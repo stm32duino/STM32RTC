@@ -534,9 +534,17 @@ void STM32RTC::setHours(uint8_t hours, RTC_AM_PM period)
 void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
 {
   if (_configured) {
-    setSeconds(seconds);
-    setMinutes(minutes);
-    setHours(hours);
+    syncTime();
+    if(seconds < 60) {
+      _seconds = seconds;
+    }
+    if(minutes < 60) {
+      _minutes = minutes;
+    }
+    if(hours < 24) {
+      _hours = hours;
+    }
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == RTC_AM)? AM : PM);
   }
 }
 
@@ -551,10 +559,21 @@ void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
 void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, RTC_AM_PM period)
 {
   if (_configured) {
-    setSubSeconds(subSeconds);
-    setSeconds(seconds);
-    setMinutes(minutes);
-    setHours(hours, period);
+    syncTime();
+    if(subSeconds < 1000) {
+      _subSeconds = subSeconds;
+    }
+    if(seconds < 60) {
+      _seconds = seconds;
+    }
+    if(minutes < 60) {
+      _minutes = minutes;
+    }
+    if(hours < 24) {
+      _hours = hours;
+    }
+    _hoursPeriod = period;
+    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == RTC_AM)? AM : PM);
   }
 }
 
@@ -566,7 +585,7 @@ void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t
 void STM32RTC::setWeekDay(uint8_t weekDay)
 {
   if (_configured) {
-    RTC_GetDate(&_year, &_month, &_day, &_wday);
+    syncDate();
     if((weekDay >= 1) && (weekDay <= 7)) {
       _wday = weekDay;
     }
@@ -582,7 +601,7 @@ void STM32RTC::setWeekDay(uint8_t weekDay)
 void STM32RTC::setDay(uint8_t day)
 {
   if (_configured) {
-    RTC_GetDate(&_year, &_month, &_day, &_wday);
+    syncDate();
     if((day >= 1) && (day <= 31)) {
       _day = day;
     }
@@ -598,7 +617,7 @@ void STM32RTC::setDay(uint8_t day)
 void STM32RTC::setMonth(uint8_t month)
 {
   if (_configured) {
-    RTC_GetDate(&_year, &_month, &_day, &_wday);
+    syncDate();
     if((month >= 1) && (month <= 12)) {
       _month = month;
     }
@@ -614,7 +633,7 @@ void STM32RTC::setMonth(uint8_t month)
 void STM32RTC::setYear(uint8_t year)
 {
   if (_configured) {
-    RTC_GetDate(&_year, &_month, &_day, &_wday);
+    syncDate();
     if(year < 100) {
       _year = year;
     }
@@ -632,9 +651,17 @@ void STM32RTC::setYear(uint8_t year)
 void STM32RTC::setDate(uint8_t day, uint8_t month, uint8_t year)
 {
   if (_configured) {
-    setDay(day);
-    setMonth(month);
-    setYear(year);
+    syncDate();
+    if((day >= 1) && (day <= 31)) {
+      _day = day;
+    }
+    if((month >= 1) && (month <= 12)) {
+      _month = month;
+    }
+    if(year < 100) {
+      _year = year;
+    }
+    RTC_SetDate(_year, _month, _day, _wday);
   }
 }
 
@@ -649,11 +676,20 @@ void STM32RTC::setDate(uint8_t day, uint8_t month, uint8_t year)
 void STM32RTC::setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year)
 {
   if (_configured) {
-    setWeekDay(weekDay);
-    setDay(day);
-    setMonth(month);
-    setYear(year);
-  }
+    syncDate();
+    if((weekDay >= 1) && (weekDay <= 7)) {
+      _wday = weekDay;
+    }
+    if((day >= 1) && (day <= 31)) {
+      _day = day;
+    }
+    if((month >= 1) && (month <= 12)) {
+      _month = month;
+    }
+    if(year < 100) {
+      _year = year;
+    }
+    RTC_SetDate(_year, _month, _day, _wday);  }
 }
 
 /**
