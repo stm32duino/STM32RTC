@@ -188,7 +188,7 @@ public:
   friend class STM32LowPower;
 
 private:
-  STM32RTC(void): _clockSource(RTC_LSI_CLOCK) {}
+  STM32RTC(void): _clockSource(RTC_LSE_CLOCK) {}
 
   static bool _configured;
 
