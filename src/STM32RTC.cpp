@@ -851,8 +851,12 @@ uint32_t STM32RTC::getEpoch(void)
   syncTime();
 
   tm.tm_isdst = -1;
+  /*
+   * mktime ignores the values supplied by the caller in the
+   * tm_wday and tm_yday fields
+   */
   tm.tm_yday = 0;
-  tm.tm_wday = _wday - 1;
+  tm.tm_wday = 0;
   tm.tm_year = _year + EPOCH_TIME_YEAR_OFF;
   tm.tm_mon = _month - 1;
   tm.tm_mday = _day;
@@ -911,7 +915,11 @@ void STM32RTC::setEpoch(uint32_t ts)
     _year = tmp->tm_year - EPOCH_TIME_YEAR_OFF;
     _month = tmp->tm_mon + 1;
     _day = tmp->tm_mday;
-    _wday = tmp->tm_wday + 1;
+    if(tmp->tm_wday == 0) {
+      _wday = RTC_WEEKDAY_SUNDAY;
+    } else {
+      _wday = tmp->tm_wday;
+    }
     _hours = tmp->tm_hour;
     _minutes = tmp->tm_min;
     _seconds = tmp->tm_sec;
