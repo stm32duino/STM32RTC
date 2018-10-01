@@ -48,23 +48,23 @@
 
 typedef void(*voidFuncPtr)(void *);
 
-#define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::RTC_LSI_CLOCK) || ((SRC) == STM32RTC::RTC_LSE_CLOCK) ||\
-                              ((SRC) == STM32RTC::RTC_HSE_CLOCK))
-#define IS_HOUR_FORMAT(FMT)  (((FMT) == STM32RTC::RTC_HOUR_12) || ((FMT) == STM32RTC::RTC_HOUR_24))
+#define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::LSI_CLOCK) || ((SRC) == STM32RTC::LSE_CLOCK) ||\
+                              ((SRC) == STM32RTC::HSE_CLOCK))
+#define IS_HOUR_FORMAT(FMT)  (((FMT) == STM32RTC::HOUR_12) || ((FMT) == STM32RTC::HOUR_24))
 
 class STM32RTC {
 public:
 
   enum RTC_Hour_Format : uint8_t
   {
-    RTC_HOUR_12 = HOUR_FORMAT_12,
-    RTC_HOUR_24 = HOUR_FORMAT_24
+    HOUR_12 = HOUR_FORMAT_12,
+    HOUR_24 = HOUR_FORMAT_24
   };
 
   enum RTC_AM_PM : uint8_t
   {
-    RTC_AM = AM,
-    RTC_PM = PM
+    AM = HOUR_AM,
+    PM = HOUR_PM
   };
 
   enum Alarm_Match: uint8_t
@@ -81,9 +81,9 @@ public:
 
   enum RTC_Source_Clock: uint8_t
   {
-    RTC_LSI_CLOCK = LSI_CLOCK,
-    RTC_LSE_CLOCK = LSE_CLOCK,
-    RTC_HSE_CLOCK = HSE_CLOCK
+    LSI_CLOCK = ::LSI_CLOCK,
+    LSE_CLOCK = ::LSE_CLOCK,
+    HSE_CLOCK = ::HSE_CLOCK
   };
 
   static STM32RTC& getInstance() {
@@ -95,8 +95,8 @@ public:
   STM32RTC(STM32RTC const&)        = delete;
   void operator=(STM32RTC const&)  = delete;
 
-  void begin(bool resetTime, RTC_Hour_Format format = RTC_HOUR_24);
-  void begin(RTC_Hour_Format format = RTC_HOUR_24);
+  void begin(bool resetTime, RTC_Hour_Format format = HOUR_24);
+  void begin(RTC_Hour_Format format = HOUR_24);
 
   void end(void);
 
@@ -188,7 +188,7 @@ public:
   friend class STM32LowPower;
 
 private:
-  STM32RTC(void): _clockSource(RTC_LSI_CLOCK) {}
+  STM32RTC(void): _clockSource(LSI_CLOCK) {}
 
   static bool _configured;
 
