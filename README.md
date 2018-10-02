@@ -27,11 +27,11 @@ The following functions are not supported:
 The following functions have been added to support specific STM32 RTC features:
 
 _RTC hours mode (12 or 24)_
-* **`void begin(RTC_Hour_Format format)`**
+* **`void begin(Hour_Format format)`**
 
 _RTC clock source_
-* **`RTC_Source_Clock setClockSource(void)`** : get current clock source.
-* **`void setClockSource(RTC_Source_Clock source)`** : this function must be called before `begin()`.
+* **`Source_Clock getClockSource(void)`** : get current clock source.
+* **`void setClockSource(Source_Clock source)`** : this function must be called before `begin()`.
 
 _RTC Asynchronous and Synchronous prescaler_
 * **`void getPrediv(int8_t *predivA, int16_t *predivS)`** : get user (a)synchronous prescaler values if set else computed ones for the current clock source.
@@ -42,12 +42,12 @@ _SubSeconds management_
 * **`void setSubSeconds(uint32_t subSeconds)`**
 
 _Hour format (AM or PM)_
-* **`uint8_t getHours(RTC_AM_PM *period)`**
-* **`void setHours(uint8_t hours, RTC_AM_PM period)`**
-* **`void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, RTC_AM_PM period)`**
-* **`void setAlarmHours(uint8_t hours, RTC_AM_PM period)`**
-* **`uint8_t getAlarmHours(RTC_AM_PM *period)`**
-* **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, RTC_AM_PM period)`**
+* **`uint8_t getHours(AM_PM *period)`**
+* **`void setHours(uint8_t hours, AM_PM period)`**
+* **`void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, AM_PM period)`**
+* **`void setAlarmHours(uint8_t hours, AM_PM period)`**
+* **`uint8_t getAlarmHours(AM_PM *period)`**
+* **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, AM_PM period)`**
 
 _Week day configuration_
 * **`uint8_t getWeekDay(void)`**
@@ -55,7 +55,7 @@ _Week day configuration_
 * **`void setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year)`**
 
 _Time and date configuration (added for convenience)_
-* **`void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, RTC_AM_PM *period = NULL)`**
+* **`void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, AM_PM *period = NULL)`**
 * **`void getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year)`**
 
 Refer to the Arduino RTC documentation for the other functions  
