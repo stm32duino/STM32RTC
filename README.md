@@ -58,6 +58,23 @@ _Time and date configuration (added for convenience)_
 * **`void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, AM_PM *period = NULL)`**
 * **`void getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year)`**
 
+### Since STM32 Core version > 1.5.0
+_Reset time management_
+By default, if a time is set it will not be reset afer a reboot.
+
+Using `begin(true)` or `begin(true, HOUR_24)` will reset the RTC registers.
+
+To know if a time has already been set use:
+* **`bool isTimeSet(void)`**
+```
+  if (!rtc.isTimeSet()) {
+    // Set the time
+    rtc.setHours(hours);
+    rtc.setMinutes(minutes);
+    rtc.setSeconds(seconds);
+  }
+```
+
 Refer to the Arduino RTC documentation for the other functions  
 http://arduino.cc/en/Reference/RTC
 

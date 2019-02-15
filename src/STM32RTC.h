@@ -185,12 +185,21 @@ public:
   bool isAlarmEnabled(void) {
     return _alarmEnabled;
   }
+  bool isTimeSet(void) {
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01050000)
+    return RTC_IsTimeSet();
+#else
+    return false;
+#endif
+  }
+
   friend class STM32LowPower;
 
 private:
   STM32RTC(void): _clockSource(LSI_CLOCK) {}
 
   static bool _configured;
+  static bool _reset;
 
   AM_PM   _hoursPeriod;
   uint8_t     _hours;

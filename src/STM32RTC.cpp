@@ -45,6 +45,7 @@
 
 // Initialize static variable
 bool STM32RTC::_configured = false;
+bool STM32RTC::_reset = false;
 
 /**
   * @brief initializes the RTC
@@ -54,6 +55,7 @@ bool STM32RTC::_configured = false;
   */
 void STM32RTC::begin(bool resetTime, Hour_Format format)
 {
+  _reset = resetTime;
   if(resetTime == true) {
     _configured = false;
     _alarmEnabled = false;
@@ -71,7 +73,11 @@ void STM32RTC::begin(Hour_Format format)
   if(_configured == false) {
     RTC_init((format == HOUR_12)? HOUR_FORMAT_12: HOUR_FORMAT_24,
              (_clockSource == LSE_CLOCK)? ::LSE_CLOCK:
-             (_clockSource == HSE_CLOCK)? ::HSE_CLOCK : ::LSI_CLOCK);
+             (_clockSource == HSE_CLOCK)? ::HSE_CLOCK : ::LSI_CLOCK
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01050000)
+              , _reset
+#endif
+             );
     // Must be set before call of sync methods
     _configured = true;
     syncTime();
