@@ -60,7 +60,7 @@ _Time and date configuration (added for convenience)_
 
 ### Since STM32 Core version > 1.5.0
 _Reset time management_
-By default, if a time is set it will not be reset afer a reboot.
+By default, if a time is set it will not be reset after a reboot.
 
 Using `begin(true)` or `begin(true, HOUR_24)` will reset the RTC registers.
 
