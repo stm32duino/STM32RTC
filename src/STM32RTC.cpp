@@ -704,6 +704,20 @@ void STM32RTC::setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year
 }
 
 /**
+  * @brief  set RTC alarm subseconds.
+  * @param  subseconds: 0-999 (in ms)
+  * @retval none
+  */
+void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds)
+{
+  if (_configured) {
+    if (subSeconds < 1000) {
+      _alarmSubSeconds = subSeconds;
+    }
+  }
+}
+
+/**
   * @brief  set RTC alarm second.
   * @param  seconds: 0-59
   * @retval none
@@ -768,12 +782,13 @@ void STM32RTC::setAlarmHours(uint8_t hours, AM_PM period)
   * @param  seconds: 0-59
   * @retval none
   */
-void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds)
+void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds)
 {
   if (_configured) {
     setAlarmHours(hours);
     setAlarmMinutes(minutes);
     setAlarmSeconds(seconds);
+    setAlarmSeconds(subSeconds);
   }
 }
 
@@ -848,9 +863,10 @@ void STM32RTC::setAlarmDate(uint8_t day, uint8_t month, uint8_t year)
 
 /**
   * @brief  get epoch time
+  * @param  subSecondsPtr: Optional pointer to where to store subseconds of the epoch in ms
   * @retval epoch time in seconds
   */
-uint32_t STM32RTC::getEpoch(void)
+uint32_t STM32RTC::getEpoch(uint32_t* subSecondsPtr)
 {
   struct tm tm;
 
@@ -870,6 +886,8 @@ uint32_t STM32RTC::getEpoch(void)
   tm.tm_hour = _hours;
   tm.tm_min = _minutes;
   tm.tm_sec = _seconds;
+  if (subSecondsPtr != nullptr)
+    *subSecondsPtr = _subSeconds;
 
   return mktime(&tm);
 }
@@ -886,8 +904,10 @@ uint32_t STM32RTC::getY2kEpoch(void)
 /**
   * @brief  set RTC alarm from epoch time
   * @param  epoch time in seconds
+  * @param  Alarm_Match match enum
+  * @param  subSeconds subSeconds in ms
   */
-void STM32RTC::setAlarmEpoch(uint32_t ts, Alarm_Match match)
+void STM32RTC::setAlarmEpoch(uint32_t ts, Alarm_Match match, uint32_t subSeconds)
 {
   if (_configured) {
     if (ts < EPOCH_TIME_OFF) {
@@ -901,6 +921,7 @@ void STM32RTC::setAlarmEpoch(uint32_t ts, Alarm_Match match)
     setAlarmHours(tmp->tm_hour);
     setAlarmMinutes(tmp->tm_min);
     setAlarmSeconds(tmp->tm_sec);
+    setAlarmSubSeconds(subSeconds);
     enableAlarm(match);
   }
 }
@@ -908,8 +929,9 @@ void STM32RTC::setAlarmEpoch(uint32_t ts, Alarm_Match match)
 /**
   * @brief  set RTC time from epoch time
   * @param  epoch time in seconds
+  * @param  subSeconds subSeconds in ms
   */
-void STM32RTC::setEpoch(uint32_t ts)
+void STM32RTC::setEpoch(uint32_t ts, uint32_t subSeconds)
 {
   if (_configured) {
     if (ts < EPOCH_TIME_OFF) {
@@ -930,6 +952,7 @@ void STM32RTC::setEpoch(uint32_t ts)
     _hours = tmp->tm_hour;
     _minutes = tmp->tm_min;
     _seconds = tmp->tm_sec;
+    _subSeconds = subSeconds;
 
     RTC_SetDate(_year, _month, _day, _wday);
     RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
