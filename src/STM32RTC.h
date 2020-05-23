@@ -173,7 +173,6 @@ class STM32RTC {
     uint32_t getY2kEpoch(void);
     void setEpoch(uint32_t ts, uint32_t subSeconds = 0);
     void setY2kEpoch(uint32_t ts);
-    void setAlarmEpoch(uint32_t ts, uint32_t subSeconds = 0);
     void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0);
 
     void getPrediv(int8_t *predivA, int16_t *predivS);
