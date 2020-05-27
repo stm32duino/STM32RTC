@@ -788,7 +788,7 @@ void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uin
     setAlarmHours(hours);
     setAlarmMinutes(minutes);
     setAlarmSeconds(seconds);
-    setAlarmSeconds(subSeconds);
+    setAlarmSubSeconds(subSeconds);
   }
 }
 
@@ -863,10 +863,10 @@ void STM32RTC::setAlarmDate(uint8_t day, uint8_t month, uint8_t year)
 
 /**
   * @brief  get epoch time
-  * @param  subSecondsPtr: Optional pointer to where to store subseconds of the epoch in ms
+  * @param  subSeconds: optional pointer to where to store subseconds of the epoch in ms
   * @retval epoch time in seconds
   */
-uint32_t STM32RTC::getEpoch(uint32_t *subSecondsPtr)
+uint32_t STM32RTC::getEpoch(uint32_t *subSeconds)
 {
   struct tm tm;
 
@@ -886,8 +886,8 @@ uint32_t STM32RTC::getEpoch(uint32_t *subSecondsPtr)
   tm.tm_hour = _hours;
   tm.tm_min = _minutes;
   tm.tm_sec = _seconds;
-  if (subSecondsPtr != nullptr) {
-    *subSecondsPtr = _subSeconds;
+  if (subSeconds != nullptr) {
+    *subSeconds = _subSeconds;
   }
 
   return mktime(&tm);

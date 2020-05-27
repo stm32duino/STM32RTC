@@ -10,7 +10,7 @@ This library is based on the Arduino RTCZero library.
 The library allows to take control of the internal RTC of the STM32 boards.
 
 Singleton design pattern is used to ensure that only one STM32RTC instance is instantiated:
-```
+```C++
 /* Get the rtc object */
 STM32RTC& rtc = STM32RTC::getInstance();
 ```
@@ -58,6 +58,18 @@ _Time and date configuration (added for convenience)_
 * **`void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, AM_PM *period = NULL)`**
 * **`void getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year)`**
 
+### Since STM32RTC version > 1.0.3
+
+  _SubSeconds alarm management_
+
+  * **`void setAlarmSubSeconds(uint32_t subSeconds)`**
+
+  * **Updated API:**
+    * **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0)`**
+    * **`uint32_t getEpoch(uint32_t *subSeconds = nullptr)`**
+    * **`void setEpoch(uint32_t ts, uint32_t subSeconds = 0)`**
+    * **`void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0)`** 
+
 ### Since STM32 Core version > 1.5.0
 _Reset time management_
 By default, if a time is set it will not be reset after a reboot.
@@ -66,7 +78,7 @@ Using `begin(true)` or `begin(true, HOUR_24)` will reset the RTC registers.
 
 To know if a time has already been set use:
 * **`bool isTimeSet(void)`**
-```
+```C++
   if (!rtc.isTimeSet()) {
     // Set the time
     rtc.setHours(hours);

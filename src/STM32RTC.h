@@ -169,7 +169,7 @@ class STM32RTC {
 
     /* Epoch Functions */
 
-    uint32_t getEpoch(uint32_t *subSecondsPtr = nullptr);
+    uint32_t getEpoch(uint32_t *subSeconds = nullptr);
     uint32_t getY2kEpoch(void);
     void setEpoch(uint32_t ts, uint32_t subSeconds = 0);
     void setY2kEpoch(uint32_t ts);
