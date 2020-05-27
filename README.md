@@ -42,10 +42,10 @@ _SubSeconds management_
 * **`void setSubSeconds(uint32_t subSeconds)`**
 
 _Hour format (AM or PM)_
-* **`uint8_t getHours(AM_PM *period)`**
-* **`void setHours(uint8_t hours, AM_PM period)`**
-* **`void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, AM_PM period)`**
-* **`void setAlarmHours(uint8_t hours, AM_PM period)`**
+* **`uint8_t getHours(AM_PM *period = nullptr)`**
+* **`void setHours(uint8_t hours, AM_PM period = AM)`**
+* **`void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 1000, AM_PM period = AM)`**
+* **`void setAlarmHours(uint8_t hours, AM_PM period = AM)`**
 * **`uint8_t getAlarmHours(AM_PM *period)`**
 * **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, AM_PM period)`**
 
@@ -55,23 +55,50 @@ _Week day configuration_
 * **`void setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year)`**
 
 _Time and date configuration (added for convenience)_
-* **`void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, AM_PM *period = NULL)`**
+* **`void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, AM_PM *period = nullptr)`**
 * **`void getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year)`**
 
-### Since STM32RTC version > 1.0.3
+### Since STM32RTC version higher than 1.0.3
 
-  _SubSeconds alarm management_
+_SubSeconds alarm management_
 
   * **`void setAlarmSubSeconds(uint32_t subSeconds)`**
 
   * **Updated API:**
-    * **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0)`**
+    * **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0, AM_PM period = AM)`**
     * **`uint32_t getEpoch(uint32_t *subSeconds = nullptr)`**
     * **`void setEpoch(uint32_t ts, uint32_t subSeconds = 0)`**
     * **`void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0)`** 
 
+_Library version management_
+
+  STM32 RTC library version is based on Semantic Versioning 2.0.0 (https://semver.org/)
+
+  This will ease some dependencies:
+
+    * `STM32_RTC_VERSION_MAJOR` -> major version
+    * `STM32_RTC_VERSION_MINOR` -> minor version
+    * `STM32_RTC_VERSION_PATCH` -> patch version
+    * `STM32_RTC_VERSION_EXTRA` -> Extra label
+     with:
+      - 0: official release
+      - [1-9]: release candidate
+      - F[0-9]: development
+
+    * `STM32_RTC_VERSION` --> Full version number
+
+  `STM32_RTC_VERSION` can de used to handle some API change:
+```C++
+#if defined(STM32_RTC_VERSION) && (STM32_RTC_VERSION  >= 0x01010000)
+  rtc.setAlarmTime(alarmHours, alarmMinutes, alarmSeconds, 123);
+#else
+  rtc.setAlarmTime(alarmHours, alarmMinutes, alarmSeconds);
+#endif
+```
+
 ### Since STM32 Core version > 1.5.0
 _Reset time management_
+
 By default, if a time is set it will not be reset after a reboot.
 
 Using `begin(true)` or `begin(true, HOUR_24)` will reset the RTC registers.

@@ -122,7 +122,7 @@ class STM32RTC {
     void enableAlarm(Alarm_Match match);
     void disableAlarm(void);
 
-    void attachInterrupt(voidFuncPtr callback, void *data = NULL);
+    void attachInterrupt(voidFuncPtr callback, void *data = nullptr);
     void detachInterrupt(void);
 
     // Kept for compatibility: use STM32LowPower library.
@@ -133,8 +133,8 @@ class STM32RTC {
     uint32_t getSubSeconds(void);
     uint8_t getSeconds(void);
     uint8_t getMinutes(void);
-    uint8_t getHours(AM_PM *period = NULL);
-    void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, AM_PM *period = NULL);
+    uint8_t getHours(AM_PM *period = nullptr);
+    void getTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, AM_PM *period = nullptr);
 
     uint8_t getWeekDay(void);
     uint8_t getDay(void);
@@ -145,7 +145,7 @@ class STM32RTC {
     uint32_t getAlarmSubSeconds(void);
     uint8_t getAlarmSeconds(void);
     uint8_t getAlarmMinutes(void);
-    uint8_t getAlarmHours(AM_PM *period = NULL);
+    uint8_t getAlarmHours(AM_PM *period = nullptr);
 
     uint8_t getAlarmDay(void);
 
@@ -158,10 +158,8 @@ class STM32RTC {
     void setSubSeconds(uint32_t subSeconds);
     void setSeconds(uint8_t seconds);
     void setMinutes(uint8_t minutes);
-    void setHours(uint8_t hours);
-    void setHours(uint8_t hours, AM_PM period);
-    void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
-    void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, AM_PM period);
+    void setHours(uint8_t hours, AM_PM period = AM);
+    void setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 1000, AM_PM period = AM);
 
     void setWeekDay(uint8_t weekDay);
     void setDay(uint8_t day);
@@ -173,10 +171,8 @@ class STM32RTC {
     void setAlarmSubSeconds(uint32_t subSeconds);
     void setAlarmSeconds(uint8_t seconds);
     void setAlarmMinutes(uint8_t minutes);
-    void setAlarmHours(uint8_t hours);
-    void setAlarmHours(uint8_t hours, AM_PM period);
-    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0);
-    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, AM_PM period);
+    void setAlarmHours(uint8_t hours, AM_PM period = AM);
+    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0, AM_PM period = AM);
 
     void setAlarmDay(uint8_t day);
 
@@ -221,7 +217,8 @@ class STM32RTC {
     static bool _configured;
     static bool _reset;
 
-    AM_PM   _hoursPeriod;
+    Hour_Format _format;
+    AM_PM       _hoursPeriod;
     uint8_t     _hours;
     uint8_t     _minutes;
     uint8_t     _seconds;
