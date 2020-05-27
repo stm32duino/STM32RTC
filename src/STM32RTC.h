@@ -152,11 +152,12 @@ class STM32RTC {
     void setDate(uint8_t day, uint8_t month, uint8_t year);
     void setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year);
 
+    void setAlarmSubSeconds(uint32_t subSeconds);
     void setAlarmSeconds(uint8_t seconds);
     void setAlarmMinutes(uint8_t minutes);
     void setAlarmHours(uint8_t hours);
     void setAlarmHours(uint8_t hours, AM_PM period);
-    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds);
+    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0);
     void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, AM_PM period);
 
     void setAlarmDay(uint8_t day);
@@ -168,11 +169,11 @@ class STM32RTC {
 
     /* Epoch Functions */
 
-    uint32_t getEpoch(void);
+    uint32_t getEpoch(uint32_t *subSeconds = nullptr);
     uint32_t getY2kEpoch(void);
-    void setEpoch(uint32_t ts);
+    void setEpoch(uint32_t ts, uint32_t subSeconds = 0);
     void setY2kEpoch(uint32_t ts);
-    void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS);
+    void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0);
 
     void getPrediv(int8_t *predivA, int16_t *predivS);
     void setPrediv(int8_t predivA, int16_t predivS);

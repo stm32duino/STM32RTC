@@ -48,6 +48,7 @@ getAlarmMinutes	KEYWORD2
 getAlarmSeconds	KEYWORD2
 getAlarmSubSeconds	KEYWORD2
 
+setAlarmSubSeconds  KEYWORD2
 setAlarmSeconds	KEYWORD2
 setAlarmMinutes	KEYWORD2
 setAlarmHours	KEYWORD2
