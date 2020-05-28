@@ -46,6 +46,24 @@
 #error "RTC configuration is missing. Check flag HAL_RTC_MODULE_ENABLED in variants/board_name/stm32yzxx_hal_conf.h"
 #endif
 
+/**
+ * @brief STM32 RTC library version number
+ */
+#define STM32_RTC_VERSION_MAJOR    (0x01U) /*!< [31:24] major version */
+#define STM32_RTC_VERSION_MINOR    (0x01U) /*!< [23:16] minor version */
+#define STM32_RTC_VERSION_PATCH    (0x00U) /*!< [15:8]  patch version */
+/*
+ * Extra label for development:
+ * 0: official release
+ * [1-9]: release candidate
+ * F[0-9]: development
+ */
+#define STM32_RTC_VERSION_EXTRA    (0x00U) /*!< [7:0]  extra version */
+#define STM32_RTC_VERSION          ((STM32_RTC_VERSION_MAJOR << 24U)\
+                                        |(STM32_RTC_VERSION_MINOR << 16U)\
+                                        |(STM32_RTC_VERSION_PATCH << 8U )\
+                                        |(STM32_RTC_VERSION_EXTRA))
+
 typedef void(*voidFuncPtr)(void *);
 
 #define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::LSI_CLOCK) || ((SRC) == STM32RTC::LSE_CLOCK) ||\
