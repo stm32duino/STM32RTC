@@ -1,15 +1,13 @@
 /**
   ******************************************************************************
   * @file    STM32RTC.h
-  * @author  WI6LABS
-  * @version V1.0.0
-  * @date    12-December-2017
+  * @author  Frederic Pillon
   * @brief   Provides a RTC interface for Arduino
   *
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2020 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -40,10 +38,12 @@
 #define __STM32_RTC_H
 
 #include "Arduino.h"
-
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000)
+  #include "rtc.h"
+#endif
 // Check if RTC HAL enable in variants/board_name/stm32yzxx_hal_conf.h
 #ifndef HAL_RTC_MODULE_ENABLED
-#error "RTC configuration is missing. Check flag HAL_RTC_MODULE_ENABLED in variants/board_name/stm32yzxx_hal_conf.h"
+  #error "RTC configuration is missing. Check flag HAL_RTC_MODULE_ENABLED in variants/board_name/stm32yzxx_hal_conf.h"
 #endif
 
 /**

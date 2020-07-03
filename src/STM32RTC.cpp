@@ -1,15 +1,13 @@
 /**
   ******************************************************************************
   * @file    STM32RTC.cpp
-  * @author  WI6LABS
-  * @version V1.0.0
-  * @date    12-December-2017
+  * @author  Frederic Pillon
   * @brief   Provides a RTC interface for Arduino
   *
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
+  * <h2><center>&copy; COPYRIGHT(c) 2020 STMicroelectronics</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
