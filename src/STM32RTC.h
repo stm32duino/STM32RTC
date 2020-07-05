@@ -38,7 +38,7 @@
 #define __STM32_RTC_H
 
 #include "Arduino.h"
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000)
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01080000)
   #include "rtc.h"
 #endif
 // Check if RTC HAL enable in variants/board_name/stm32yzxx_hal_conf.h

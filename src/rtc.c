@@ -37,7 +37,7 @@
 #include "rtc.h"
 #include <math.h>
 
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000) &&\
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01080000) &&\
     defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
 #if defined(STM32MP1xx)
   /**
