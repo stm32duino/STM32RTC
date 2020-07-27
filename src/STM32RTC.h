@@ -192,6 +192,9 @@ class STM32RTC {
     void getPrediv(int8_t *predivA, int16_t *predivS);
     void setPrediv(int8_t predivA, int16_t predivS);
 
+	void getPrescaler(uint32_t *prescaler);
+	void setPrescaler(uint32_t prescaler);
+
     bool isConfigured(void)
     {
       return _configured;
