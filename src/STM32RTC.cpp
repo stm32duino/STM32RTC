@@ -159,6 +159,16 @@ void STM32RTC::setPrediv(int8_t predivA, int16_t predivS)
   RTC_setPrediv(predivA, predivS);
 }
 
+
+void STM32RTC::getPrescaler(uint32_t *prescaler){
+	RTC_getPrescaler(prescaler);
+}
+
+void STM32RTC::setPrescaler(uint32_t prescaler){
+	RTC_setPrescaler(prescaler);
+}
+
+
 /**
   * @brief enable the RTC alarm.
   * @param match: Alarm_Match configuration
