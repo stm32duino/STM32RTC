@@ -149,6 +149,9 @@ void RTC_SetClockSource(sourceClock_t source);
 void RTC_getPrediv(int8_t *asynch, int16_t *synch);
 void RTC_setPrediv(int8_t asynch, int16_t synch);
 
+void RTC_getPrescaler(uint32_t *prescaler);
+void RTC_setPrescaler(uint32_t prescaler);
+
 void RTC_init(hourFormat_t format, sourceClock_t source, bool reset);
 void RTC_DeInit(void);
 bool RTC_IsTimeSet(void);
