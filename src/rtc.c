@@ -354,8 +354,8 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 
 #if defined(STM32F1xx)
   /* Let HAL calculate the prescaler */
-  RtcHandle.Init.AsynchPrediv = RTC_AUTO_1_SECOND;// eg: 0x8000-1 =32768-1 ;//
-  RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;//RTC_OUTPUTSOURCE_CALIBCLOCK; RTC_OUTPUTSOURCE_NONE; RTC_OUTPUTSOURCE_ALARM; RTC_OUTPUTSOURCE_SECOND
+  RtcHandle.Init.AsynchPrediv = RTC_AUTO_1_SECOND;// eg: 0x8000-1 =32768-1
+  RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;/* RTC_OUTPUTSOURCE_CALIBCLOCK; RTC_OUTPUTSOURCE_NONE; RTC_OUTPUTSOURCE_ALARM; RTC_OUTPUTSOURCE_SECOND */
   UNUSED(format);
 #else
   if (format == HOUR_FORMAT_12) {
