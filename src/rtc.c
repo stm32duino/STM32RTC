@@ -251,12 +251,12 @@ void RTC_getPrediv(int8_t *asynch, int16_t *synch)
 void RTC_setPrescaler(uint32_t prescaler)
 {
 #if defined(STM32F1xx)
-/*     
-    if(prescaler==RTC_AUTO_1_SECOND) prescaler = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_RTC); // Automatically calculate for 1Sec
-	SET_BIT((RtcHandle).Instance->CRL, RTC_CRL_CNF);//__HAL_RTC_WRITEPROTECTION_DISABLE(RtcHandle);
-    MODIFY_REG(RtcHandle.Instance->PRLH, RTC_PRLH_PRL, (prescaler >> 16U));
-    MODIFY_REG(RtcHandle.Instance->PRLL, RTC_PRLL_PRL, (prescaler & RTC_PRLL_PRL));
-	CLEAR_BIT((RtcHandle).Instance->CRL, RTC_CRL_CNF);//__HAL_RTC_WRITEPROTECTION_ENABLE(RtcHandle); */
+   
+  //   if(prescaler==RTC_AUTO_1_SECOND) prescaler = HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_RTC); // Automatically calculate for 1Sec
+  //   SET_BIT((RtcHandle).Instance->CRL, RTC_CRL_CNF);//__HAL_RTC_WRITEPROTECTION_DISABLE(RtcHandle);
+  //   MODIFY_REG(RtcHandle.Instance->PRLH, RTC_PRLH_PRL, (prescaler >> 16U));
+  //   MODIFY_REG(RtcHandle.Instance->PRLL, RTC_PRLL_PRL, (prescaler & RTC_PRLL_PRL));
+  //   CLEAR_BIT((RtcHandle).Instance->CRL, RTC_CRL_CNF);//__HAL_RTC_WRITEPROTECTION_ENABLE(RtcHandle); 
 	
 	RtcHandle.Init.AsynchPrediv = prescaler;
   	HAL_RTC_Init(&RtcHandle);
@@ -270,7 +270,7 @@ void RTC_setPrescaler(uint32_t prescaler)
 void RTC_getPrescaler(uint32_t *prescaler)
 {
 #if defined(STM32F1xx)
-    //*prescaler = (((uint32_t) RtcHandle.Instance->PRLH << 16U) | READ_REG(RtcHandle.Instance->PRLL & RTC_PRLL_PRL));
+    // *prescaler = (((uint32_t) RtcHandle.Instance->PRLH << 16U) | READ_REG(RtcHandle.Instance->PRLL & RTC_PRLL_PRL));
     *prescaler = RtcHandle.Init.AsynchPrediv;
 #else
   UNUSED(asynch);
@@ -355,7 +355,7 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #if defined(STM32F1xx)
   /* Let HAL calculate the prescaler */
   RtcHandle.Init.AsynchPrediv = RTC_AUTO_1_SECOND;// eg: 0x8000-1 =32768-1
-  RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;/* RTC_OUTPUTSOURCE_CALIBCLOCK; RTC_OUTPUTSOURCE_NONE; RTC_OUTPUTSOURCE_ALARM; RTC_OUTPUTSOURCE_SECOND */
+  RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE; /* RTC_OUTPUTSOURCE_CALIBCLOCK; RTC_OUTPUTSOURCE_NONE; RTC_OUTPUTSOURCE_ALARM; RTC_OUTPUTSOURCE_SECOND */
   UNUSED(format);
 #else
   if (format == HOUR_FORMAT_12) {
