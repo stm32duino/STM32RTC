@@ -64,32 +64,10 @@ void setup()
 void loop()
 {
   // Print date...
-  print2digits(rtc.getDay());
-  Serial.print("/");
-  print2digits(rtc.getMonth());
-  Serial.print("/");
-  print2digits(rtc.getYear());
-  Serial.print(" ");
+  Serial.printf("%02d/%02d/%02d ", rtc.getDay(), rtc.getMonth(), rtc.getYear());
 
   // ...and time
-  print2digits(rtc.getHours());
-  Serial.print(":");
-  print2digits(rtc.getMinutes());
-  Serial.print(":");
-  print2digits(rtc.getSeconds());
-  Serial.print(".");
-  print2digits(rtc.getSubSeconds());
-  Serial.println();
+  Serial.printf("%02d:%02d:%02d.%03d\n", rtc.getHours(), rtc.getMinutes(), rtc.getSeconds(), rtc.getSubSeconds());
 
   delay(1000);
-}
-
-void print2digits(int number) {
-  if (number < 100) {
-    Serial.print("0");
-  }
-  if (number < 10) {
-    Serial.print("0");
-  }
-  Serial.print(number);
 }
