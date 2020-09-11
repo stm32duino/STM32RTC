@@ -35,7 +35,6 @@
   */
 
 #include "rtc.h"
-#include <math.h>
 
 #if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000) &&\
     defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
@@ -76,6 +75,11 @@ static void RTC_initClock(sourceClock_t source);
 #if !defined(STM32F1xx)
 static void RTC_computePrediv(int8_t *asynch, int16_t *synch);
 #endif /* !STM32F1xx */
+
+static inline int _log2(int x)
+{
+  return (x > 0) ? (sizeof(int) * 8 - __builtin_clz(x) - 1) : 0;
+}
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -217,7 +221,7 @@ void RTC_setPrediv(int8_t asynch, int16_t synch)
   } else {
     RTC_computePrediv(&predivAsync, &predivSync);
   }
-  predivSync_bits = (uint8_t)log2(predivSync) + 1;
+  predivSync_bits = (uint8_t)_log2(predivSync) + 1;
 #else
   UNUSED(asynch);
   UNUSED(synch);
@@ -241,7 +245,7 @@ void RTC_getPrediv(int8_t *asynch, int16_t *synch)
     *asynch = predivAsync;
     *synch = predivSync;
   }
-  predivSync_bits = (uint8_t)log2(predivSync) + 1;
+  predivSync_bits = (uint8_t)_log2(predivSync) + 1;
 #else
   UNUSED(asynch);
   UNUSED(synch);
