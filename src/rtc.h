@@ -165,6 +165,10 @@ void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *secon
 void attachAlarmCallback(voidCallbackPtr func, void *data);
 void detachAlarmCallback(void);
 
+#if defined(STM32F1xx)
+void RTC_StoreDate(void);
+#endif
+
 #ifdef __cplusplus
 }
 #endif
