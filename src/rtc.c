@@ -516,7 +516,9 @@ void RTC_SetDate(uint8_t year, uint8_t month, uint8_t day, uint8_t wday)
     RTC_DateStruct.WeekDay = wday;
     HAL_RTC_SetDate(&RtcHandle, &RTC_DateStruct, RTC_FORMAT_BIN);
     setBackupRegister(RTC_BKP_INDEX, RTC_BKP_VALUE);
+#if defined(STM32F1xx)
     RTC_StoreDate();
+#endif
   }
 }
 
