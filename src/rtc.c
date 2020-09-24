@@ -363,9 +363,13 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
     RtcHandle.DateToUpdate.Year  = BackupDate.Year;
     RtcHandle.DateToUpdate.Month = BackupDate.Month;
     RtcHandle.DateToUpdate.Date  = BackupDate.Date;
-
     /* Read the time so that the date is rolled over if required */
     HAL_RTC_GetTime(&RtcHandle, &DummyTime, RTC_FORMAT_BIN);
+    /* Store the date or it will revert again if we lose power before manually updating. */
+    if (BackupDate.Date != RtcHandle.DateToUpdate.Date)
+    {
+      RTC_StoreDate();
+    }
   }
 #endif
 
