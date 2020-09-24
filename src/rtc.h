@@ -165,6 +165,9 @@ void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *secon
 void attachAlarmCallback(voidCallbackPtr func, void *data);
 void detachAlarmCallback(void);
 
+void attachSecondsIrqCallback(voidCallbackPtr func);
+void detachSecondsIrqCallback();
+
 #ifdef __cplusplus
 }
 #endif

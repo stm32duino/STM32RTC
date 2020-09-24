@@ -220,6 +220,26 @@ void STM32RTC::detachInterrupt(void)
   detachAlarmCallback();
 }
 
+
+/**
+  * @brief attach a callback to the RTC Seconds interrupt.
+  * @param callback: pointer to the callback
+  * @retval None
+  */
+void STM32RTC::attachSecondsInterrupt(voidFuncPtr callback)
+{
+  attachSecondsIrqCallback(callback);
+}
+
+/**
+  * @brief detach the RTC Seconds callback.
+  * @retval None
+  */
+void STM32RTC::detachSecondsInterrupt(void)
+{
+  detachSecondsIrqCallback();
+}
+
 // Kept for compatibility. Use STM32LowPower library.
 void STM32RTC::standbyMode(void)
 {

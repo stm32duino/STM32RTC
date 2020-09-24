@@ -58,6 +58,7 @@ extern "C" {
 static RTC_HandleTypeDef RtcHandle = {0};
 static voidCallbackPtr RTCUserCallback = NULL;
 static void *callbackUserData = NULL;
+static voidCallbackPtr RTCSecondsIrqCallback = NULL;
 
 static sourceClock_t clkSrc = LSI_CLOCK;
 static uint8_t HSEDiv = 0;
@@ -368,6 +369,7 @@ void RTC_DeInit(void)
   HAL_RTC_DeInit(&RtcHandle);
   RTCUserCallback = NULL;
   callbackUserData = NULL;
+  RTCSecondsIrqCallback = NULL;
 }
 
 /**
@@ -709,6 +711,53 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 void RTC_Alarm_IRQHandler(void)
 {
   HAL_RTC_AlarmIRQHandler(&RtcHandle);
+}
+
+/**
+  * @brief Attach Seconds interrupt callback.
+  * @param func: pointer to the callback
+  * @retval None
+  */
+void attachSecondsIrqCallback(voidCallbackPtr func)
+{
+  RTCSecondsIrqCallback = func;
+  HAL_RTCEx_SetSecond_IT(&RtcHandle);
+  HAL_NVIC_EnableIRQ(RTC_IRQn);
+}
+
+/**
+  * @brief Detach Seconds interrupt callback.
+  * @param None
+  * @retval None
+  */
+void detachSecondsIrqCallback(void)
+{
+  HAL_RTCEx_DeactivateSecond(&RtcHandle);
+  RTCSecondsIrqCallback = NULL;
+}
+
+/**
+  * @brief  Seconds interrupt callback.
+  * @param  hrtc RTC handle
+  * @retval None
+  */
+void HAL_RTCEx_RTCEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  UNUSED(hrtc);
+
+  if (RTCSecondsIrqCallback != NULL) {
+    RTCSecondsIrqCallback(NULL);
+  }
+}
+
+/**
+  * @brief  This function handles RTC Seconds interrupt request.
+  * @param  None
+  * @retval None
+  */
+void RTC_IRQHandler(void)
+{
+  HAL_RTCEx_RTCIRQHandler(&RtcHandle);
 }
 
 #ifdef __cplusplus
