@@ -125,7 +125,7 @@ class STM32RTC {
     void attachInterrupt(voidFuncPtr callback, void *data = nullptr);
     void detachInterrupt(void);
 
-#if defined(STM32F1xx)
+#if defined(STM32F1xx) && defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000)
     void attachSecondsInterrupt(voidFuncPtr callback);
     void detachSecondsInterrupt(void);
 #endif

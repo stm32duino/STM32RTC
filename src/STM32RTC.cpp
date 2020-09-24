@@ -220,7 +220,7 @@ void STM32RTC::detachInterrupt(void)
   detachAlarmCallback();
 }
 
-#if defined(STM32F1xx)
+#if defined(STM32F1xx) && defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000)
 /**
   * @brief attach a callback to the RTC Seconds interrupt.
   * @param callback: pointer to the callback
