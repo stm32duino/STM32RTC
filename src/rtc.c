@@ -713,6 +713,7 @@ void RTC_Alarm_IRQHandler(void)
   HAL_RTC_AlarmIRQHandler(&RtcHandle);
 }
 
+#if defined(STM32F1xx)
 /**
   * @brief Attach Seconds interrupt callback.
   * @param func: pointer to the callback
@@ -759,6 +760,7 @@ void RTC_IRQHandler(void)
 {
   HAL_RTCEx_RTCIRQHandler(&RtcHandle);
 }
+#endif
 
 #ifdef __cplusplus
 }

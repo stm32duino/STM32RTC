@@ -124,9 +124,11 @@ class STM32RTC {
 
     void attachInterrupt(voidFuncPtr callback, void *data = nullptr);
     void detachInterrupt(void);
-    
+
+#if defined(STM32F1xx)
     void attachSecondsInterrupt(voidFuncPtr callback);
     void detachSecondsInterrupt(void);
+#endif
 
     // Kept for compatibility: use STM32LowPower library.
     void standbyMode();
