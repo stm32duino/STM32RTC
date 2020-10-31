@@ -729,28 +729,26 @@ void attachSecondsIrqCallback(voidCallbackPtr func)
   /* All other variants don't have a Seconds interrupt, we will make use of the Periodic Wake Up Timer */
   /* Disable writeprotection so we can setup the periodic wakeup timer */
   //__HAL_RTC_WRITEPROTECTION_DISABLE(&RtcHandle);
-  LL_RTC_DisableWriteProtection(RTC);
-#endif /* USE_TIMEOUT */
-  }
-  
+  //LL_RTC_DisableWriteProtection(RTC);
+
   /* Setting the Wakeup time to 1 s
        If LL_RTC_WAKEUPCLOCK_CKSPRE is selected, the frequency is 1Hz, 
        this allows to get a wakeup time equal to 1 s if the counter is 0x0 */
-  LL_RTC_WAKEUP_SetAutoReload(RTC, 0);
-  LL_RTC_WAKEUP_SetClock(RTC, LL_RTC_WAKEUPCLOCK_CKSPRE);
+  //LL_RTC_WAKEUP_SetAutoReload(RTC, 0);
+  //LL_RTC_WAKEUP_SetClock(RTC, LL_RTC_WAKEUPCLOCK_CKSPRE);
   
   /* Enable wake up counter and wake up interrupt */
-  LL_RTC_WAKEUP_Enable(RTC);
-  LL_RTC_EnableIT_WUT(RTC);
-  LL_RTC_ClearFlag_WUT(RTC);
+  //LL_RTC_WAKEUP_Enable(RTC);
+  //LL_RTC_EnableIT_WUT(RTC);
+  //LL_RTC_ClearFlag_WUT(RTC);
   
   /* Enable RTC registers write protection */
-  LL_RTC_EnableWriteProtection(RTC);
+  //LL_RTC_EnableWriteProtection(RTC);
  /* LSI_CLOCK,
   HSI_CLOCK,
   LSE_CLOCK,
   HSE_CLOCK*/
-#endif
+#endif /* USE_TIMEOUT */
 }
 
 /**
