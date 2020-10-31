@@ -713,7 +713,6 @@ void RTC_Alarm_IRQHandler(void)
   HAL_RTC_AlarmIRQHandler(&RtcHandle);
 }
 
-#if defined(STM32F1xx)
 /**
   * @brief Attach Seconds interrupt callback.
   * @param func: pointer to the callback
@@ -722,8 +721,36 @@ void RTC_Alarm_IRQHandler(void)
 void attachSecondsIrqCallback(voidCallbackPtr func)
 {
   RTCSecondsIrqCallback = func;
+#if defined(STM32F1xx)
+  /* The STM32F1xx series has a built in seconds interrupt so we can just enable that */
   HAL_RTCEx_SetSecond_IT(&RtcHandle);
   HAL_NVIC_EnableIRQ(RTC_IRQn);
+#else
+  /* All other variants don't have a Seconds interrupt, we will make use of the Periodic Wake Up Timer */
+  /* Disable writeprotection so we can setup the periodic wakeup timer */
+  //__HAL_RTC_WRITEPROTECTION_DISABLE(&RtcHandle);
+  LL_RTC_DisableWriteProtection(RTC);
+#endif /* USE_TIMEOUT */
+  }
+  
+  /* Setting the Wakeup time to 1 s
+       If LL_RTC_WAKEUPCLOCK_CKSPRE is selected, the frequency is 1Hz, 
+       this allows to get a wakeup time equal to 1 s if the counter is 0x0 */
+  LL_RTC_WAKEUP_SetAutoReload(RTC, 0);
+  LL_RTC_WAKEUP_SetClock(RTC, LL_RTC_WAKEUPCLOCK_CKSPRE);
+  
+  /* Enable wake up counter and wake up interrupt */
+  LL_RTC_WAKEUP_Enable(RTC);
+  LL_RTC_EnableIT_WUT(RTC);
+  LL_RTC_ClearFlag_WUT(RTC);
+  
+  /* Enable RTC registers write protection */
+  LL_RTC_EnableWriteProtection(RTC);
+ /* LSI_CLOCK,
+  HSI_CLOCK,
+  LSE_CLOCK,
+  HSE_CLOCK*/
+#endif
 }
 
 /**
@@ -733,10 +760,15 @@ void attachSecondsIrqCallback(voidCallbackPtr func)
   */
 void detachSecondsIrqCallback(void)
 {
+#if defined(STM32F1xx)
   HAL_RTCEx_DeactivateSecond(&RtcHandle);
+#else
+
+#endif
   RTCSecondsIrqCallback = NULL;
 }
 
+#if defined(STM32F1xx)
 /**
   * @brief  Seconds interrupt callback.
   * @param  hrtc RTC handle
@@ -759,6 +791,20 @@ void HAL_RTCEx_RTCEventCallback(RTC_HandleTypeDef *hrtc)
 void RTC_IRQHandler(void)
 {
   HAL_RTCEx_RTCIRQHandler(&RtcHandle);
+}
+#else
+/**
+  * @brief  Periodic wakeup timer callback.
+  * @param  htim Timer handle
+  * @retval None
+ */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+{
+  UNUSED(htim);
+
+  if (RTCSecondsIrqCallback != NULL) {
+    RTCSecondsIrqCallback(NULL);
+  }
 }
 #endif
 
