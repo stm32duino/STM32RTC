@@ -139,7 +139,8 @@ static void RTC_initClock(sourceClock_t source)
     PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_HSE_DIV128;
     HSEDiv = 128;
 #elif defined(STM32F0xx) || defined(STM32F3xx) || defined(STM32G0xx) ||\
-      defined(STM32G4xx) || defined(STM32L4xx) || defined(STM32WBxx)
+      defined(STM32G4xx) || defined(STM32L4xx) || defined(STM32L5xx) ||\
+      defined(STM32WBxx)
     PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_HSE_DIV32;
     HSEDiv = 32;
 #elif defined(STM32L0xx) || defined(STM32L1xx)
@@ -339,9 +340,9 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
   }
   RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
   RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
-#if defined(STM32G0xx) || defined(STM32H7xx) || defined(STM32L0xx) || defined(STM32L4xx)
+#if defined(STM32G0xx) || defined(STM32H7xx) || defined(STM32L0xx) || defined(STM32L4xx) || defined(STM32L5xx)
   RtcHandle.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
-#endif /* STM32H7xx || STM32L0xx || STM32L4xx */
+#endif /* STM32H7xx || STM32L0xx || STM32L4xx || STM32L5xx */
   RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
   RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
 #endif /* STM32F1xx */

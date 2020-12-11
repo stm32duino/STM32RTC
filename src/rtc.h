@@ -107,7 +107,7 @@ typedef void(*voidCallbackPtr)(void *);
 #define STM32L1_ULPH
 #endif
 
-#if defined(STM32F0xx) || defined(STM32L0xx)
+#if defined(STM32F0xx) || defined(STM32L0xx) || defined(STM32L5xx)
 #define RTC_Alarm_IRQn RTC_IRQn
 #define RTC_Alarm_IRQHandler RTC_IRQHandler
 #endif
