@@ -794,7 +794,7 @@ void RTC_IRQHandler(void)
   * @param  htim Timer handle
   * @retval None
  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef* htim)
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   UNUSED(htim);
 
