@@ -740,7 +740,6 @@ void attachSecondsIrqCallback(voidCallbackPtr func)
   //LL_RTC_WAKEUP_Enable(RTC);
   //LL_RTC_EnableIT_WUT(RTC);
   //LL_RTC_ClearFlag_WUT(RTC);
-  
   /* Enable RTC registers write protection */
   //LL_RTC_EnableWriteProtection(RTC);
  /* LSI_CLOCK,
