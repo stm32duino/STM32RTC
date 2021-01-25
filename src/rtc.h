@@ -86,8 +86,6 @@ typedef void(*voidCallbackPtr)(void *);
 #endif
 
 
-
-
 #define HSE_RTC_MAX 1000000U
 
 #if !defined(STM32F1xx)
