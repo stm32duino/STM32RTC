@@ -736,7 +736,6 @@ void attachSecondsIrqCallback(voidCallbackPtr func)
        this allows to get a wakeup time equal to 1 s if the counter is 0x0 */
   //LL_RTC_WAKEUP_SetAutoReload(RTC, 0);
   //LL_RTC_WAKEUP_SetClock(RTC, LL_RTC_WAKEUPCLOCK_CKSPRE);
-  
   /* Enable wake up counter and wake up interrupt */
   //LL_RTC_WAKEUP_Enable(RTC);
   //LL_RTC_EnableIT_WUT(RTC);
