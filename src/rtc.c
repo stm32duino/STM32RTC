@@ -355,7 +355,7 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
   RTC_DateTypeDef BackupDate;
   RTC_TimeTypeDef DummyTime;
   uint32_t dateMem;
-  dateMem = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_SAVE_THE_DATE+1);
+  dateMem = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_SAVE_THE_DATE + 1);
   dateMem |= HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_SAVE_THE_DATE) << 16;
   memcpy(&BackupDate, &dateMem, sizeof(uint32_t));
   if (IS_RTC_YEAR(BackupDate.Year) && IS_RTC_MONTH(BackupDate.Month) && IS_RTC_DATE(BackupDate.Date)) {
@@ -757,7 +757,7 @@ void RTC_StoreDate(void)
   uint32_t dateToStore;
   memcpy(&dateToStore, &RtcHandle.DateToUpdate, 4);
   HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_SAVE_THE_DATE, dateToStore >> 16);
-  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_SAVE_THE_DATE+1, dateToStore & 0xffff);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_SAVE_THE_DATE + 1, dateToStore & 0xffff);
 }
 #endif
 
