@@ -37,6 +37,8 @@
 #ifndef __RTC_H
 #define __RTC_H
 
+#define RTC_BKP_SAVE_THE_DATE RTC_BKP_DR3
+
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 #include "stm32_def.h"
