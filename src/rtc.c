@@ -363,7 +363,7 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
     RtcHandle.DateToUpdate.Year  = BackupDate.Year;
     RtcHandle.DateToUpdate.Month = BackupDate.Month;
     RtcHandle.DateToUpdate.Date  = BackupDate.Date;
-    // Check for valid weekday separately so that if there is a problem we have still atleast set the date
+    // Check for valid weekday separately so that if there is a problem we have still at least set the date
     if (IS_RTC_WEEKDAY(BackupDate.WeekDay)) {
       RtcHandle.DateToUpdate.WeekDay = BackupDate.WeekDay;
     }
