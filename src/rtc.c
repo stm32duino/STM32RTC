@@ -33,8 +33,8 @@
   *
   ******************************************************************************
   */
-
 #include "rtc.h"
+#include <string.h>
 
 #if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000) &&\
     defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
@@ -347,7 +347,36 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
   RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
 #endif /* STM32F1xx */
 
+  /* Ensure backup domain is enabled before we init the RTC so we can use the backup registers for date retention on stm32f1xx baords */
+  enableBackupDomain();
+
   HAL_RTC_Init(&RtcHandle);
+
+#if defined(STM32F1xx)
+  // Copy date data back out of the BackUp registers
+  RTC_DateTypeDef BackupDate;
+  RTC_TimeTypeDef DummyTime;
+  uint32_t dateMem;
+  dateMem = HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_SAVE_THE_DATE + 1);
+  dateMem |= HAL_RTCEx_BKUPRead(&RtcHandle, RTC_BKP_SAVE_THE_DATE) << 16;
+  memcpy(&BackupDate, &dateMem, sizeof(uint32_t));
+  if (IS_RTC_YEAR(BackupDate.Year) && IS_RTC_MONTH(BackupDate.Month) && IS_RTC_DATE(BackupDate.Date)) {
+    /* Change the date retrieved from the backup registers */
+    RtcHandle.DateToUpdate.Year  = BackupDate.Year;
+    RtcHandle.DateToUpdate.Month = BackupDate.Month;
+    RtcHandle.DateToUpdate.Date  = BackupDate.Date;
+    // Check for valid weekday separately so that if there is a problem we have still at least set the date
+    if (IS_RTC_WEEKDAY(BackupDate.WeekDay)) {
+      RtcHandle.DateToUpdate.WeekDay = BackupDate.WeekDay;
+    }
+    /* Read the time so that the date is rolled over if required */
+    HAL_RTC_GetTime(&RtcHandle, &DummyTime, RTC_FORMAT_BIN);
+    /* Store the date or it will revert again if we lose power before manually updating. */
+    if (BackupDate.Date != RtcHandle.DateToUpdate.Date) {
+      RTC_StoreDate();
+    }
+  }
+#endif
 
 #if !defined(STM32F1xx) && !defined(STM32F2xx) && !defined(STM32L1xx) || defined(STM32L1_ULPH)
   /* Enable Direct Read of the calendar registers (not through Shadow) */
@@ -356,8 +385,7 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 
   HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
   HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
-  /* Ensure backup domain is enabled */
-  enableBackupDomain();
+
 }
 
 /**
@@ -439,6 +467,12 @@ void RTC_GetTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *s
   RTC_TimeTypeDef RTC_TimeStruct;
 
   if ((hours != NULL) && (minutes != NULL) && (seconds != NULL)) {
+#if defined(STM32F1xx)
+    /* Store the date prior to checking the time, this may roll over to the next day as part of the time check,
+       we need to the new date details in the backuip registers if it changes */
+    uint8_t current_date = RtcHandle.DateToUpdate.Date;
+#endif
+
     HAL_RTC_GetTime(&RtcHandle, &RTC_TimeStruct, RTC_FORMAT_BIN);
     *hours = RTC_TimeStruct.Hours;
     *minutes = RTC_TimeStruct.Minutes;
@@ -462,6 +496,13 @@ void RTC_GetTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *s
     UNUSED(period);
     UNUSED(subSeconds);
 #endif /* !STM32F1xx */
+
+#if defined(STM32F1xx)
+    if (current_date != RtcHandle.DateToUpdate.Date) {
+      RTC_StoreDate();
+    }
+#endif
+
   }
 }
 
@@ -484,6 +525,9 @@ void RTC_SetDate(uint8_t year, uint8_t month, uint8_t day, uint8_t wday)
     RTC_DateStruct.WeekDay = wday;
     HAL_RTC_SetDate(&RtcHandle, &RTC_DateStruct, RTC_FORMAT_BIN);
     setBackupRegister(RTC_BKP_INDEX, RTC_BKP_VALUE);
+#if defined(STM32F1xx)
+    RTC_StoreDate();
+#endif
   }
 }
 
@@ -711,6 +755,17 @@ void RTC_Alarm_IRQHandler(void)
 {
   HAL_RTC_AlarmIRQHandler(&RtcHandle);
 }
+
+#if defined(STM32F1xx)
+void RTC_StoreDate(void)
+{
+  /* Store the date in the backup registers */
+  uint32_t dateToStore;
+  memcpy(&dateToStore, &RtcHandle.DateToUpdate, 4);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_SAVE_THE_DATE, dateToStore >> 16);
+  HAL_RTCEx_BKUPWrite(&RtcHandle, RTC_BKP_SAVE_THE_DATE + 1, dateToStore & 0xffff);
+}
+#endif
 
 #ifdef __cplusplus
 }

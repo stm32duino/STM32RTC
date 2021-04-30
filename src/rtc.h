@@ -37,6 +37,8 @@
 #ifndef __RTC_H
 #define __RTC_H
 
+#define RTC_BKP_SAVE_THE_DATE RTC_BKP_DR2
+
 /* Includes ------------------------------------------------------------------*/
 #include <stdbool.h>
 #include "stm32_def.h"
@@ -164,6 +166,10 @@ void RTC_StopAlarm(void);
 void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
 void attachAlarmCallback(voidCallbackPtr func, void *data);
 void detachAlarmCallback(void);
+
+#if defined(STM32F1xx)
+void RTC_StoreDate(void);
+#endif
 
 #ifdef __cplusplus
 }
