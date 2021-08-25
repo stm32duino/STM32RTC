@@ -96,7 +96,8 @@ typedef void(*voidCallbackPtr)(void *);
 #define PREDIVS_MAX (RTC_PRER_PREDIV_S >> RTC_PRER_PREDIV_S_Pos)
 #endif /* !STM32F1xx */
 
-#if defined(STM32F0xx) || defined(STM32L0xx) || defined(STM32L5xx)
+#if defined(STM32F0xx) || defined(STM32L0xx) || \
+    defined(STM32L5xx) || defined(STM32U5xx)
 #define RTC_Alarm_IRQn RTC_IRQn
 #define RTC_Alarm_IRQHandler RTC_IRQHandler
 #endif
