@@ -915,6 +915,9 @@ void STM32RTC::setY2kEpoch(uint32_t ts)
 void STM32RTC::configForLowPower(Source_Clock source)
 {
 #if defined(HAL_PWR_MODULE_ENABLED)
+#ifdef __HAL_RCC_RTCAPB_CLKAM_ENABLE
+  __HAL_RCC_RTCAPB_CLKAM_ENABLE();
+#endif
   if (!_configured) {
     _clockSource = source;
     // Enable RTC
