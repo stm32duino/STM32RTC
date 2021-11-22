@@ -189,9 +189,13 @@ class STM32RTC {
     void setY2kEpoch(uint32_t ts);
     void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0);
 
+#if defined(STM32F1xx)
+    void getPrediv(uint32_t *predivA, int16_t *dummy = nullptr);
+    void setPrediv(uint32_t predivA, int16_t dummy = 0);
+#else
     void getPrediv(int8_t *predivA, int16_t *predivS);
     void setPrediv(int8_t predivA, int16_t predivS);
-
+#endif /* STM32F1xx */
     bool isConfigured(void)
     {
       return _configured;
