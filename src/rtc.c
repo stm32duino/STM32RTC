@@ -66,6 +66,8 @@ static uint8_t HSEDiv = 0;
 static uint8_t predivSync_bits = 0xFF;
 static int8_t predivAsync = -1;
 static int16_t predivSync = -1;
+#else
+static uint32_t prediv = RTC_AUTO_1_SECOND;
 #endif /* !STM32F1xx */
 
 static hourFormat_t initFormat = HOUR_FORMAT_12;
@@ -203,6 +205,20 @@ static void RTC_initClock(sourceClock_t source)
   __HAL_RCC_RTC_ENABLE();
 }
 
+#if defined(STM32F1xx)
+/**
+  * @brief set user asynchronous prescaler value.
+  * @note  use RTC_AUTO_1_SECOND to reset value
+  * @param asynch: asynchronous prescaler value in range 0 - PREDIVA_MAX
+  * @retval None
+  */
+void RTC_setPrediv(uint32_t asynch)
+{
+  /* set the prescaler for a stm32F1 (value is hold by one param) */
+  prediv = asynch;
+  LL_RTC_SetAsynchPrescaler(RTC, asynch);
+}
+#else
 /**
   * @brief set user (a)synchronous prescaler values.
   * @note  use -1 to reset value and use computed ones
@@ -212,7 +228,6 @@ static void RTC_initClock(sourceClock_t source)
   */
 void RTC_setPrediv(int8_t asynch, int16_t synch)
 {
-#if !defined(STM32F1xx)
   if ((asynch >= -1) && ((uint32_t)asynch <= PREDIVA_MAX) && \
       (synch >= -1) && ((uint32_t)synch <= PREDIVS_MAX)) {
     predivAsync = asynch;
@@ -221,12 +236,22 @@ void RTC_setPrediv(int8_t asynch, int16_t synch)
     RTC_computePrediv(&predivAsync, &predivSync);
   }
   predivSync_bits = (uint8_t)_log2(predivSync) + 1;
-#else
-  UNUSED(asynch);
-  UNUSED(synch);
-#endif /* !STM32F1xx */
 }
+#endif /* STM32F1xx */
 
+#if defined(STM32F1xx)
+/**
+  * @brief get user asynchronous prescaler value for the current clock source.
+  * @param asynch: pointer where return asynchronous prescaler value.
+  * @retval None
+  */
+void RTC_getPrediv(uint32_t *asynch)
+{
+  /* get the prescaler for a stm32F1 (value is hold by one param) */
+  prediv = LL_RTC_GetDivider(RTC);
+  *asynch = prediv;
+}
+#else
 /**
   * @brief get user (a)synchronous prescaler values if set else computed ones
   *        for the current clock source.
@@ -236,7 +261,6 @@ void RTC_setPrediv(int8_t asynch, int16_t synch)
   */
 void RTC_getPrediv(int8_t *asynch, int16_t *synch)
 {
-#if !defined(STM32F1xx)
   if ((predivAsync == -1) || (predivSync == -1)) {
     RTC_computePrediv(&predivAsync, &predivSync);
   }
@@ -245,11 +269,8 @@ void RTC_getPrediv(int8_t *asynch, int16_t *synch)
     *synch = predivSync;
   }
   predivSync_bits = (uint8_t)_log2(predivSync) + 1;
-#else
-  UNUSED(asynch);
-  UNUSED(synch);
-#endif /* !STM32F1xx */
 }
+#endif /* STM32F1xx */
 
 #if !defined(STM32F1xx)
 /**

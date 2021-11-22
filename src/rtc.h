@@ -94,6 +94,9 @@ typedef void(*voidCallbackPtr)(void *);
 #endif
 #define PREDIVA_MAX (RTC_PRER_PREDIV_A >> RTC_PRER_PREDIV_A_Pos)
 #define PREDIVS_MAX (RTC_PRER_PREDIV_S >> RTC_PRER_PREDIV_S_Pos)
+#else
+/* for stm32F1 the MAX value is combining PREDIV low & high registers */
+#define PREDIVA_MAX 0xFFFFFU
 #endif /* !STM32F1xx */
 
 #if defined(STM32F0xx) || defined(STM32L0xx) || \
@@ -135,9 +138,13 @@ static uint32_t RTC_getSource(void) {
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void RTC_SetClockSource(sourceClock_t source);
-
+#if defined(STM32F1xx)
+void RTC_getPrediv(uint32_t *asynch);
+void RTC_setPrediv(uint32_t asynch);
+#else
 void RTC_getPrediv(int8_t *asynch, int16_t *synch);
 void RTC_setPrediv(int8_t asynch, int16_t synch);
+#endif /* STM32F1xx */
 
 void RTC_init(hourFormat_t format, sourceClock_t source, bool reset);
 void RTC_DeInit(void);
