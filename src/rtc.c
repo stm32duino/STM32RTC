@@ -58,6 +58,7 @@ extern "C" {
 static RTC_HandleTypeDef RtcHandle = {0};
 static voidCallbackPtr RTCUserCallback = NULL;
 static void *callbackUserData = NULL;
+static voidCallbackPtr RTCSecondsIrqCallback = NULL;
 
 static sourceClock_t clkSrc = LSI_CLOCK;
 static uint8_t HSEDiv = 0;
@@ -388,6 +389,7 @@ void RTC_DeInit(void)
   HAL_RTC_DeInit(&RtcHandle);
   RTCUserCallback = NULL;
   callbackUserData = NULL;
+  RTCSecondsIrqCallback = NULL;
 }
 
 /**
@@ -730,6 +732,107 @@ void RTC_Alarm_IRQHandler(void)
 {
   HAL_RTC_AlarmIRQHandler(&RtcHandle);
 }
+
+#ifdef ONESECOND_IRQn
+/**
+  * @brief Attach Seconds interrupt callback.
+  * @note  stm32F1 has a second interrupt capability
+  *        other MCUs map this on their WakeUp feature
+  * @param func: pointer to the callback
+  * @retval None
+  */
+void attachSecondsIrqCallback(voidCallbackPtr func)
+{
+#if defined(STM32F1xx)
+  /* callback called on Seconds interrupt */
+  RTCSecondsIrqCallback = func;
+
+  HAL_RTCEx_SetSecond_IT(&RtcHandle);
+  __HAL_RTC_SECOND_CLEAR_FLAG(&RtcHandle, RTC_FLAG_SEC);
+#else
+  /* callback called on wakeUp interrupt for One-Second purpose*/
+  RTCSecondsIrqCallback = func;
+
+  /* for MCUs using the wakeup feature : irq each second */
+#if defined(RTC_WUTR_WUTOCLR)
+  HAL_RTCEx_SetWakeUpTimer_IT(&RtcHandle, 0, RTC_WAKEUPCLOCK_CK_SPRE_16BITS, 0);
+#else
+  HAL_RTCEx_SetWakeUpTimer_IT(&RtcHandle, 0, RTC_WAKEUPCLOCK_CK_SPRE_16BITS);
+#endif /* RTC_WUTR_WUTOCLR */
+
+#endif /* STM32F1xx */
+  /* enable the IRQ that will trig the one-second interrupt */
+  HAL_NVIC_EnableIRQ(ONESECOND_IRQn);
+}
+
+/**
+  * @brief Detach Seconds interrupt callback.
+  * @param None
+  * @retval None
+  */
+void detachSecondsIrqCallback(void)
+{
+#if defined(STM32F1xx)
+  HAL_RTCEx_DeactivateSecond(&RtcHandle);
+#else
+  /* for MCUs using the wakeup feature : do not deactivate the WakeUp
+     as it might be used for another reason than the One-Second purpose */
+  // HAL_RTCEx_DeactivateWakeUpTimer(&RtcHandle);
+#endif /* STM32F1xx */
+  RTCSecondsIrqCallback = NULL;
+}
+
+#if defined(STM32F1xx)
+/**
+  * @brief  Seconds interrupt callback.
+  * @param  hrtc RTC handle
+  * @retval None
+  */
+void HAL_RTCEx_RTCEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  UNUSED(hrtc);
+
+  if (RTCSecondsIrqCallback != NULL) {
+    RTCSecondsIrqCallback(NULL);
+  }
+}
+
+/**
+  * @brief  This function handles RTC Seconds interrupt request.
+  * @param  None
+  * @retval None
+  */
+void RTC_IRQHandler(void)
+{
+  HAL_RTCEx_RTCIRQHandler(&RtcHandle);
+}
+
+#else
+/**
+  * @brief  WakeUp event mapping the Seconds interrupt callback.
+  * @param  hrtc RTC handle
+  * @retval None
+  */
+void HAL_RTCEx_WakeUpTimerEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  UNUSED(hrtc);
+
+  if (RTCSecondsIrqCallback != NULL) {
+    RTCSecondsIrqCallback(NULL);
+  }
+}
+
+/**
+  * @brief  This function handles RTC Seconds through wakeup interrupt request.
+  * @param  None
+  * @retval None
+  */
+void RTC_WKUP_IRQHandler(void)
+{
+  HAL_RTCEx_WakeUpTimerIRQHandler(&RtcHandle);
+}
+#endif /* STM32F1xx */
+#endif /* ONESECOND_IRQn */
 
 #ifdef __cplusplus
 }
