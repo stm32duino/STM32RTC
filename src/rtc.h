@@ -109,6 +109,28 @@ typedef void(*voidCallbackPtr)(void *);
 #define RTC_Alarm_IRQHandler RTC_TAMP_IRQHandler
 #endif
 
+/* mapping the IRQn for the one-second interrupt depending on the soc */
+#if defined(STM32F1xx) || (defined(STM32F0xx) && defined(RTC_CR_WUTE)) || \
+    defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U5xx) || \
+    defined(STM32WLE4xx)
+// specific WakeUp interrupt
+#define ONESECOND_IRQn RTC_IRQn
+#elif defined(STM32MP1xx)
+// global RTC interrupt
+#define ONESECOND_IRQn RTC_WKUP_ALARM_IRQn
+#elif defined(STM32G0xx)
+// global RTC/TAMP interrupt
+#define ONESECOND_IRQn RTC_TAMP_IRQn
+#elif defined(STM32WL54xx)|| defined(STM32WL55xx)
+// global RTC/LSS interrupt
+#define ONESECOND_IRQn RTC_LSECSS_IRQn
+#elif defined(RTC_CR_WUTE)
+// specific WakeUp interrupt (including M4 cpu of the STM32WLE5xx)
+#define ONESECOND_IRQn RTC_WKUP_IRQn
+#else
+// no One-Second IRQ available for the series
+#endif /* STM32F1xx || etc */
+
 #if defined(STM32F1xx) && !defined(IS_RTC_WEEKDAY)
 /* Compensate missing HAL definition */
 #define IS_RTC_WEEKDAY(WEEKDAY) (((WEEKDAY) == RTC_WEEKDAY_MONDAY)    || \
@@ -161,6 +183,10 @@ void RTC_StopAlarm(void);
 void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
 void attachAlarmCallback(voidCallbackPtr func, void *data);
 void detachAlarmCallback(void);
+#ifdef ONESECOND_IRQn
+void attachSecondsIrqCallback(voidCallbackPtr func);
+void detachSecondsIrqCallback(void);
+#endif /* ONESECOND_IRQn */
 
 #ifdef __cplusplus
 }

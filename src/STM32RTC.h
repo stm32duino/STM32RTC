@@ -125,6 +125,12 @@ class STM32RTC {
     void attachInterrupt(voidFuncPtr callback, void *data = nullptr);
     void detachInterrupt(void);
 
+#ifdef ONESECOND_IRQn
+    // Other mcu than stm32F1 will use the WakeUp feature to interrupt each second.
+    void attachSecondsInterrupt(voidFuncPtr callback);
+    void detachSecondsInterrupt(void);
+
+#endif /* ONESECOND_IRQn */
     // Kept for compatibility: use STM32LowPower library.
     void standbyMode();
 

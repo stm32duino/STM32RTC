@@ -100,6 +100,20 @@ _Library version management_
 #endif
 ```
 
+### Since STM32RTC version higher than 1.1.1
+
+_One-Second interrupt_
+
+  STM32 RTC includes a one-second interrupt for generating a periodic interrupt signal.
+  - This feature is native on the stm32F1xx and mapped on the existing WakeUp interrupt on other stm32 mcus. 
+  - It is not available on some stm32F0 devices.
+
+  * **new API:**
+    * **`void attachSecondsInterrupt(voidFuncPtr callback)`**
+    * **`void detachSecondsInterrupt(void)`**
+
+
+
 ### Since STM32 Core version > 1.5.0
 _Reset time management_
 
@@ -118,10 +132,10 @@ To know if a time has already been set use:
   }
 ```
 
-Refer to the Arduino RTC documentation for the other functions  
+Refer to the Arduino RTC documentation for the other functions
 http://arduino.cc/en/Reference/RTC
 
 ## Source
 
-Source files available at:  
+Source files available at:
 https://github.com/stm32duino/STM32RTC
