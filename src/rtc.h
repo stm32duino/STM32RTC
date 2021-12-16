@@ -77,6 +77,16 @@ typedef enum {
 typedef void(*voidCallbackPtr)(void *);
 
 /* Exported constants --------------------------------------------------------*/
+
+#if defined(STM32F1xx)
+/* select 32 bits in backup memory to store date.
+   2 consecutive 16bit reg. are reserved: RTC_BKP_DATE & RTC_BKP_DATE + 1 */
+#if !defined(RTC_BKP_DATE)
+/* can be changed for your convenience (here : LL_RTC_BKP_DR6 & LL_RTC_BKP_DR7) */
+#define RTC_BKP_DATE LL_RTC_BKP_DR6
+#endif
+#endif /* STM32F1xx */
+
 /* Interrupt priority */
 #ifndef RTC_IRQ_PRIO
 #define RTC_IRQ_PRIO       2
@@ -187,6 +197,10 @@ void detachAlarmCallback(void);
 void attachSecondsIrqCallback(voidCallbackPtr func);
 void detachSecondsIrqCallback(void);
 #endif /* ONESECOND_IRQn */
+
+#if defined(STM32F1xx)
+void RTC_StoreDate(void);
+#endif
 
 #ifdef __cplusplus
 }
