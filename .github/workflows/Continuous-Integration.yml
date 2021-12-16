@@ -54,6 +54,7 @@ jobs:
       uses: stm32duino/actions/compile-examples@main
       with:
         board-pattern: ".*NUCLEO_([^F]|F[^0]|F0[^34]).*"
+        custom-config: "./extras/rtc_cores_config.json"
 
     # Use the output from the `Compile` step
     - name: Compilation Errors
