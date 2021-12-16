@@ -113,6 +113,12 @@ _One-Second interrupt_
     * **`void detachSecondsInterrupt(void)`**
 
 
+_Date retention for stm32F1xx_
+
+  STM32 RTC includes date save/retrieve mechanism for the stm32F1xx mcu, that do not have a date counter.
+
+  The content is stored in BackUp memory which is kept during Reset and powered by Vbat when the Vdd is off.
+
 
 ### Since STM32 Core version > 1.5.0
 _Reset time management_
