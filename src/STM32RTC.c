@@ -83,7 +83,63 @@ stm32rtc_end(STM32RTC *rtc)
 	}
 }
 
+void
+stm32rtc_enable_alarm
+(
+	STM32RTC *rtc,
+	alarmMask_t mask
+)
+{
+	if (rtc->_configured)
+	{
+		rtc->alarm_mask = mask;
+		switch (mask)
+		{
+			case OFF_MSK:
+				RTC_StopAlarm();
+				break;
+			case SS_MSK:
+			case MM_MSK:
+			case HH_MSK:
+			case D_MSK:
+			case M_MSK:
+			case Y_MSK:
+				RTC_StartAlarm
+				(
+					rtc->alarm_day,
+					rtc->alarm_hours,
+					rtc->alarm_minutes,
+					rtc->alarm_seconds,
+					rtc->alarm_sub_seconds,
+					rtc->alarm_period,
+					rtc->alarm_mask
+				);
+				rtc->alarm_enabled = true;
+				break;
+			default:
+				break;
+		}
+	}
+}
+
+void
+stm32rtc_disable_alarm(STM32RTC *rtc)
+{
+	if (rtc->_configured)
+	{
+		RTC_StopAlarm();
+		rtc->alarm_enabled = false;
+	}
+}
+
+
 // GET FUNCTIONS
+
+sourceClock_t
+stm32rtc_get_source_clock(STM32RTC *rtc)
+{
+	return rtc->source_clock;
+}
 
 ul32
 stm32rtc_get_sub_seconds(STM32RTC *rtc)
@@ -196,6 +252,20 @@ stm32rtc_get_date
 
 
 // SET FUNCTIONS
+
+void
+stm32rtc_set_source_clock
+(
+	STM32RTC *rtc,
+	sourceClock_t source
+)
+{
+	if (IS_CLOCK_SOURCE(source))
+	{
+		rtc->source_clock = source;
+		RTC_SetClockSource(source);
+	}
+}
 
 void
 stm32rtc_set_sub_seconds

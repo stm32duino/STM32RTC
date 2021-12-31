@@ -30,6 +30,10 @@ typedef signed int     i32;
 typedef signed long    i64;
 
 
+#define IS_CLOCK_SOURCE(SRC) (((SRC) == LSI_CLOCK) || ((SRC) == LSE_CLOCK) || \
+                              ((SRC) == HSI_CLOCK) || ((SRC) == HSE_CLOCK))
+#define IS_HOUR_FORMAT(FMT)  (((FMT) == HOUR_FORMAT_12) || ((FMT) == HOUR_FORMAT_24))
+
 typedef struct
 {
 	u8 hours;
@@ -109,10 +113,43 @@ stm32rtc_reset
 void
 stm32rtc_end(STM32RTC *rtc);
 
+/**
+ * @brief Enable RTC alarm
+ * 
+ * @param rtc: RTC
+ * @param mask: Alarm configuration
+ * @retval None
+ */
+void
+stm32rtc_enable_alarm
+(
+	STM32RTC *rtc,
+	alarmMask_t mask
+);
+
+/**
+ * @brief Disable RTC alarm
+ * 
+ * @param rtc: RTC
+ * @retval None
+ */
+void
+stm32rtc_disable_alarm(STM32RTC *rtc);
+
 
 
 
 // GET FUNCTIONS
+
+/**
+ * @brief Get RTC clock sourse
+ * 
+ * @param rtc: RTC
+ * @retval Clock sourse: LSI_CLOCK or HSI_CLOCK
+ *                    or LSE_CLOCK or HSE_CLOCK
+ */
+sourceClock_t
+stm32rtc_get_source_clock(STM32RTC *rtc);
 
 /**
  * @brief Get RTC subseconds
@@ -236,7 +273,24 @@ stm32rtc_get_date
 );
 
 
+
+
+
 // SET FUNCTIONS
+
+/**
+ * @brief Set RTC source clock source. By default LSI clock is selected. This
+ *        method must be called before stm32rtc_begin().
+ * 
+ * @param rtc: RTC
+ * @param source: 
+ */
+void
+stm32rtc_set_source_clock
+(
+	STM32RTC *rtc,
+	sourceClock_t source
+);
 
 /**
  * @brief Set RTC subseconds
