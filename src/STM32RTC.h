@@ -447,12 +447,33 @@ stm32rtc_set_wdate
 );
 
 
+
+// SYNCHRONISATION FUNCTIONS
+
+/**
+ * @brief Synchronise the time from the current RTC one
+ * 
+ * @param rtc: RTC
+ * @retval None
+ */
 void
 stm32rtc_sync_time(STM32RTC *rtc);
 
+/**
+ * @brief Synchronise the date from the current RTC one
+ * 
+ * @param rtc: RTC
+ * @retval None
+ */
 void
 stm32rtc_sync_date(STM32RTC *rtc);
 
+/**
+ * @brief Synchronise the alarm time from the current RTC one
+ * 
+ * @param rtc: RTC
+ * @retval None
+ */
 void
 stm32rtc_sync_alarm_time(STM32RTC *rtc);
 
