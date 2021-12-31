@@ -61,6 +61,8 @@ typedef struct
 
 
 
+// CONTROL FUNCTIONS
+
 /**
   * @brief Initialization default values of RTC
   * 
@@ -69,7 +71,6 @@ typedef struct
   */
 void
 stm32rtc_init(STM32RTC *rtc);
-
 
 /**
  * @brief Initialize RTC on chip
@@ -85,7 +86,6 @@ stm32rtc_begin
 	hourFormat_t hour_fmt
 );
 
-
 /**
  * @brief Resets and reconfigure RTC
  * 
@@ -99,7 +99,6 @@ stm32rtc_reset
 	STM32RTC *rtc,
 	hourFormat_t hour_fmt
 );
-
 
 /**
  * @brief Deinitialize and stop the RTC
@@ -115,15 +114,41 @@ stm32rtc_end(STM32RTC *rtc);
 
 // GET FUNCTIONS
 
+/**
+ * @brief Get RTC subseconds
+ * 
+ * @param rtc: RTC
+ * @retval Return the current subseconds from the RTC.
+ */
 ul32
 stm32rtc_get_sub_seconds(STM32RTC *rtc);
 
+/**
+ * @brief Get RTC seconds
+ * 
+ * @param rtc: RTC
+ * @retval Return the current seconds from the RTC.
+ */
 u8
 stm32rtc_get_seconds(STM32RTC *rtc);
 
+/**
+ * @brief Get RTC minutes
+ * 
+ * @param rtc: RTC
+ * @retval Return the current minutes from the RTC.
+ */
 u8
 stm32rtc_get_minutes(STM32RTC *rtc);
 
+/**
+ * @brief Get RTC hours
+ * 
+ * @param rtc: RTC
+ * @param period: Optional (default: NULL)
+ *                Pointer to the current hour period set in the RTC: AM or PM
+ * @retval Return the current hours from the RTC.
+ */
 u8
 stm32rtc_get_hours
 (
@@ -131,6 +156,18 @@ stm32rtc_get_hours
 	hourAM_PM_t *period
 );
 
+/**
+ * @brief Get RTC time
+ * 
+ * @param rtc: RTC
+ * @param hours: Pointer to the current hours
+ * @param minutes: Pointer to the current minutes
+ * @param seconds: Pointer to the current seconds
+ * @param sub_seconds: Pointer to the current subseconds
+ * @param period: Optional (default: NULL)
+ *                Pointer to the current hour period set in the RTC: AM or PM
+ * @retval None
+ */
 void
 stm32rtc_get_time
 (
@@ -142,18 +179,52 @@ stm32rtc_get_time
 	hourAM_PM_t *period
 );
 
+/**
+ * @brief Get RTC day of week
+ * 
+ * @param rtc: RTC
+ * @retval Return the current day of week from the RTC.
+ */
 u8
 stm32rtc_get_week_day(STM32RTC *rtc);
 
+/**
+ * @brief Get RTC day
+ * 
+ * @param rtc: RTC
+ * @retval Return the current day from the RTC.
+ */
 u8
 stm32rtc_get_day(STM32RTC *rtc);
 
+/**
+ * @brief Get RTC month
+ * 
+ * @param rtc: RTC
+ * @retval Return the current month from the RTC.
+ */
 u8
 stm32rtc_get_month(STM32RTC *rtc);
 
+/**
+ * @brief Get RTC year
+ * 
+ * @param rtc: RTC
+ * @retval Return the current year from the RTC.
+ */
 u8
 stm32rtc_get_year(STM32RTC *rtc);
 
+/**
+ * @brief Get RTC date
+ * 
+ * @param rtc: RTC
+ * @param wday: Pointer to the current day of week
+ * @param day: Pointer to the current day
+ * @param month: Pointer to the current month
+ * @param year: Pointer to the current year
+ * @retval None
+ */
 void
 stm32rtc_get_date
 (
@@ -164,8 +235,16 @@ stm32rtc_get_date
 	u8 *year
 );
 
+
 // SET FUNCTIONS
 
+/**
+ * @brief Set RTC subseconds
+ * 
+ * @param rtc: RTC
+ * @param sub_seconds: 0-999
+ * @retval None
+ */
 void
 stm32rtc_set_sub_seconds
 (
@@ -173,6 +252,13 @@ stm32rtc_set_sub_seconds
 	ul32 sub_seconds
 );
 
+/**
+ * @brief Set RTC sseconds
+ * 
+ * @param rtc: RTC
+ * @param seconds: 0-59
+ * @retval None
+ */
 void
 stm32rtc_set_seconds
 (
@@ -180,6 +266,13 @@ stm32rtc_set_seconds
 	u8 seconds
 );
 
+/**
+ * @brief Set RTC minutes
+ * 
+ * @param rtc: RTC
+ * @param minutes: 0-59
+ * @retval None
+ */
 void
 stm32rtc_set_minutes
 (
@@ -187,6 +280,13 @@ stm32rtc_set_minutes
 	u8 minutes
 );
 
+/**
+ * @brief Set RTC hours
+ * 
+ * @param rtc: RTC
+ * @param hours: 0-23
+ * @retval None
+ */
 void
 stm32rtc_set_hours
 (
@@ -194,6 +294,14 @@ stm32rtc_set_hours
 	u8 hours
 );
 
+/**
+ * @brief Set RTC hours in 12H format
+ * 
+ * @param rtc: RTC
+ * @param hours: 0-11
+ * @param period: Hour period: HOUR_AM or HOUR_PM
+ * @retval None
+ */
 void
 stm32rtc_set_hours_12
 (
@@ -202,6 +310,16 @@ stm32rtc_set_hours_12
 	hourAM_PM_t period
 );
 
+/**
+ * @brief Set RTC time
+ * 
+ * @param rtc: RTC
+ * @param hours: 0-23
+ * @param minutes: 0-59
+ * @param seconds: 0-59
+ * @param sub_seconds: 0-999
+ * @retval None
+ */
 void
 stm32rtc_set_time
 (
@@ -212,6 +330,17 @@ stm32rtc_set_time
 	ul32 sub_seconds
 );
 
+/**
+ * @brief Set RTC time in 12H format
+ * 
+ * @param rtc: RTC
+ * @param hours: 0-23
+ * @param minutes: 0-59
+ * @param seconds: 0-59
+ * @param sub_seconds: 0-999
+ * @param period: Hour period: HOUR_AM or HOUR_PM
+ * @retval None
+ */
 void
 stm32rtc_set_time_12
 (
@@ -223,6 +352,13 @@ stm32rtc_set_time_12
 	hourAM_PM_t period
 );
 
+/**
+ * @brief Set RTC day of week
+ * 
+ * @param rtc: RTC
+ * @param wday: 1-7 (Monday first)
+ * @retval None
+ */
 void
 stm32rtc_set_week_day
 (
@@ -230,6 +366,13 @@ stm32rtc_set_week_day
 	u8 wday
 );
 
+/**
+ * @brief Set RTC day
+ * 
+ * @param rtc: RTC
+ * @param day: 1-31
+ * @retval None
+ */
 void
 stm32rtc_set_day
 (
@@ -237,6 +380,13 @@ stm32rtc_set_day
 	u8 day
 );
 
+/**
+ * @brief Set RTC month
+ * 
+ * @param rtc: RTC
+ * @param month: 1-12
+ * @retval None
+ */
 void
 stm32rtc_set_month
 (
@@ -244,6 +394,13 @@ stm32rtc_set_month
 	u8 month
 );
 
+/**
+ * @brief Set RTC year
+ * 
+ * @param rtc: RTC
+ * @param year: 0-99
+ * @retval None
+ */
 void
 stm32rtc_set_year
 (
@@ -251,6 +408,15 @@ stm32rtc_set_year
 	u8 year
 );
 
+/**
+ * @brief Set RTC date
+ * 
+ * @param rtc: RTC
+ * @param day: 1-31
+ * @param month: 1-12
+ * @param year: 0-99
+ * @retval None
+ */
 void
 stm32rtc_set_date
 (
@@ -260,6 +426,16 @@ stm32rtc_set_date
 	u8 year
 );
 
+/**
+ * @brief Set RTC date with day of week
+ * 
+ * @param rtc: RTC
+ * @param day: 1-31
+ * @param month: 1-12
+ * @param year: 0-99
+ * @param wday: 1-7 (Monday first)
+ * @retval None
+ */
 void
 stm32rtc_set_wdate
 (

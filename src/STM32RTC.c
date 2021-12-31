@@ -107,7 +107,7 @@ stm32rtc_get_minutes(STM32RTC *rtc)
 }
 
 u8
-stm32rtc_get_hsours
+stm32rtc_get_hours
 (
 	STM32RTC *rtc,
 	hourAM_PM_t *period
