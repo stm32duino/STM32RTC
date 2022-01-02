@@ -13,6 +13,7 @@
 #include "Arduino.h"
 #if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000)
 	#include "rtc.h"
+	#include "time.h"
 #endif
 // Check if RTC HAL enable in variants/board_name/stm32yzxx_hal_conf.h
 #ifndef HAL_RTC_MODULE_ENABLED
@@ -762,6 +763,82 @@ stm32rtc_set_alarm_12
 	ul32 sub_seconds,
 	hourAM_PM_t period
 );
+
+
+// EPOCH FGUNCTIONS
+
+/**
+ * @brief Get epoch time
+ * 
+ * @param rtc: RTC
+ * @param subseconds: Optional pointer to epoch time in subseconds
+ * @retval Epoch time in seconds
+ */
+ul32
+stm32rtc_get_epoch
+(
+	STM32RTC *rtc,
+	ul32 *subseconds
+);
+
+/**
+ * @brief Get epoch time since 1srt January 2000, 00:00:00
+ * 
+ * @param rtc: RTC
+ * @retval Epoch time in seconds
+ */
+ul32
+stm32rtc_get_y2k_epoch(STM32RTC *rtc);
+
+/**
+ * @brief Set RTC time from epoch time
+ * 
+ * @param rtc: RTC
+ * @param ts: time in seconds
+ * @param sub_seconds: subseconds
+ * @retval None
+ */
+void
+stm32rtc_set_epoch
+(
+	STM32RTC *rtc,
+	ul32 ts,
+	ul32 sub_seconds
+);
+
+/**
+ * @brief Set epoch time since 1srt January 2000, 00:00:00
+ * 
+ * @param rtc: RTC
+ * @param ts: Epoch Time in seconds
+ */
+void
+stm32rtc_set_y2k_epoch
+(
+	STM32RTC *rtc,
+	ul32 ts
+);
+
+/**
+ * @brief Set  RTC alarm from epoch time
+ * 
+ * @param rtc: RTC
+ * @param ts: time in seconds
+ * @param mask: alarm mask
+ * @param sub_seconds: 0-999
+ * @retval None
+ */
+void
+stm32rtc_set_alarm_epoch
+(
+	STM32RTC *rtc,
+	ul32 ts,
+	alarmMask_t mask,
+	ul32 sub_seconds
+);
+
+
+
 
 
 

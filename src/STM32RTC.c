@@ -12,7 +12,8 @@
 
 // CONTROL FUNCTION
 
-
+#define EPOCH_TIME_OFF      946684800  // This is 1st January 2000, 00:00:00 in epoch time
+#define EPOCH_TIME_YEAR_OFF 100        // years since 1900
 
 void
 stm32rtc_init
@@ -818,6 +819,127 @@ stm32rtc_set_alarm_12
 	stm32rtc_set_alarm_sub_seconds(rtc, sub_seconds);
 }
 
+
+
+// EPOCH FUNCTIONS
+
+ul32
+stm32rtc_get_epoch
+(
+	STM32RTC *rtc,
+	ul32 *subseconds
+)
+{
+	struct tm tm;
+
+	stm32rtc_sync_time(rtc);
+	stm32rtc_sync_date(rtc);
+
+	tm.tm_isdst = -1;
+	tm.tm_yday = 0;
+	tm.tm_wday = 0;
+	tm.tm_year = rtc->year + EPOCH_TIME_YEAR_OFF;
+	tm.tm_mon = rtc->month - 1;
+	tm.tm_mday = rtc->day;
+	tm.tm_hour = rtc->hours;
+	tm.tm_min = rtc->minutes;
+	tm.tm_sec = rtc->seconds;
+	if (subseconds != NULL)
+		*subseconds = rtc->sub_seconds;
+
+	return mktime(&tm);
+}
+
+ul32
+stm32rtc_get_y2k_epoch(STM32RTC *rtc)
+{
+	return (stm32rtc_get_epoch(rtc, NULL) - EPOCH_TIME_OFF);
+}
+
+void
+stm32rtc_set_epoch
+(
+	STM32RTC *rtc,
+	ul32 ts,
+	ul32 sub_seconds
+)
+{
+	if (rtc->_configured)
+	{
+		if (ts < EPOCH_TIME_OFF)
+			ts = EPOCH_TIME_OFF;
+
+		time_t t = ts;
+		struct tm *tmp = gmtime(&t);
+
+		rtc->year = tmp->tm_year - EPOCH_TIME_YEAR_OFF;
+		rtc->month = tmp->tm_mon + 1;
+		rtc->day = tmp->tm_mday;
+		if (tmp->tm_wday == 0) {
+			rtc->wday = RTC_WEEKDAY_SUNDAY;
+		} else {
+			rtc->wday = tmp->tm_wday;
+		}
+		rtc->hours = tmp->tm_hour;
+		rtc->minutes = tmp->tm_min;
+		rtc->seconds = tmp->tm_sec;
+		rtc->sub_seconds = sub_seconds;
+
+		RTC_SetDate
+		(
+			rtc->year,
+			rtc->month,
+			rtc->day,
+			rtc->wday
+		);
+
+		RTC_SetTime
+		(
+			rtc->hours,
+			rtc->minutes,
+			rtc->seconds,
+			rtc->sub_seconds,
+			rtc->period
+		);
+	}
+}
+
+void
+stm32rtc_set_y2k_epoch
+(
+	STM32RTC *rtc,
+	ul32 ts
+)
+{
+	if (rtc->_configured)
+		stm32rtc_set_epoch(rtc, ts + EPOCH_TIME_OFF, 0);
+}
+
+void
+stm32rtc_set_alarm_epoch
+(
+	STM32RTC *rtc,
+	ul32 ts,
+	alarmMask_t mask,
+	ul32 sub_seconds
+)
+{
+	if (rtc->_configured)
+	{
+		if (ts < EPOCH_TIME_OFF)
+			ts = EPOCH_TIME_OFF;
+
+		time_t t = ts;
+		struct tm *tmp = gmtime(&t);
+
+		stm32rtc_set_alarm_day(rtc, tmp->tm_mday);
+		stm32rtc_set_alarm_hours(rtc, tmp->tm_hour);
+		stm32rtc_set_alarm_minutes(rtc, tmp->tm_min);
+		stm32rtc_set_alarm_seconds(rtc, tmp->tm_sec);
+		stm32rtc_set_alarm_sub_seconds(rtc, sub_seconds);
+		stm32rtc_enable_alarm(rtc, mask);
+	}
+}
 
 
 
