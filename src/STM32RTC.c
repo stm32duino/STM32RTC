@@ -132,6 +132,44 @@ stm32rtc_disable_alarm(STM32RTC *rtc)
 	}
 }
 
+void
+stm32rtc_attach_intrerrupt
+(
+	STM32RTC *rtc,
+	voidCallbackPtr callback,
+	void *data
+)
+{
+	attachAlarmCallback(callback, data);
+}
+
+void
+stm32rtc_detach_intrerrupt(STM32RTC *rtc)
+{
+	detachAlarmCallback();
+}
+
+#ifdef ONESECOND_IRQn
+
+	void
+	stm32rtc_attach_secconds_intrerrupt
+	(
+		STM32RTC *rtc,
+		voidCallbackPtr callback
+	)
+	{
+		attachSecondsIrqCallback(callback);
+	}
+
+	void
+	stm32rtc_detach_seconds_intrerrupt(STM32RTC *rtc)
+	{
+		detachSecondsIrqCallback();
+	}
+
+#endif /* ONESCOND_IRQn */
+
+
 
 // GET FUNCTIONS
 

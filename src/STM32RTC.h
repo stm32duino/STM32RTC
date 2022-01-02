@@ -136,6 +136,62 @@ stm32rtc_enable_alarm
 void
 stm32rtc_disable_alarm(STM32RTC *rtc);
 
+/**
+ * @brief Attach callback to RTC allarm intrerrupt
+ * 
+ * @param rtc: RTC
+ * @param callback: Pointer to callback
+ * @param data: Data
+ * @retval None
+ */
+void
+stm32rtc_attach_intrerrupt
+(
+	STM32RTC *rtc,
+	voidCallbackPtr callback,
+	void *data
+);
+
+/**
+ * @brief Detach RTC alarm callback
+ * 
+ * @param rtc: RTC
+ * @retval None
+ */
+void
+stm32rtc_detach_intrerrupt(STM32RTC *rtc);
+
+#ifdef ONESECOND_IRQn
+	// Other mcu than stm32F1 will use the WakeUp feature to interrupt each second.
+
+	/**
+	 * @brief Attach callback to RTC Seconds intreerrupt
+	 * 
+	 * @param rtc: RTC
+	 * @param callback: Pointer to callback
+	 * @retval None
+	 */
+	void
+	stm32rtc_attach_secconds_intrerrupt
+	(
+		STM32RTC *rtc,
+		voidCallbackPtr callback
+	);
+
+	/**
+	 * @brief Detach callback to RTC Seconds intrerrupt
+	 * 
+	 * @param rtc: RTC
+	 *
+	 */
+	void
+	stm32rtc_detach_seconds_intrerrupt(STM32RTC *rtc);
+
+#endif /* ONESECOND_IRQn */
+
+
+
+
 
 
 
