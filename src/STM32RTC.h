@@ -328,6 +328,81 @@ stm32rtc_get_date
 	u8 *year
 );
 
+/**
+ * @brief Get RTC alarm subseconds
+ * 
+ * @param rtc: RTC
+ * @retval Return the current alarm subseconds
+ */
+ul32
+stm32rtc_get_alarm_sub_seconds(STM32RTC *rtc);
+
+/**
+ * @brief Get RTC alarm seconds
+ * 
+ * @param rtc: RTC
+ * @retval Return the current alarm seconds
+ */
+u8
+stm32rtc_get_alarm_seconds(STM32RTC *rtc);
+
+/**
+ * @brief Get RTC alarm minutes
+ * 
+ * @param rtc: RTC
+ * @retval Return the current alarm minute
+ */
+u8
+stm32rtc_get_alarm_minutes(STM32RTC *rtc);
+
+/**
+ * @brief Get RTC alarm hours
+ * 
+ * @param rtc: RTC
+ * @param period: optional (default: nullptr)
+ *				  pointer to the current hour format set in the RTC: AM or PM
+ * @retval Return the current alarm hours
+ */
+u8
+stm32rtc_get_alarm_hours
+(
+	STM32RTC *rtc,
+	hourAM_PM_t *period
+);
+
+/**
+ * @brief Get RTC alarm day
+ * 
+ * @param rtc: RTC
+ * @retval Return the current alarm day
+ */
+u8
+stm32rtc_get_alarm_day(STM32RTC *rtc);
+
+/**
+ * @brief Get RTC alarm time and date
+ * 
+ * @param rtc: RTC
+ * @param hours: Pointer to the current hours
+ * @param minutes: Pointer to the current minutes
+ * @param seconds: Pointer to the current seconds
+ * @param sub_seconds: Pointer to the current subseconds
+ * @param period: Optional (default: NULL)
+ *                Pointer to the current hour period set in the RTC: AM or PM
+ * @retval None
+ */
+void
+stm32rtc_get_alarm
+(
+	STM32RTC *rtc,
+	u8 *day,
+	u8 *hours,
+	u8 *minutes,
+	u8 *seconds,
+	ul32 *sub_seconds,
+	hourAM_PM_t *period
+);
+
 
 
 
@@ -339,7 +414,8 @@ stm32rtc_get_date
  *        method must be called before stm32rtc_begin().
  * 
  * @param rtc: RTC
- * @param source: 
+ * @param source: Source Clock: LSI_CLOCK or HSI_CLOCK
+ *                           or LSE_CLOCK or HSE_CLOCK
  */
 void
 stm32rtc_set_source_clock
@@ -555,6 +631,140 @@ stm32rtc_set_wdate
 	u8 year,
 	u8 wday
 );
+
+/**
+ * @brief Set RTC alarm subseconds
+ * 
+ * @param rtc: RTC
+ * @param sub_seconds: 0-999
+ * @retval None
+ */
+void
+stm32rtc_set_alarm_sub_seconds
+(
+	STM32RTC *rtc,
+	ul32 sub_seconds
+);
+
+/**
+ * @brief Set RTC alarm seconds
+ * 
+ * @param rtc: RTC
+ * @param seconds: 0-59
+ * @retval None
+ */
+void
+stm32rtc_set_alarm_seconds
+(
+	STM32RTC *rtc,
+	u8 seconds
+);
+
+/**
+ * @brief Set RTC alarm minutes
+ * 
+ * @param rtc: RTC
+ * @param minutes: 0-59
+ * @retval None
+ */
+void
+stm32rtc_set_alarm_minutes
+(
+	STM32RTC *rtc,
+	u8 minutes
+);
+
+/**
+ * @brief Set RTC alarm hours
+ * 
+ * @param rtc: RTC
+ * @param hours: 0-23
+ * @retval None
+ */
+void
+stm32rtc_set_alarm_hours
+(
+	STM32RTC *rtc,
+	u8 hours
+);
+
+/**
+ * @brief Set RTC alarm hours in 12H format
+ * 
+ * @param rtc: RTC
+ * @param hours: 0-11
+ * @param period: Hour period: HOUR_AM or HOUR_PM
+ * @retval None
+ */
+void
+stm32rtc_set_alarm_hours_12
+(
+	STM32RTC *rtc,
+	u8 hours,
+	hourAM_PM_t period
+);
+
+/**
+ * @brief Set RTC alarm day
+ * 
+ * @param rtc: RTC
+ * @param day: 1-31
+ */
+void
+stm32rtc_set_alarm_day
+(
+	STM32RTC *rtc,
+	u8 day
+);
+
+/**
+ * @brief Set RTC alarm time and day
+ * 
+ * @param rtc: RTC
+ * @param day: 1-31
+ * @param hours: 0-23
+ * @param minutes: 0-59
+ * @param seconds: 0-59
+ * @param sub_seconds: 0-999
+ * @retval None
+ */
+void
+stm32rtc_set_alarm
+(
+	STM32RTC *rtc,
+	u8 day,
+	u8 hours,
+	u8 minutes,
+	u8 seconds,
+	ul32 sub_seconds
+);
+
+/**
+ * @brief Set RTC alarm time in 12H format and day
+ * 
+ * @param rtc: RTC
+ * @param day: 1-31
+ * @param hours: 0-23
+ * @param minutes: 0-59
+ * @param seconds: 0-59
+ * @param sub_seconds: 0-999
+ * @param period: Hour period: HOUR_AM or HOUR_PM
+ * @retval None
+ */
+void
+stm32rtc_set_alarm_12
+(
+	STM32RTC *rtc,
+	u8 day,
+	u8 hours,
+	u8 minutes,
+	u8 seconds,
+	ul32 sub_seconds,
+	hourAM_PM_t period
+);
+
+
+
 
 
 

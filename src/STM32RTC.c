@@ -286,7 +286,73 @@ stm32rtc_get_date
 		*year = rtc->year;
 }
 
+ul32
+stm32rtc_get_alarm_sub_seconds(STM32RTC *rtc)
+{
+	stm32rtc_sync_alarm_time(rtc);
+	return rtc->alarm_sub_seconds;
+}
 
+u8
+stm32rtc_get_alarm_seconds(STM32RTC *rtc)
+{
+	stm32rtc_sync_alarm_time(rtc);
+	return rtc->alarm_seconds;
+}
+
+u8
+stm32rtc_get_alarm_minutes(STM32RTC *rtc)
+{
+	stm32rtc_sync_alarm_time(rtc);
+	return rtc->alarm_minutes;
+}
+
+u8
+stm32rtc_get_alarm_hours
+(
+	STM32RTC *rtc,
+	hourAM_PM_t *period
+)
+{
+	stm32rtc_sync_alarm_time(rtc);
+	if (period != NULL)
+		*period = rtc->alarm_period;
+	return rtc->alarm_hours;
+}
+
+u8
+stm32rtc_get_alarm_day(STM32RTC *rtc)
+{
+	stm32rtc_sync_alarm_time(rtc);
+	return rtc->alarm_day;
+}
+
+void
+stm32rtc_get_alarm
+(
+	STM32RTC *rtc,
+	u8 *day,
+	u8 *hours,
+	u8 *minutes,
+	u8 *seconds,
+	ul32 *sub_seconds,
+	hourAM_PM_t *period
+)
+{
+	stm32rtc_sync_alarm_time(rtc);
+	if (hours != NULL)
+		*hours = rtc->alarm_hours;
+	if (minutes != NULL)
+		*minutes = rtc->alarm_minutes;
+	if (seconds != NULL)
+		*seconds = rtc->alarm_seconds;
+	if (sub_seconds != NULL)
+		*sub_seconds = rtc->alarm_sub_seconds;
+	if (period != NULL)
+		*period = rtc->alarm_period;
+	if (day != NULL)
+		*day = rtc->alarm_day;
+}
 
 
 // SET FUNCTIONS
@@ -638,10 +704,119 @@ stm32rtc_set_wdate
 	}
 }
 
+void
+stm32rtc_set_alarm_sub_seconds
+(
+	STM32RTC *rtc,
+	ul32 sub_seconds
+)
+{
+	if (rtc->_configured)
+		if (sub_seconds < 1000)
+			rtc->alarm_sub_seconds = sub_seconds;
+}
 
+void
+stm32rtc_set_alarm_seconds
+(
+	STM32RTC *rtc,
+	u8 seconds
+)
+{
+	if (rtc->_configured)
+		if (seconds < 60)
+			rtc->alarm_seconds = seconds;
+}
 
+void
+stm32rtc_set_alarm_minutes
+(
+	STM32RTC *rtc,
+	u8 minutes
+)
+{
+	if (rtc->_configured)
+		if (minutes < 60)
+		 rtc->alarm_minutes = minutes;
+}
 
+void
+stm32rtc_set_alarm_hours
+(
+	STM32RTC *rtc,
+	u8 hours
+)
+{
+	if (rtc->_configured)
+		if (hours < 24)
+			rtc->alarm_hours = hours;
+}
 
+void
+stm32rtc_set_alarm_hours_12
+(
+	STM32RTC *rtc,
+	u8 hours,
+	hourAM_PM_t period
+)
+{
+	if (rtc->_configured)
+	{
+		if (hours < 12)
+			rtc->alarm_hours = hours;
+		if (rtc->format == HOUR_FORMAT_12)
+			rtc->alarm_period = period;
+	}
+}
+
+void
+stm32rtc_set_alarm_day
+(
+	STM32RTC *rtc,
+	u8 day
+)
+{
+	if (rtc->_configured)
+		if (day >= 1 && day <= 31)
+			rtc->alarm_day = day;
+}
+
+void
+stm32rtc_set_alarm
+(
+	STM32RTC *rtc,
+	u8 day,
+	u8 hours,
+	u8 minutes,
+	u8 seconds,
+	ul32 sub_seconds
+)
+{
+	stm32rtc_set_alarm_day(rtc, day);	
+	stm32rtc_set_alarm_hours(rtc, hours);
+	stm32rtc_set_alarm_minutes(rtc, minutes);
+	stm32rtc_set_alarm_seconds(rtc, seconds);
+	stm32rtc_set_alarm_sub_seconds(rtc, sub_seconds);
+}
+
+void
+stm32rtc_set_alarm_12
+(
+	STM32RTC *rtc,
+	u8 day,
+	u8 hours,
+	u8 minutes,
+	u8 seconds,
+	ul32 sub_seconds,
+	hourAM_PM_t period
+)
+{
+	stm32rtc_set_alarm_day(rtc, day);	
+	stm32rtc_set_alarm_hours_12(rtc, hours, period);
+	stm32rtc_set_alarm_minutes(rtc, minutes);
+	stm32rtc_set_alarm_seconds(rtc, seconds);
+	stm32rtc_set_alarm_sub_seconds(rtc, sub_seconds);
+}
 
 
 
