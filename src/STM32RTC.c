@@ -941,9 +941,79 @@ stm32rtc_set_alarm_epoch
 	}
 }
 
+#ifdef STM32F1xx
+
+	void
+	stm32rtc_get_prediv
+	(
+		STM32RTC *rtc,
+		ul32 *prediv_a,
+		i16 *dummy
+	)
+	{
+		(void)dummy;
+		RTC_getPrediv(prediv_a);
+	}
+
+	void
+	stm32rtc_set_prediv
+	(
+		STM32RTC *rtc,
+		ul32 prediv_a,
+		i16 dummy
+	)
+	{
+		(void)dummy;
+		RTC_setPrediv(prediv_a);
+	}
+#else
+
+	void
+	stm32rtc_get_prediv
+	(
+		STM32RTC *rtc,
+		i8 *prediv_a,
+		i16* prediv_s
+	)
+	{
+		if (prediv_a != NULL && prediv_s != NULL)
+			RTC_getPrediv(prediv_a, prediv_s);
+	}
+
+	void
+	stm32rtc_set_prediv
+	(
+		STM32RTC *rtc,
+		i8 prediv_a,
+		i16 prediv_s
+	)
+	{
+		RTC_setPrediv(prediv_a, prediv_s);
+	}
+#endif /* STM32F1xx */
 
 
+bool
+stm32rtc_is_configured(STM32RTC *rtc)
+{
+	return rtc->_configured;
+}
 
+bool
+stm32rtc_is_alarm_enabled(STM32RTC *rtc)
+{
+	return rtc->alarm_enabled;
+}
+
+bool
+stm32rtc_is_time_set(STM32RTC *rtc)
+{
+	#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01050000)
+		return RTC_IsTimeSet();
+	#else
+		return false;	
+	#endif
+}
 
 
 

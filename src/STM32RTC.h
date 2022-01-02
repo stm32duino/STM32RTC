@@ -838,10 +838,83 @@ stm32rtc_set_alarm_epoch
 );
 
 
+#ifdef STM32F1xx
+	/**
+	 * @brief  get user asynchronous prescaler value for the current clock source.
+	 * 
+	 * @param rtc: RTC
+	 * @param  predivA: pointer to the current Asynchronous prescaler value
+	 * @param  dummy : not used (kept for compatibility reason)
+	 * @retval None
+	 */
+	void
+	stm32rtc_get_prediv
+	(
+		STM32RTC *rtc,
+		ul32 *prediv_a,
+		i16 *dummy
+	);
 
+	/**
+	 * @brief  set user asynchronous prescalers value.
+	 * @note   This method must be called before begin().
+	 * 
+	 * @param rtc: RTC
+	 * @param  predivA: Asynchronous prescaler value. Reset value: RTC_AUTO_1_SECOND
+	 * @param  dummy : not used (kept for compatibility reason)
+	 * @retval None
+	 */
+	void
+	stm32rtc_set_prediv
+	(
+		STM32RTC *rtc,
+		ul32 prediv_a,
+		i16 dummy
+	);
+#else
+	/**
+	 * @brief Get user (a)synchronous prescaler values if set else computed
+	 *        ones for the current clock source.
+	 * 
+	 * @param rt: RTC
+	 * @param prediv_a: Pointer to the current Asynchronous prescaler value
+	 * @param prediv_s: Pointer to the current Synchronous prescaler value
+	 * @retval None
+	 */
+	void
+	stm32rtc_get_prediv
+	(
+		STM32RTC *rtc,
+		i8 *prediv_a,
+		i16* prediv_s
+	);
 
+	/**
+	 * @brief Set user (a)synchronous prescalers value.
+	 * @note  This method must be called before begin().
+	 * 
+	 * @param rtc: RTC
+	 * @param prediv_a: Asynchronous prescaler value. Reset value: -1
+	 * @param prediv_s: Synchronous prescaler value. Reset value: -1
+	 * @retval None
+	 */
+	void
+	stm32rtc_set_prediv
+	(
+		STM32RTC *rtc,
+		i8 prediv_a,
+		i16 prediv_s
+	);
+#endif /* STM32F1xx */
 
+bool
+stm32rtc_is_configured(STM32RTC *rtc);
 
+bool
+stm32rtc_is_alarm_enabled(STM32RTC *rtc);
+
+bool
+stm32rtc_is_time_set(STM32RTC *rtc);
 
 
 
