@@ -115,7 +115,7 @@ typedef void(*voidCallbackPtr)(void *);
 #define PREDIVA_MAX 0xFFFFFU
 #endif /* !STM32F1xx */
 
-#if defined(STM32F0xx) || defined(STM32L0xx) || \
+#if defined(STM32C0xx) || defined(STM32F0xx) || defined(STM32L0xx) || \
     defined(STM32L5xx) || defined(STM32U5xx)
 #define RTC_Alarm_IRQn RTC_IRQn
 #define RTC_Alarm_IRQHandler RTC_IRQHandler
