@@ -35,6 +35,7 @@
   */
 
 #include "rtc.h"
+#include "stm32yyxx_ll_rtc.h"
 #include <string.h>
 
 #if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000) &&\
@@ -331,64 +332,69 @@ static void RTC_computePrediv(int8_t *asynch, int16_t *synch)
 /**
   * @brief RTC Initialization
   *        This function configures the RTC time and calendar. By default, the
-  *        RTC is set to the 1st January 2017 0:0:0:00
+  *        RTC is set to the 1st January 2001
+  *        Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
   * @param format: enable the RTC in 12 or 24 hours mode
-  * @retval None
+  * @param source: RTC clock source: LSE, LSI or HSE
+  * @param reset: force RTC reset, even if previously configured
+  * @retval True if RTC is reinitialized, else false
   */
-void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
+bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 {
-  initFormat = format;
+  bool reinit = false;
 
-  if (reset) {
-    resetBackupDomain();
-  }
+  initFormat = format;
 
   /* Init RTC clock */
   RTC_initClock(source);
 
   RtcHandle.Instance = RTC;
 
-#if defined(STM32F1xx)
-  /* Let HAL calculate the prescaler */
-  RtcHandle.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
-  RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
-  UNUSED(format);
-#else
-  if (format == HOUR_FORMAT_12) {
-    RtcHandle.Init.HourFormat = RTC_HOURFORMAT_12;
-  } else {
-    RtcHandle.Init.HourFormat = RTC_HOURFORMAT_24;
-  }
-  RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
-  RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
-#if defined(RTC_OUTPUT_REMAP_NONE)
-  RtcHandle.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
-#endif /* RTC_OUTPUT_REMAP_NONE */
-  RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
-  RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
-#endif /* STM32F1xx */
-
-  /* Ensure backup domain is enabled before we init the RTC so we can use the backup registers for date retention on stm32f1xx baords */
+  /* Ensure backup domain is enabled before we init the RTC so we can use the backup registers for date retention on stm32f1xx boards */
   enableBackupDomain();
 
-  HAL_RTC_Init(&RtcHandle);
+  if (reset) {
+    resetBackupDomain();
+  }
 
 #if defined(STM32F1xx)
-  // Copy RTC date back out of the BackUp registers
   uint32_t BackupDate;
-  /* date from backup battery was not reset, load it */
-  if (!reset) {
-    BackupDate = getBackupRegister(RTC_BKP_DATE) << 16;
-    BackupDate |= getBackupRegister(RTC_BKP_DATE + 1) & 0xFFFF;
-    if (BackupDate != 0) {
-      /* cannot force the date to be 0 but 1/1/2000 is the reset value, always */
-      memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
-      /* and fill the new RTC Date value */
-      RTC_SetDate(RtcHandle.DateToUpdate.Year, RtcHandle.DateToUpdate.Month,
-                  RtcHandle.DateToUpdate.Date, RtcHandle.DateToUpdate.WeekDay);
-    }
+  BackupDate = getBackupRegister(RTC_BKP_DATE) << 16;
+  BackupDate |= getBackupRegister(RTC_BKP_DATE + 1) & 0xFFFF;
+  if ((BackupDate == 0) || reset) {
+    /* Let HAL calculate the prescaler */
+    RtcHandle.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
+    RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
+    HAL_RTC_Init(&RtcHandle);
+    // Default: saturday 1st of January 2001
+    // Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
+    RTC_SetDate(1, 1, 1, 6);
+    reinit = true;
+  } else {
+    memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
+    /* and fill the new RTC Date value */
+    RTC_SetDate(RtcHandle.DateToUpdate.Year, RtcHandle.DateToUpdate.Month,
+                RtcHandle.DateToUpdate.Date, RtcHandle.DateToUpdate.WeekDay);
   }
-  RTC_StoreDate();
+#else
+
+  if (!LL_RTC_IsActiveFlag_INITS(RtcHandle.Instance) || reset) {
+    RtcHandle.Init.HourFormat = format == HOUR_FORMAT_12 ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
+    RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
+    RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+    RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+#if defined(RTC_OUTPUT_REMAP_NONE)
+    RtcHandle.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
+#endif /* RTC_OUTPUT_REMAP_NONE */
+
+    RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
+
+    HAL_RTC_Init(&RtcHandle);
+    // Default: saturday 1st of January 2001
+    // Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
+    RTC_SetDate(1, 1, 1, 6);
+    reinit = true;
+  }
 #endif /* STM32F1xx */
 
 #if defined(RTC_CR_BYPSHAD)
@@ -398,6 +404,8 @@ void RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 
   HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
   HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+
+  return reinit;
 }
 
 /**
@@ -416,9 +424,16 @@ void RTC_DeInit(void)
   * @brief Check if time is already set
   * @retval True if set else false
   */
-bool RTC_IsTimeSet(void)
+bool RTC_IsConfigured(void)
 {
-  return (getBackupRegister(RTC_BKP_INDEX) == RTC_BKP_VALUE) ? true : false;
+#if defined(STM32F1xx)
+  uint32_t BackupDate;
+  BackupDate = getBackupRegister(RTC_BKP_DATE) << 16;
+  BackupDate |= getBackupRegister(RTC_BKP_DATE + 1) & 0xFFFF;
+  return (BackupDate != 0);
+#else
+  return LL_RTC_IsActiveFlag_INITS(RtcHandle.Instance);
+#endif
 }
 
 /**
@@ -462,7 +477,6 @@ void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSe
 #endif /* !STM32F1xx */
 
     HAL_RTC_SetTime(&RtcHandle, &RTC_TimeStruct, RTC_FORMAT_BIN);
-    setBackupRegister(RTC_BKP_INDEX, RTC_BKP_VALUE);
   }
 }
 
@@ -534,7 +548,6 @@ void RTC_SetDate(uint8_t year, uint8_t month, uint8_t day, uint8_t wday)
     RTC_DateStruct.Date = day;
     RTC_DateStruct.WeekDay = wday;
     HAL_RTC_SetDate(&RtcHandle, &RTC_DateStruct, RTC_FORMAT_BIN);
-    setBackupRegister(RTC_BKP_INDEX, RTC_BKP_VALUE);
 #if defined(STM32F1xx)
     RTC_StoreDate();
 #endif /* STM32F1xx */
@@ -656,6 +669,20 @@ void RTC_StopAlarm(void)
 
   /* Disable the Alarm A interrupt */
   HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A);
+}
+
+/**
+  * @brief Check whether RTC alarm is set
+  * @param None
+  * @retval True if Alarm is set
+  */
+bool RTC_IsAlarmSet(void)
+{
+#if defined(STM32F1xx)
+  return LL_RTC_IsEnabledIT_ALR(RtcHandle.Instance);
+#else
+  return LL_RTC_IsEnabledIT_ALRA(RtcHandle.Instance);
+#endif
 }
 
 /**

@@ -178,9 +178,9 @@ void RTC_getPrediv(int8_t *asynch, int16_t *synch);
 void RTC_setPrediv(int8_t asynch, int16_t synch);
 #endif /* STM32F1xx */
 
-void RTC_init(hourFormat_t format, sourceClock_t source, bool reset);
+bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset);
 void RTC_DeInit(void);
-bool RTC_IsTimeSet(void);
+bool RTC_IsConfigured(void);
 
 void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period);
 void RTC_GetTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period);
@@ -190,6 +190,7 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday);
 
 void RTC_StartAlarm(uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask);
 void RTC_StopAlarm(void);
+bool RTC_IsAlarmSet(void);
 void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
 void attachAlarmCallback(voidCallbackPtr func, void *data);
 void detachAlarmCallback(void);

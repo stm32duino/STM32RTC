@@ -42,8 +42,17 @@
 #define EPOCH_TIME_YEAR_OFF 100        // years since 1900
 
 // Initialize static variable
-bool STM32RTC::_configured = false;
-bool STM32RTC::_reset = false;
+bool STM32RTC::_timeSet = false;
+
+/**
+  * @brief initializes the RTC
+  * @param format: hour format: HOUR_12 or HOUR_24(default)
+  * @retval None
+  */
+void STM32RTC::begin(Hour_Format format)
+{
+  begin(false, format);
+}
 
 /**
   * @brief initializes the RTC
@@ -53,32 +62,20 @@ bool STM32RTC::_reset = false;
   */
 void STM32RTC::begin(bool resetTime, Hour_Format format)
 {
-  _reset = resetTime;
-  if (resetTime == true) {
-    _configured = false;
-    _alarmEnabled = false;
-  }
-  begin(format);
-}
+  bool reinit;
 
-/**
-  * @brief initializes the RTC
-  * @param format: hour format: HOUR_12 or HOUR_24(default)
-  * @retval None
-  */
-void STM32RTC::begin(Hour_Format format)
-{
-  if (_configured == false) {
-    _format = format;
-    RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
-             (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
-             (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01050000)
-             , _reset
-#endif
-            );
-    // Must be set before call of sync methods
-    _configured = true;
+  if (resetTime == true) {
+    _timeSet = false;
+  }
+
+  _format = format;
+  reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
+                    (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
+                    (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
+                    , resetTime);
+
+  if (reinit == true) {
+    _timeSet = false;
     syncTime();
     syncDate();
     // Use current time to init alarm members
@@ -89,9 +86,7 @@ void STM32RTC::begin(Hour_Format format)
     _alarmSubSeconds = _subSeconds;
     _alarmPeriod = _hoursPeriod;
   } else {
-    syncTime();
-    syncDate();
-    syncAlarmTime();
+    _timeSet = true;
   }
 }
 
@@ -102,11 +97,8 @@ void STM32RTC::begin(Hour_Format format)
   */
 void STM32RTC::end(void)
 {
-  if (_configured == true) {
-    RTC_DeInit();
-    _configured = false;
-    _alarmEnabled = false;
-  }
+  RTC_DeInit();
+  _timeSet = false;
 }
 
 /**
@@ -195,26 +187,23 @@ void STM32RTC::setPrediv(int8_t predivA, int16_t predivS)
   */
 void STM32RTC::enableAlarm(Alarm_Match match)
 {
-  if (_configured) {
-    _alarmMatch = match;
-    switch (match) {
-      case MATCH_OFF:
-        RTC_StopAlarm();
-        break;
-      case MATCH_YYMMDDHHMMSS://kept for compatibility
-      case MATCH_MMDDHHMMSS:  //kept for compatibility
-      case MATCH_DHHMMSS:
-      case MATCH_HHMMSS:
-      case MATCH_MMSS:
-      case MATCH_SS:
-        RTC_StartAlarm(_alarmDay, _alarmHours, _alarmMinutes, _alarmSeconds,
-                       _alarmSubSeconds, (_alarmPeriod == AM) ? HOUR_AM : HOUR_PM,
-                       static_cast<uint8_t>(_alarmMatch));
-        _alarmEnabled = true;
-        break;
-      default:
-        break;
-    }
+  _alarmMatch = match;
+  switch (match) {
+    case MATCH_OFF:
+      RTC_StopAlarm();
+      break;
+    case MATCH_YYMMDDHHMMSS://kept for compatibility
+    case MATCH_MMDDHHMMSS:  //kept for compatibility
+    case MATCH_DHHMMSS:
+    case MATCH_HHMMSS:
+    case MATCH_MMSS:
+    case MATCH_SS:
+      RTC_StartAlarm(_alarmDay, _alarmHours, _alarmMinutes, _alarmSeconds,
+                     _alarmSubSeconds, (_alarmPeriod == AM) ? HOUR_AM : HOUR_PM,
+                     static_cast<uint8_t>(_alarmMatch));
+      break;
+    default:
+      break;
   }
 }
 
@@ -224,10 +213,7 @@ void STM32RTC::enableAlarm(Alarm_Match match)
   */
 void STM32RTC::disableAlarm(void)
 {
-  if (_configured) {
-    RTC_StopAlarm();
-    _alarmEnabled = false;
-  }
+  RTC_StopAlarm();
 }
 
 /**
@@ -508,13 +494,12 @@ uint8_t STM32RTC::getAlarmYear(void)
   */
 void STM32RTC::setSubSeconds(uint32_t subSeconds)
 {
-  if (_configured) {
-    syncTime();
-    if (subSeconds < 1000) {
-      _subSeconds = subSeconds;
-    }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  syncTime();
+  if (subSeconds < 1000) {
+    _subSeconds = subSeconds;
   }
+  RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  _timeSet = true;
 }
 
 /**
@@ -524,13 +509,12 @@ void STM32RTC::setSubSeconds(uint32_t subSeconds)
   */
 void STM32RTC::setSeconds(uint8_t seconds)
 {
-  if (_configured) {
-    syncTime();
-    if (seconds < 60) {
-      _seconds = seconds;
-    }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  syncTime();
+  if (seconds < 60) {
+    _seconds = seconds;
   }
+  RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  _timeSet = true;
 }
 
 /**
@@ -540,13 +524,12 @@ void STM32RTC::setSeconds(uint8_t seconds)
   */
 void STM32RTC::setMinutes(uint8_t minutes)
 {
-  if (_configured) {
-    syncTime();
-    if (minutes < 60) {
-      _minutes = minutes;
-    }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  syncTime();
+  if (minutes < 60) {
+    _minutes = minutes;
   }
+  RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  _timeSet = true;
 }
 
 /**
@@ -557,16 +540,15 @@ void STM32RTC::setMinutes(uint8_t minutes)
   */
 void STM32RTC::setHours(uint8_t hours, AM_PM period)
 {
-  if (_configured) {
-    syncTime();
-    if (hours < 24) {
-      _hours = hours;
-    }
-    if (_format == HOUR_12) {
-      _hoursPeriod = period;
-    }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  syncTime();
+  if (hours < 24) {
+    _hours = hours;
   }
+  if (_format == HOUR_12) {
+    _hoursPeriod = period;
+  }
+  RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  _timeSet = true;
 }
 
 /**
@@ -580,25 +562,24 @@ void STM32RTC::setHours(uint8_t hours, AM_PM period)
   */
 void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, AM_PM period)
 {
-  if (_configured) {
-    syncTime();
-    if (subSeconds < 1000) {
-      _subSeconds = subSeconds;
-    }
-    if (seconds < 60) {
-      _seconds = seconds;
-    }
-    if (minutes < 60) {
-      _minutes = minutes;
-    }
-    if (hours < 24) {
-      _hours = hours;
-    }
-    if (_format == HOUR_12) {
-      _hoursPeriod = period;
-    }
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  syncTime();
+  if (subSeconds < 1000) {
+    _subSeconds = subSeconds;
   }
+  if (seconds < 60) {
+    _seconds = seconds;
+  }
+  if (minutes < 60) {
+    _minutes = minutes;
+  }
+  if (hours < 24) {
+    _hours = hours;
+  }
+  if (_format == HOUR_12) {
+    _hoursPeriod = period;
+  }
+  RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  _timeSet = true;
 }
 
 /**
@@ -608,13 +589,12 @@ void STM32RTC::setTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t
   */
 void STM32RTC::setWeekDay(uint8_t weekDay)
 {
-  if (_configured) {
-    syncDate();
-    if ((weekDay >= 1) && (weekDay <= 7)) {
-      _wday = weekDay;
-    }
-    RTC_SetDate(_year, _month, _day, _wday);
+  syncDate();
+  if ((weekDay >= 1) && (weekDay <= 7)) {
+    _wday = weekDay;
   }
+  RTC_SetDate(_year, _month, _day, _wday);
+  _timeSet = true;
 }
 
 /**
@@ -624,13 +604,12 @@ void STM32RTC::setWeekDay(uint8_t weekDay)
   */
 void STM32RTC::setDay(uint8_t day)
 {
-  if (_configured) {
-    syncDate();
-    if ((day >= 1) && (day <= 31)) {
-      _day = day;
-    }
-    RTC_SetDate(_year, _month, _day, _wday);
+  syncDate();
+  if ((day >= 1) && (day <= 31)) {
+    _day = day;
   }
+  RTC_SetDate(_year, _month, _day, _wday);
+  _timeSet = true;
 }
 
 /**
@@ -640,13 +619,12 @@ void STM32RTC::setDay(uint8_t day)
   */
 void STM32RTC::setMonth(uint8_t month)
 {
-  if (_configured) {
-    syncDate();
-    if ((month >= 1) && (month <= 12)) {
-      _month = month;
-    }
-    RTC_SetDate(_year, _month, _day, _wday);
+  syncDate();
+  if ((month >= 1) && (month <= 12)) {
+    _month = month;
   }
+  RTC_SetDate(_year, _month, _day, _wday);
+  _timeSet = true;
 }
 
 /**
@@ -656,13 +634,12 @@ void STM32RTC::setMonth(uint8_t month)
   */
 void STM32RTC::setYear(uint8_t year)
 {
-  if (_configured) {
-    syncDate();
-    if (year < 100) {
-      _year = year;
-    }
-    RTC_SetDate(_year, _month, _day, _wday);
+  syncDate();
+  if (year < 100) {
+    _year = year;
   }
+  RTC_SetDate(_year, _month, _day, _wday);
+  _timeSet = true;
 }
 
 /**
@@ -674,19 +651,18 @@ void STM32RTC::setYear(uint8_t year)
   */
 void STM32RTC::setDate(uint8_t day, uint8_t month, uint8_t year)
 {
-  if (_configured) {
-    syncDate();
-    if ((day >= 1) && (day <= 31)) {
-      _day = day;
-    }
-    if ((month >= 1) && (month <= 12)) {
-      _month = month;
-    }
-    if (year < 100) {
-      _year = year;
-    }
-    RTC_SetDate(_year, _month, _day, _wday);
+  syncDate();
+  if ((day >= 1) && (day <= 31)) {
+    _day = day;
   }
+  if ((month >= 1) && (month <= 12)) {
+    _month = month;
+  }
+  if (year < 100) {
+    _year = year;
+  }
+  RTC_SetDate(_year, _month, _day, _wday);
+  _timeSet = true;
 }
 
 /**
@@ -699,22 +675,21 @@ void STM32RTC::setDate(uint8_t day, uint8_t month, uint8_t year)
   */
 void STM32RTC::setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year)
 {
-  if (_configured) {
-    syncDate();
-    if ((weekDay >= 1) && (weekDay <= 7)) {
-      _wday = weekDay;
-    }
-    if ((day >= 1) && (day <= 31)) {
-      _day = day;
-    }
-    if ((month >= 1) && (month <= 12)) {
-      _month = month;
-    }
-    if (year < 100) {
-      _year = year;
-    }
-    RTC_SetDate(_year, _month, _day, _wday);
+  syncDate();
+  if ((weekDay >= 1) && (weekDay <= 7)) {
+    _wday = weekDay;
   }
+  if ((day >= 1) && (day <= 31)) {
+    _day = day;
+  }
+  if ((month >= 1) && (month <= 12)) {
+    _month = month;
+  }
+  if (year < 100) {
+    _year = year;
+  }
+  RTC_SetDate(_year, _month, _day, _wday);
+  _timeSet = true;
 }
 
 /**
@@ -724,10 +699,8 @@ void STM32RTC::setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year
   */
 void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds)
 {
-  if (_configured) {
-    if (subSeconds < 1000) {
-      _alarmSubSeconds = subSeconds;
-    }
+  if (subSeconds < 1000) {
+    _alarmSubSeconds = subSeconds;
   }
 }
 
@@ -738,10 +711,8 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds)
   */
 void STM32RTC::setAlarmSeconds(uint8_t seconds)
 {
-  if (_configured) {
-    if (seconds < 60) {
-      _alarmSeconds = seconds;
-    }
+  if (seconds < 60) {
+    _alarmSeconds = seconds;
   }
 }
 
@@ -752,10 +723,8 @@ void STM32RTC::setAlarmSeconds(uint8_t seconds)
   */
 void STM32RTC::setAlarmMinutes(uint8_t minutes)
 {
-  if (_configured) {
-    if (minutes < 60) {
-      _alarmMinutes = minutes;
-    }
+  if (minutes < 60) {
+    _alarmMinutes = minutes;
   }
 }
 
@@ -767,13 +736,11 @@ void STM32RTC::setAlarmMinutes(uint8_t minutes)
   */
 void STM32RTC::setAlarmHours(uint8_t hours, AM_PM period)
 {
-  if (_configured) {
-    if (hours < 24) {
-      _alarmHours = hours;
-    }
-    if (_format == HOUR_12) {
-      _alarmPeriod = period;
-    }
+  if (hours < 24) {
+    _alarmHours = hours;
+  }
+  if (_format == HOUR_12) {
+    _alarmPeriod = period;
   }
 }
 
@@ -788,12 +755,10 @@ void STM32RTC::setAlarmHours(uint8_t hours, AM_PM period)
   */
 void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, AM_PM period)
 {
-  if (_configured) {
-    setAlarmHours(hours, period);
-    setAlarmMinutes(minutes);
-    setAlarmSeconds(seconds);
-    setAlarmSubSeconds(subSeconds);
-  }
+  setAlarmHours(hours, period);
+  setAlarmMinutes(minutes);
+  setAlarmSeconds(seconds);
+  setAlarmSubSeconds(subSeconds);
 }
 
 /**
@@ -803,10 +768,8 @@ void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uin
   */
 void STM32RTC::setAlarmDay(uint8_t day)
 {
-  if (_configured) {
-    if ((day >= 1) && (day <= 31)) {
-      _alarmDay = day;
-    }
+  if ((day >= 1) && (day <= 31)) {
+    _alarmDay = day;
   }
 }
 
@@ -897,21 +860,19 @@ uint32_t STM32RTC::getY2kEpoch(void)
   */
 void STM32RTC::setAlarmEpoch(uint32_t ts, Alarm_Match match, uint32_t subSeconds)
 {
-  if (_configured) {
-    if (ts < EPOCH_TIME_OFF) {
-      ts = EPOCH_TIME_OFF;
-    }
-
-    time_t t = ts;
-    struct tm *tmp = gmtime(&t);
-
-    setAlarmDay(tmp->tm_mday);
-    setAlarmHours(tmp->tm_hour);
-    setAlarmMinutes(tmp->tm_min);
-    setAlarmSeconds(tmp->tm_sec);
-    setAlarmSubSeconds(subSeconds);
-    enableAlarm(match);
+  if (ts < EPOCH_TIME_OFF) {
+    ts = EPOCH_TIME_OFF;
   }
+
+  time_t t = ts;
+  struct tm *tmp = gmtime(&t);
+
+  setAlarmDay(tmp->tm_mday);
+  setAlarmHours(tmp->tm_hour);
+  setAlarmMinutes(tmp->tm_min);
+  setAlarmSeconds(tmp->tm_sec);
+  setAlarmSubSeconds(subSeconds);
+  enableAlarm(match);
 }
 
 /**
@@ -921,30 +882,29 @@ void STM32RTC::setAlarmEpoch(uint32_t ts, Alarm_Match match, uint32_t subSeconds
   */
 void STM32RTC::setEpoch(uint32_t ts, uint32_t subSeconds)
 {
-  if (_configured) {
-    if (ts < EPOCH_TIME_OFF) {
-      ts = EPOCH_TIME_OFF;
-    }
-
-    time_t t = ts;
-    struct tm *tmp = gmtime(&t);
-
-    _year = tmp->tm_year - EPOCH_TIME_YEAR_OFF;
-    _month = tmp->tm_mon + 1;
-    _day = tmp->tm_mday;
-    if (tmp->tm_wday == 0) {
-      _wday = RTC_WEEKDAY_SUNDAY;
-    } else {
-      _wday = tmp->tm_wday;
-    }
-    _hours = tmp->tm_hour;
-    _minutes = tmp->tm_min;
-    _seconds = tmp->tm_sec;
-    _subSeconds = subSeconds;
-
-    RTC_SetDate(_year, _month, _day, _wday);
-    RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  if (ts < EPOCH_TIME_OFF) {
+    ts = EPOCH_TIME_OFF;
   }
+
+  time_t t = ts;
+  struct tm *tmp = gmtime(&t);
+
+  _year = tmp->tm_year - EPOCH_TIME_YEAR_OFF;
+  _month = tmp->tm_mon + 1;
+  _day = tmp->tm_mday;
+  if (tmp->tm_wday == 0) {
+    _wday = RTC_WEEKDAY_SUNDAY;
+  } else {
+    _wday = tmp->tm_wday;
+  }
+  _hours = tmp->tm_hour;
+  _minutes = tmp->tm_min;
+  _seconds = tmp->tm_sec;
+  _subSeconds = subSeconds;
+
+  RTC_SetDate(_year, _month, _day, _wday);
+  RTC_SetTime(_hours, _minutes, _seconds, _subSeconds, (_hoursPeriod == AM) ? HOUR_AM : HOUR_PM);
+  _timeSet = true;
 }
 
 /**
@@ -953,9 +913,7 @@ void STM32RTC::setEpoch(uint32_t ts, uint32_t subSeconds)
   */
 void STM32RTC::setY2kEpoch(uint32_t ts)
 {
-  if (_configured) {
-    setEpoch(ts + EPOCH_TIME_OFF);
-  }
+  setEpoch(ts + EPOCH_TIME_OFF);
 }
 
 /**
@@ -968,7 +926,7 @@ void STM32RTC::configForLowPower(Source_Clock source)
 #ifdef __HAL_RCC_RTCAPB_CLKAM_ENABLE
   __HAL_RCC_RTCAPB_CLKAM_ENABLE();
 #endif
-  if (!_configured) {
+  if (!RTC_IsConfigured()) {
     _clockSource = source;
     // Enable RTC
     begin();
@@ -980,7 +938,6 @@ void STM32RTC::configForLowPower(Source_Clock source)
       uint8_t seconds, minutes, hours, weekDay, day, month, years;
       uint8_t alarmSeconds, alarmMinutes, alarmHours, alarmDay;
       Alarm_Match alarmMatch = _alarmMatch;
-      bool alarmEnabled = _alarmEnabled;
 
       alarmDay = _alarmDay;
       alarmHours = _alarmHours;
@@ -999,7 +956,7 @@ void STM32RTC::configForLowPower(Source_Clock source)
       setDate(weekDay, day, month, years);
       setAlarmTime(alarmHours, alarmMinutes, alarmSeconds, alarmPeriod);
       setAlarmDay(alarmDay);
-      if (alarmEnabled) {
+      if (RTC_IsAlarmSet()) {
         enableAlarm(alarmMatch);
       }
     }
@@ -1013,11 +970,9 @@ void STM32RTC::configForLowPower(Source_Clock source)
   */
 void STM32RTC::syncTime(void)
 {
-  if (_configured) {
-    hourAM_PM_t p = HOUR_AM;
-    RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
-    _hoursPeriod = (p == HOUR_AM) ? AM : PM;
-  }
+  hourAM_PM_t p = HOUR_AM;
+  RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
+  _hoursPeriod = (p == HOUR_AM) ? AM : PM;
 }
 
 /**
@@ -1026,9 +981,7 @@ void STM32RTC::syncTime(void)
   */
 void STM32RTC::syncDate(void)
 {
-  if (_configured) {
-    RTC_GetDate(&_year, &_month, &_day, &_wday);
-  }
+  RTC_GetDate(&_year, &_month, &_day, &_wday);
 }
 
 /**
@@ -1037,25 +990,23 @@ void STM32RTC::syncDate(void)
   */
 void STM32RTC::syncAlarmTime(void)
 {
-  if (_configured) {
-    hourAM_PM_t p = HOUR_AM;
-    uint8_t match;
-    RTC_GetAlarm(&_alarmDay, &_alarmHours, &_alarmMinutes, &_alarmSeconds,
-                 &_alarmSubSeconds, &p, &match);
-    _alarmPeriod = (p == HOUR_AM) ? AM : PM;
-    switch (static_cast<Alarm_Match>(match)) {
-      case MATCH_OFF:
-      case MATCH_YYMMDDHHMMSS://kept for compatibility
-      case MATCH_MMDDHHMMSS:  //kept for compatibility
-      case MATCH_DHHMMSS:
-      case MATCH_HHMMSS:
-      case MATCH_MMSS:
-      case MATCH_SS:
-        _alarmMatch = static_cast<Alarm_Match>(match);
-        break;
-      default:
-        _alarmMatch = MATCH_OFF;
-        break;
-    }
+  hourAM_PM_t p = HOUR_AM;
+  uint8_t match;
+  RTC_GetAlarm(&_alarmDay, &_alarmHours, &_alarmMinutes, &_alarmSeconds,
+               &_alarmSubSeconds, &p, &match);
+  _alarmPeriod = (p == HOUR_AM) ? AM : PM;
+  switch (static_cast<Alarm_Match>(match)) {
+    case MATCH_OFF:
+    case MATCH_YYMMDDHHMMSS://kept for compatibility
+    case MATCH_MMDDHHMMSS:  //kept for compatibility
+    case MATCH_DHHMMSS:
+    case MATCH_HHMMSS:
+    case MATCH_MMSS:
+    case MATCH_SS:
+      _alarmMatch = static_cast<Alarm_Match>(match);
+      break;
+    default:
+      _alarmMatch = MATCH_OFF;
+      break;
   }
 }
