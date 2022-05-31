@@ -204,16 +204,16 @@ class STM32RTC {
 #endif /* STM32F1xx */
     bool isConfigured(void)
     {
-      return _configured;
+      return RTC_IsConfigured();
     }
     bool isAlarmEnabled(void)
     {
-      return _alarmEnabled;
+      return RTC_IsAlarmSet();
     }
     bool isTimeSet(void)
     {
 #if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01050000)
-      return RTC_IsTimeSet();
+      return _timeSet;
 #else
       return false;
 #endif
@@ -224,8 +224,7 @@ class STM32RTC {
   private:
     STM32RTC(void): _clockSource(LSI_CLOCK) {}
 
-    static bool _configured;
-    static bool _reset;
+    static bool _timeSet;
 
     Hour_Format _format;
     AM_PM       _hoursPeriod;
@@ -245,7 +244,6 @@ class STM32RTC {
     uint32_t    _alarmSubSeconds;
     AM_PM       _alarmPeriod;
     Alarm_Match _alarmMatch;
-    bool        _alarmEnabled;
 
     Source_Clock _clockSource;
 
