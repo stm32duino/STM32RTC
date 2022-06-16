@@ -948,7 +948,7 @@ void STM32RTC::configForLowPower(Source_Clock source)
     end();
     _clockSource = source;
     // Enable RTC
-    begin(period);
+    begin(_format);
     // Restore config
     setTime(seconds, minutes, hours, subSeconds, period);
     setDate(weekDay, day, month, years);
@@ -957,6 +957,11 @@ void STM32RTC::configForLowPower(Source_Clock source)
     if (RTC_IsAlarmSet()) {
       enableAlarm(alarmMatch);
     }
+  }
+
+  if (!isTimeSet()) {
+    // Set arbitrary time for Lowpower; if not already set
+    setTime(12, 0, 0, 0, AM);
   }
 #endif
 }
