@@ -355,6 +355,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 
   if (reset) {
     resetBackupDomain();
+    RTC_initClock(source);
   }
 
 #if defined(STM32F1xx)
@@ -401,9 +402,6 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
   /* Enable Direct Read of the calendar registers (not through Shadow) */
   HAL_RTCEx_EnableBypassShadow(&RtcHandle);
 #endif
-
-  HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
-  HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
 
   return reinit;
 }
@@ -654,6 +652,8 @@ void RTC_StartAlarm(uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds
 
     /* Set RTC_Alarm */
     HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
+    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
+    HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   }
 }
 
