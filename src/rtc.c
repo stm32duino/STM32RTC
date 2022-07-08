@@ -364,7 +364,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
   BackupDate |= getBackupRegister(RTC_BKP_DATE + 1) & 0xFFFF;
   if ((BackupDate == 0) || reset) {
     /* Let HAL calculate the prescaler */
-    RtcHandle.Init.AsynchPrediv = RTC_AUTO_1_SECOND;
+    RtcHandle.Init.AsynchPrediv = prediv;
     RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
     HAL_RTC_Init(&RtcHandle);
     // Default: saturday 1st of January 2001
@@ -395,6 +395,9 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
     // Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
     RTC_SetDate(1, 1, 1, 6);
     reinit = true;
+  } else {
+    // This initialize variables: predivAsync, redivSync and predivSync_bits
+    RTC_getPrediv(NULL, NULL);
   }
 #endif /* STM32F1xx */
 
