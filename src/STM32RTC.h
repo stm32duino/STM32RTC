@@ -135,6 +135,7 @@ class STM32RTC {
     void standbyMode();
 
     /* Get Functions */
+    uint32_t getAlarmType(void);
 
     uint32_t getSubSeconds(void);
     uint8_t getSeconds(void);
@@ -160,6 +161,7 @@ class STM32RTC {
     uint8_t getAlarmYear();
 
     /* Set Functions */
+    void setAlarmType(uint32_t alarmType);
 
     void setSubSeconds(uint32_t subSeconds);
     void setSeconds(uint8_t seconds);
@@ -225,6 +227,8 @@ class STM32RTC {
     STM32RTC(void): _clockSource(LSI_CLOCK) {}
 
     static bool _timeSet;
+
+    uint32_t    _alarmType;
 
     Hour_Format _format;
     AM_PM       _hoursPeriod;

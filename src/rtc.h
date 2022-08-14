@@ -194,6 +194,13 @@ bool RTC_IsAlarmSet(void);
 void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
 void attachAlarmCallback(voidCallbackPtr func, void *data);
 void detachAlarmCallback(void);
+
+void v2_RTC_StartAlarm(uint32_t alarmType, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask);
+void v2_RTC_StopAlarm(uint32_t alarmType);
+bool v2_RTC_IsAlarmSet(uint32_t alarmType);
+void v2_RTC_GetAlarm(uint32_t alarmType, uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
+void v2_attachAlarmCallback(uint32_t alarmType, voidCallbackPtr func, void *data);
+void v2_detachAlarmCallback(uint32_t alarmType);
 #ifdef ONESECOND_IRQn
 void attachSecondsIrqCallback(voidCallbackPtr func);
 void detachSecondsIrqCallback(void);

@@ -64,6 +64,8 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
 {
   bool reinit;
 
+  _alarmType = RTC_ALARM_A;
+
   if (resetTime == true) {
     _timeSet = false;
   }
@@ -198,7 +200,8 @@ void STM32RTC::enableAlarm(Alarm_Match match)
     case MATCH_HHMMSS:
     case MATCH_MMSS:
     case MATCH_SS:
-      RTC_StartAlarm(_alarmDay, _alarmHours, _alarmMinutes, _alarmSeconds,
+      v2_RTC_StartAlarm(_alarmType,
+                     _alarmDay, _alarmHours, _alarmMinutes, _alarmSeconds,
                      _alarmSubSeconds, (_alarmPeriod == AM) ? HOUR_AM : HOUR_PM,
                      static_cast<uint8_t>(_alarmMatch));
       break;
@@ -213,7 +216,7 @@ void STM32RTC::enableAlarm(Alarm_Match match)
   */
 void STM32RTC::disableAlarm(void)
 {
-  RTC_StopAlarm();
+  v2_RTC_StopAlarm(_alarmType);
 }
 
 /**
@@ -223,7 +226,7 @@ void STM32RTC::disableAlarm(void)
   */
 void STM32RTC::attachInterrupt(voidFuncPtr callback, void *data)
 {
-  attachAlarmCallback(callback, data);
+  v2_attachAlarmCallback(_alarmType, callback, data);
 }
 
 /**
@@ -232,7 +235,7 @@ void STM32RTC::attachInterrupt(voidFuncPtr callback, void *data)
   */
 void STM32RTC::detachInterrupt(void)
 {
-  detachAlarmCallback();
+  v2_detachAlarmCallback(_alarmType);
 }
 
 #ifdef ONESECOND_IRQn
@@ -265,6 +268,15 @@ void STM32RTC::standbyMode(void)
 /*
  * Get Functions
  */
+
+/**
+  * @brief  get alarmType month.
+  * @retval return the value of alarmType.
+  */
+uint32_t STM32RTC::getAlarmType(void)
+{
+  return _alarmType;
+}
 
 /**
   * @brief  get RTC subseconds.
@@ -486,6 +498,15 @@ uint8_t STM32RTC::getAlarmYear(void)
 /*
  * Set Functions
  */
+
+/**
+  * @brief  set RTC Alarm type (A, B) we currently operating on.
+  * @param  alarmType: RTC_ALARM_A, RTC_ALARM_B
+  * @retval none
+  */
+void STM32RTC::setAlarmType(uint32_t alarmType) {
+  _alarmType = alarmType;
+}
 
 /**
   * @brief  set RTC subseconds.
@@ -954,7 +975,7 @@ void STM32RTC::configForLowPower(Source_Clock source)
     setDate(weekDay, day, month, years);
     setAlarmTime(alarmHours, alarmMinutes, alarmSeconds, alarmPeriod);
     setAlarmDay(alarmDay);
-    if (RTC_IsAlarmSet()) {
+    if (v2_RTC_IsAlarmSet(_alarmType)) {
       enableAlarm(alarmMatch);
     }
   }
@@ -994,7 +1015,8 @@ void STM32RTC::syncAlarmTime(void)
 {
   hourAM_PM_t p = HOUR_AM;
   uint8_t match;
-  RTC_GetAlarm(&_alarmDay, &_alarmHours, &_alarmMinutes, &_alarmSeconds,
+  v2_RTC_GetAlarm(_alarmType,
+               &_alarmDay, &_alarmHours, &_alarmMinutes, &_alarmSeconds,
                &_alarmSubSeconds, &p, &match);
   _alarmPeriod = (p == HOUR_AM) ? AM : PM;
   switch (static_cast<Alarm_Match>(match)) {
