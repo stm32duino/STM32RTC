@@ -732,13 +732,19 @@ void v2_RTC_StartAlarm(uint32_t alarmType, uint8_t day, uint8_t hours, uint8_t m
   }
 }
 
-void v2_RTC_StopAlarm(uint32_t alarmType) {
-  if (alarmType == RTC_ALARM_A) {
-    /* Clear RTC Alarm Flag */
-    __HAL_RTC_ALARM_CLEAR_FLAG(&RtcHandle, RTC_FLAG_ALRAF);
+void disableAlarmA() {
+  /* Clear RTC Alarm Flag */
+  __HAL_RTC_ALARM_CLEAR_FLAG(&RtcHandle, RTC_FLAG_ALRAF);
+  /* Disable the Alarm A interrupt */
+  HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A);
+}
 
-    /* Disable the Alarm A interrupt */
-    HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A);
+void v2_RTC_StopAlarm(uint32_t alarmType) {
+#if defined(STM32F1xx) || defined(STM32F0xx)
+  disableAlarmA();
+#else
+  if (alarmType == RTC_ALARM_A) {
+    disableAlarmA();
   } else {
     /* Clear RTC Alarm Flag */
     __HAL_RTC_ALARM_CLEAR_FLAG(&RtcHandle, RTC_FLAG_ALRBF);
@@ -746,6 +752,7 @@ void v2_RTC_StopAlarm(uint32_t alarmType) {
     /* Disable the Alarm B interrupt */
     HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_B);
   }
+#endif
 }
 
 void v2_RTC_GetAlarm(uint32_t alarmType, uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask)
@@ -804,6 +811,8 @@ void v2_RTC_GetAlarm(uint32_t alarmType, uint8_t *day, uint8_t *hours, uint8_t *
 bool v2_RTC_IsAlarmSet(uint32_t alarmType) {
 #if defined(STM32F1xx)
   return LL_RTC_IsEnabledIT_ALR(RtcHandle.Instance);
+#elif defined(STM32F0xx)
+    return LL_RTC_IsEnabledIT_ALRA(RtcHandle.Instance);
 #else
   if (alarmType == RTC_ALARM_A) {
     return LL_RTC_IsEnabledIT_ALRA(RtcHandle.Instance);
