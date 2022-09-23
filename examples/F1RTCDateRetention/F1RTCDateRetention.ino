@@ -66,8 +66,9 @@ void setup()
   // Check if date is valid = read in the backUp reg.
   // Note that backup reg only keep the date /time
   // and a power off reset the content if not saved by Vbat
-  // HAL_RTC init date is set to 1st of January 2000
-if ((day == 1) && (month == RTC_MONTH_JANUARY) && (year == 0)) {
+  // Stm32duino RTC init date is set to 1st of January 2001
+  // https://github.com/stm32duino/STM32RTC/blob/f620b534f7bffe24f031fc5935324027cfe51320/src/rtc.c#L395
+if ((day == 1) && (month == RTC_MONTH_JANUARY) && (year == 1)) {
     // Set the time
     rtc.setHours(INITIAL_HOUR);
     rtc.setMinutes(INITIAL_MIN);

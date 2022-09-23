@@ -64,29 +64,26 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
 {
   bool reinit;
 
-  if (resetTime == true) {
-    _timeSet = false;
-  }
 
   _format = format;
   reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
                     (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                     (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
                     , resetTime);
+  _timeSet = !reinit;
 
-  if (reinit == true) {
-    _timeSet = false;
-    syncTime();
-    syncDate();
-    // Use current time to init alarm members
+  syncTime();
+  syncDate();
+
+  if (!IS_RTC_DATE(_alarmDay)) {
+    // Use current time to init alarm members,
+    // specially in case _alarmDay is 0 (reset value) which is an invalid value
     _alarmDay  = _day;
     _alarmHours = _hours;
     _alarmMinutes = _minutes;
     _alarmSeconds = _seconds;
     _alarmSubSeconds = _subSeconds;
     _alarmPeriod = _hoursPeriod;
-  } else {
-    _timeSet = true;
   }
 }
 
@@ -927,37 +924,8 @@ void STM32RTC::configForLowPower(Source_Clock source)
   __HAL_RCC_RTCAPB_CLKAM_ENABLE();
 #endif
 
+  setClockSource(source);
   begin();
-
-  if (_clockSource != source) {
-    // Save current config
-    AM_PM period, alarmPeriod = _alarmPeriod;
-    uint32_t subSeconds;
-    uint8_t seconds, minutes, hours, weekDay, day, month, years;
-    uint8_t alarmSeconds, alarmMinutes, alarmHours, alarmDay;
-    Alarm_Match alarmMatch = _alarmMatch;
-
-    alarmDay = _alarmDay;
-    alarmHours = _alarmHours;
-    alarmMinutes = _alarmMinutes;
-    alarmSeconds = _alarmSeconds;
-
-    getDate(&weekDay, &day, &month, &years);
-    getTime(&seconds, &minutes, &hours, &subSeconds, &period);
-
-    end();
-    _clockSource = source;
-    // Enable RTC
-    begin(_format);
-    // Restore config
-    setTime(seconds, minutes, hours, subSeconds, period);
-    setDate(weekDay, day, month, years);
-    setAlarmTime(alarmHours, alarmMinutes, alarmSeconds, alarmPeriod);
-    setAlarmDay(alarmDay);
-    if (RTC_IsAlarmSet()) {
-      enableAlarm(alarmMatch);
-    }
-  }
 
   if (!isTimeSet()) {
     // Set arbitrary time for Lowpower; if not already set
@@ -984,6 +952,9 @@ void STM32RTC::syncTime(void)
 void STM32RTC::syncDate(void)
 {
   RTC_GetDate(&_year, &_month, &_day, &_wday);
+#if defined(STM32F1xx)
+  RTC_StoreDate();
+#endif /* STM32F1xx */
 }
 
 /**

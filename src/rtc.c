@@ -202,10 +202,6 @@ static void RTC_initClock(sourceClock_t source)
   } else {
     Error_Handler();
   }
-#ifdef __HAL_RCC_RTCAPB_CLK_ENABLE
-  __HAL_RCC_RTCAPB_CLK_ENABLE();
-#endif
-  __HAL_RCC_RTC_ENABLE();
 }
 
 #if defined(STM32F1xx)
@@ -342,12 +338,19 @@ static void RTC_computePrediv(int8_t *asynch, int16_t *synch)
 bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 {
   bool reinit = false;
+  hourAM_PM_t period = HOUR_AM, alarmPeriod = HOUR_AM;
+  uint32_t subSeconds = 0, alarmSubseconds = 0;
+  uint8_t seconds = 0, minutes = 0, hours = 0, weekDay = 0, days = 0, month = 0, years = 0;
+  uint8_t alarmMask = 0, alarmDay = 0, alarmHours = 0, alarmMinutes = 0, alarmSeconds = 0;
+  bool isAlarmSet = false;
+#if defined(STM32F1xx)
+  uint32_t asynch;
+#else
+  int8_t asynch;
+  int16_t sync;
+#endif
 
   initFormat = format;
-
-  /* Init RTC clock */
-  RTC_initClock(source);
-
   RtcHandle.Instance = RTC;
 
   /* Ensure backup domain is enabled before we init the RTC so we can use the backup registers for date retention on stm32f1xx boards */
@@ -355,31 +358,27 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 
   if (reset) {
     resetBackupDomain();
-    RTC_initClock(source);
   }
+
+#ifdef __HAL_RCC_RTCAPB_CLK_ENABLE
+  __HAL_RCC_RTCAPB_CLK_ENABLE();
+#endif
+  __HAL_RCC_RTC_ENABLE();
+
+  isAlarmSet = RTC_IsAlarmSet();
 
 #if defined(STM32F1xx)
   uint32_t BackupDate;
   BackupDate = getBackupRegister(RTC_BKP_DATE) << 16;
   BackupDate |= getBackupRegister(RTC_BKP_DATE + 1) & 0xFFFF;
   if ((BackupDate == 0) || reset) {
+    // RTC needs initialization
     /* Let HAL calculate the prescaler */
     RtcHandle.Init.AsynchPrediv = prediv;
     RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
-    HAL_RTC_Init(&RtcHandle);
-    // Default: saturday 1st of January 2001
-    // Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
-    RTC_SetDate(1, 1, 1, 6);
-    reinit = true;
-  } else {
-    memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
-    /* and fill the new RTC Date value */
-    RTC_SetDate(RtcHandle.DateToUpdate.Year, RtcHandle.DateToUpdate.Month,
-                RtcHandle.DateToUpdate.Date, RtcHandle.DateToUpdate.WeekDay);
-  }
 #else
-
   if (!LL_RTC_IsActiveFlag_INITS(RtcHandle.Instance) || reset) {
+    // RTC needs initialization
     RtcHandle.Init.HourFormat = format == HOUR_FORMAT_12 ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
     RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
     RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
@@ -389,6 +388,9 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #endif /* RTC_OUTPUT_REMAP_NONE */
 
     RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
+#endif // STM32F1xx
+    // Init RTC clock
+    RTC_initClock(source);
 
     HAL_RTC_Init(&RtcHandle);
     // Default: saturday 1st of January 2001
@@ -396,10 +398,77 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
     RTC_SetDate(1, 1, 1, 6);
     reinit = true;
   } else {
-    // This initialize variables: predivAsync, redivSync and predivSync_bits
-    RTC_getPrediv(NULL, NULL);
+    // RTC is already initialized
+    uint32_t oldRtcClockSource = __HAL_RCC_GET_RTC_SOURCE();
+    oldRtcClockSource = ((oldRtcClockSource == RCC_RTCCLKSOURCE_LSE) ? LSE_CLOCK :
+                         (oldRtcClockSource == RCC_RTCCLKSOURCE_LSI) ? LSI_CLOCK :
+#if defined(RCC_RTCCLKSOURCE_HSE_DIVX)
+                         (oldRtcClockSource == RCC_RTCCLKSOURCE_HSE_DIVX) ? HSE_CLOCK :
+#elif defined(RCC_RTCCLKSOURCE_HSE_DIV32)
+                         (oldRtcClockSource == RCC_RTCCLKSOURCE_HSE_DIV32) ? HSE_CLOCK :
+#elif defined(RCC_RTCCLKSOURCE_HSE_DIV)
+                         (oldRtcClockSource == RCC_RTCCLKSOURCE_HSE_DIV) ? HSE_CLOCK :
+#elif defined(RCC_RTCCLKSOURCE_HSE_DIV128)
+                         (oldRtcClockSource == RCC_RTCCLKSOURCE_HSE_DIV128) ? HSE_CLOCK :
+#endif
+                         // default case corresponding to no clock source
+                         0xFFFFFFFF);
+
+#if defined(STM32F1xx)
+    if ((RtcHandle.DateToUpdate.WeekDay == 0)
+        && (RtcHandle.DateToUpdate.Month == 0)
+        && (RtcHandle.DateToUpdate.Date == 0)
+        && (RtcHandle.DateToUpdate.Year == 0)) {
+      // After a reset for example, restore HAL handle date with values from BackupRegister date
+      memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
+    }
+#endif  // STM32F1xx
+
+    if (source != oldRtcClockSource) {
+      // RTC is already initialized, but RTC clock source is changed
+      // In case of RTC source clock change, Backup Domain is reset by RTC_initClock()
+      // Save current config before call to RTC_initClock()
+      RTC_GetDate(&years, &month, &days, &weekDay);
+      RTC_GetTime(&hours, &minutes, &seconds, &subSeconds, &period);
+#if defined(STM32F1xx)
+      RTC_getPrediv(&asynch);
+#else
+      RTC_getPrediv(&asynch, &sync);
+#endif  // STM32F1xx
+      if (isAlarmSet) {
+        RTC_GetAlarm(&alarmDay, &alarmHours, &alarmMinutes, &alarmSeconds, &alarmSubseconds, &alarmPeriod, &alarmMask);
+      }
+
+      // Init RTC clock
+      RTC_initClock(source);
+
+      // Restore config
+      RTC_SetTime(hours, minutes, seconds, subSeconds, period);
+      RTC_SetDate(years, month, days, weekDay);
+#if defined(STM32F1xx)
+      RTC_setPrediv(asynch);
+#else
+      RTC_setPrediv(asynch, sync);
+#endif  // STM32F1xx
+      if (isAlarmSet) {
+        RTC_StartAlarm(alarmDay, alarmHours, alarmMinutes, alarmSeconds, alarmSubseconds, alarmPeriod, alarmMask);
+      }
+    } else {
+      // RTC is already initialized, and RTC stays on the same clock source
+
+      // Init RTC clock
+      RTC_initClock(source);
+#if defined(STM32F1xx)
+      memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
+      /* and fill the new RTC Date value */
+      RTC_SetDate(RtcHandle.DateToUpdate.Year, RtcHandle.DateToUpdate.Month,
+                  RtcHandle.DateToUpdate.Date, RtcHandle.DateToUpdate.WeekDay);
+#else
+      // This initialize variables: predivAsync, predivSync and predivSync_bits
+      RTC_getPrediv(NULL, NULL);
+#endif // STM32F1xx
+    }
   }
-#endif /* STM32F1xx */
 
 #if defined(RTC_CR_BYPSHAD)
   /* Enable Direct Read of the calendar registers (not through Shadow) */
@@ -573,9 +642,6 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
     *month = RTC_DateStruct.Month;
     *day = RTC_DateStruct.Date;
     *wday = RTC_DateStruct.WeekDay;
-#if defined(STM32F1xx)
-    RTC_StoreDate();
-#endif /* STM32F1xx */
   }
 }
 
