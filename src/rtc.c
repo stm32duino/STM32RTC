@@ -863,6 +863,12 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
 void RTC_Alarm_IRQHandler(void)
 {
   HAL_RTC_AlarmIRQHandler(&RtcHandle);
+
+#if defined(STM32F0xx) || defined(STM32G0xx) || defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U5xx)
+  // In some cases, the same vector is used to manage WakeupTimer,
+  // but with a dedicated HAL IRQHandler
+  HAL_RTCEx_WakeUpTimerIRQHandler(&RtcHandle);
+#endif
 }
 
 #ifdef ONESECOND_IRQn
