@@ -189,11 +189,11 @@ class STM32RTC {
 
     /* Epoch Functions */
 
-    uint32_t getEpoch(uint32_t *subSeconds = nullptr);
-    uint32_t getY2kEpoch(void);
-    void setEpoch(uint32_t ts, uint32_t subSeconds = 0);
-    void setY2kEpoch(uint32_t ts);
-    void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0);
+    time_t getEpoch(uint32_t *subSeconds = nullptr);
+    time_t getY2kEpoch(void);
+    void setEpoch(time_t ts, uint32_t subSeconds = 0);
+    void setY2kEpoch(time_t ts);
+    void setAlarmEpoch(time_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0);
 
 #if defined(STM32F1xx)
     void getPrediv(uint32_t *predivA, int16_t *dummy = nullptr);
