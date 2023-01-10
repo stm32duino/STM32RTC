@@ -383,10 +383,15 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
     RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
     RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+#if defined(RTC_OUTPUT_PULLUP_NONE)
+    RtcHandle.Init.OutPutPullUp = RTC_OUTPUT_PULLUP_NONE;
+#endif
 #if defined(RTC_OUTPUT_REMAP_NONE)
     RtcHandle.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
 #endif /* RTC_OUTPUT_REMAP_NONE */
-
+#if defined(RTC_BINARY_NONE)
+    RtcHandle.Init.BinMode = RTC_BINARY_NONE;
+#endif
     RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
 #endif // STM32F1xx
     // Init RTC clock
