@@ -121,8 +121,7 @@ typedef void(*voidCallbackPtr)(void *);
 
 /* mapping the IRQn for the one-second interrupt depending on the soc */
 #if defined(STM32F1xx) || (defined(STM32F0xx) && defined(RTC_CR_WUTE)) || \
-    defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U5xx) || \
-    defined(STM32WLE4xx)
+    defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U5xx)
 // specific WakeUp interrupt
 #define ONESECOND_IRQn RTC_IRQn
 #elif defined(STM32MP1xx)
@@ -131,7 +130,8 @@ typedef void(*voidCallbackPtr)(void *);
 #elif defined(STM32G0xx)
 // global RTC/TAMP interrupt
 #define ONESECOND_IRQn RTC_TAMP_IRQn
-#elif (defined(STM32WL54xx) || defined(STM32WL55xx)) && defined(CORE_CM0PLUS)
+#elif defined(CORE_CM0PLUS) && \
+      (defined(STM32WL54xx) || defined(STM32WL55xx) || defined(STM32WL5Mxx))
 // global RTC/LSS interrupt
 #define ONESECOND_IRQn RTC_LSECSS_IRQn
 #elif defined(RTC_CR_WUTE)
