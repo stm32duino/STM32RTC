@@ -71,6 +71,7 @@ detachSecondsInterrupt	KEYWORD2
 getClockSource	KEYWORD2
 setClockSource	KEYWORD2
 isConfigured	KEYWORD2
+isTimeSet	KEYWORD2
 
 getPrediv	KEYWORD2
 setPrediv	KEYWORD2
