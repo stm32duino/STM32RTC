@@ -60,6 +60,10 @@ extern "C" {
 static RTC_HandleTypeDef RtcHandle = {0};
 static voidCallbackPtr RTCUserCallback = NULL;
 static void *callbackUserData = NULL;
+#ifdef RTC_ALARM_B
+static voidCallbackPtr RTCUserCallbackB = NULL;
+static void *callbackUserDataB = NULL;
+#endif
 static voidCallbackPtr RTCSecondsIrqCallback = NULL;
 
 static sourceClock_t clkSrc = LSI_CLOCK;
@@ -342,7 +346,13 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
   uint32_t subSeconds = 0, alarmSubseconds = 0;
   uint8_t seconds = 0, minutes = 0, hours = 0, weekDay = 0, days = 0, month = 0, years = 0;
   uint8_t alarmMask = 0, alarmDay = 0, alarmHours = 0, alarmMinutes = 0, alarmSeconds = 0;
-  bool isAlarmSet = false;
+  bool isAlarmASet = false;
+#ifdef RTC_ALARM_B
+  hourAM_PM_t alarmBPeriod = HOUR_AM;
+  uint8_t alarmBMask = 0, alarmBDay = 0, alarmBHours = 0, alarmBMinutes = 0, alarmBSeconds = 0;
+  uint32_t alarmBSubseconds = 0;
+  bool isAlarmBSet = false;
+#endif
 #if defined(STM32F1xx)
   uint32_t asynch;
 #else
@@ -365,8 +375,10 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #endif
   __HAL_RCC_RTC_ENABLE();
 
-  isAlarmSet = RTC_IsAlarmSet();
-
+  isAlarmASet = RTC_IsAlarmSet(ALARM_A);
+#ifdef RTC_ALARM_B
+  isAlarmBSet = RTC_IsAlarmSet(ALARM_B);
+#endif
 #if defined(STM32F1xx)
   uint32_t BackupDate;
   BackupDate = getBackupRegister(RTC_BKP_DATE) << 16;
@@ -440,10 +452,14 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #else
       RTC_getPrediv(&asynch, &sync);
 #endif  // STM32F1xx
-      if (isAlarmSet) {
-        RTC_GetAlarm(&alarmDay, &alarmHours, &alarmMinutes, &alarmSeconds, &alarmSubseconds, &alarmPeriod, &alarmMask);
+      if (isAlarmASet) {
+        RTC_GetAlarm(ALARM_A, &alarmDay, &alarmHours, &alarmMinutes, &alarmSeconds, &alarmSubseconds, &alarmPeriod, &alarmMask);
       }
-
+#ifdef RTC_ALARM_B
+      if (isAlarmBSet) {
+        RTC_GetAlarm(ALARM_B, &alarmBDay, &alarmBHours, &alarmBMinutes, &alarmBSeconds, &alarmBSubseconds, &alarmBPeriod, &alarmBMask);
+      }
+#endif
       // Init RTC clock
       RTC_initClock(source);
 
@@ -455,9 +471,14 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #else
       RTC_setPrediv(asynch, sync);
 #endif  // STM32F1xx
-      if (isAlarmSet) {
-        RTC_StartAlarm(alarmDay, alarmHours, alarmMinutes, alarmSeconds, alarmSubseconds, alarmPeriod, alarmMask);
+      if (isAlarmASet) {
+        RTC_StartAlarm(ALARM_A, alarmDay, alarmHours, alarmMinutes, alarmSeconds, alarmSubseconds, alarmPeriod, alarmMask);
       }
+#ifdef RTC_ALARM_B
+      if (isAlarmBSet) {
+        RTC_StartAlarm(ALARM_B, alarmBDay, alarmBHours, alarmBMinutes, alarmBSeconds, alarmBSubseconds, alarmBPeriod, alarmBMask);
+      }
+#endif
     } else {
       // RTC is already initialized, and RTC stays on the same clock source
 
@@ -492,6 +513,10 @@ void RTC_DeInit(void)
   HAL_RTC_DeInit(&RtcHandle);
   RTCUserCallback = NULL;
   callbackUserData = NULL;
+#ifdef RTC_ALARM_B
+  RTCUserCallbackB = NULL;
+  callbackUserDataB = NULL;
+#endif
   RTCSecondsIrqCallback = NULL;
 }
 
@@ -652,6 +677,7 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
 
 /**
   * @brief Set RTC alarm and activate it with IT mode
+  * @param name: ALARM_A or ALARM_B if exists
   * @param day: 1-31 (day of the month)
   * @param hours: 0-12 or 0-23 depends on the hours mode.
   * @param minutes: 0-59
@@ -662,7 +688,7 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
   *              See AN4579 Table 5 for possible values.
   * @retval None
   */
-void RTC_StartAlarm(uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask)
+void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask)
 {
   RTC_AlarmTypeDef RTC_AlarmStructure;
 
@@ -675,14 +701,21 @@ void RTC_StartAlarm(uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds
       && IS_RTC_DATE(day) && IS_RTC_MINUTES(minutes) && IS_RTC_SECONDS(seconds)) {
     /* Set RTC_AlarmStructure with calculated values*/
     /* Use alarm A by default because it is common to all STM32 HAL */
-    RTC_AlarmStructure.Alarm = RTC_ALARM_A;
+    RTC_AlarmStructure.Alarm = name;
     RTC_AlarmStructure.AlarmTime.Seconds = seconds;
     RTC_AlarmStructure.AlarmTime.Minutes = minutes;
     RTC_AlarmStructure.AlarmTime.Hours = hours;
 #if !defined(STM32F1xx)
 #if defined(RTC_SSR_SS)
     if (subSeconds < 1000) {
-      RTC_AlarmStructure.AlarmSubSecondMask = predivSync_bits << RTC_ALRMASSR_MASKSS_Pos;
+#ifdef RTC_ALARM_B
+      if (name == ALARM_B) {
+        RTC_AlarmStructure.AlarmSubSecondMask = predivSync_bits << RTC_ALRMBSSR_MASKSS_Pos;
+      } else
+#endif
+      {
+        RTC_AlarmStructure.AlarmSubSecondMask = predivSync_bits << RTC_ALRMASSR_MASKSS_Pos;
+      }
       RTC_AlarmStructure.AlarmTime.SubSeconds = predivSync - (subSeconds * (predivSync + 1)) / 1000;
     } else {
       RTC_AlarmStructure.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
@@ -733,34 +766,53 @@ void RTC_StartAlarm(uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds
 
 /**
   * @brief Disable RTC alarm
-  * @param None
+  * @param name: ALARM_A or ALARM_B if exists
   * @retval None
   */
-void RTC_StopAlarm(void)
+void RTC_StopAlarm(alarm_t name)
 {
   /* Clear RTC Alarm Flag */
-  __HAL_RTC_ALARM_CLEAR_FLAG(&RtcHandle, RTC_FLAG_ALRAF);
-
+#ifdef RTC_ALARM_B
+  if (name == ALARM_B) {
+    __HAL_RTC_ALARM_CLEAR_FLAG(&RtcHandle, RTC_FLAG_ALRBF);
+  } else
+#endif
+  {
+    __HAL_RTC_ALARM_CLEAR_FLAG(&RtcHandle, RTC_FLAG_ALRAF);
+  }
   /* Disable the Alarm A interrupt */
-  HAL_RTC_DeactivateAlarm(&RtcHandle, RTC_ALARM_A);
+  HAL_RTC_DeactivateAlarm(&RtcHandle, name);
 }
 
 /**
   * @brief Check whether RTC alarm is set
-  * @param None
+  * @param ALARM_A or ALARM_B if exists
   * @retval True if Alarm is set
   */
-bool RTC_IsAlarmSet(void)
+bool RTC_IsAlarmSet(alarm_t name)
 {
+  bool status = false;
 #if defined(STM32F1xx)
-  return LL_RTC_IsEnabledIT_ALR(RtcHandle.Instance);
+  UNUSED(name);
+  status = LL_RTC_IsEnabledIT_ALR(RtcHandle.Instance);
 #else
-  return LL_RTC_IsEnabledIT_ALRA(RtcHandle.Instance);
+#ifdef RTC_ALARM_B
+  if (name == ALARM_B) {
+    status = LL_RTC_IsEnabledIT_ALRB(RtcHandle.Instance);
+  } else
+#else
+  UNUSED(name);
 #endif
+  {
+    status = LL_RTC_IsEnabledIT_ALRA(RtcHandle.Instance);
+  }
+#endif
+  return status;
 }
 
 /**
   * @brief Get RTC alarm
+  * @param name: ALARM_A or ALARM_B if exists
   * @param day: 1-31 day of the month (optional could be NULL)
   * @param hours: 0-12 or 0-23 depends on the hours mode
   * @param minutes: 0-59
@@ -771,12 +823,12 @@ bool RTC_IsAlarmSet(void)
   *              See AN4579 Table 5 for possible values
   * @retval None
   */
-void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask)
+void RTC_GetAlarm(alarm_t name, uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask)
 {
   RTC_AlarmTypeDef RTC_AlarmStructure;
 
   if ((hours != NULL) && (minutes != NULL) && (seconds != NULL)) {
-    HAL_RTC_GetAlarm(&RtcHandle, &RTC_AlarmStructure, RTC_ALARM_A, RTC_FORMAT_BIN);
+    HAL_RTC_GetAlarm(&RtcHandle, &RTC_AlarmStructure, name, RTC_FORMAT_BIN);
 
     *seconds = RTC_AlarmStructure.AlarmTime.Seconds;
     *minutes = RTC_AlarmStructure.AlarmTime.Minutes;
@@ -827,23 +879,45 @@ void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *secon
 /**
   * @brief Attach alarm callback.
   * @param func: pointer to the callback
+  * @param func: pointer to callback argument
+  * @param name: ALARM_A or ALARM_B if exists
   * @retval None
   */
-void attachAlarmCallback(voidCallbackPtr func, void *data)
+void attachAlarmCallback(voidCallbackPtr func, void *data, alarm_t name)
 {
-  RTCUserCallback = func;
-  callbackUserData = data;
+#ifdef RTC_ALARM_B
+  if (name == ALARM_B) {
+    RTCUserCallbackB = func;
+    callbackUserDataB = data;
+  } else
+#else
+  UNUSED(name);
+#endif
+  {
+    RTCUserCallback = func;
+    callbackUserData = data;
+  }
 }
 
 /**
   * @brief Detach alarm callback.
-  * @param None
+  * @param name: ALARM_A or ALARM_B if exists
   * @retval None
   */
-void detachAlarmCallback(void)
+void detachAlarmCallback(alarm_t name)
 {
-  RTCUserCallback = NULL;
-  callbackUserData = NULL;
+#ifdef RTC_ALARM_B
+  if (name == ALARM_B) {
+    RTCUserCallbackB = NULL;
+    callbackUserDataB = NULL;
+  } else
+#else
+  UNUSED(name);
+#endif
+  {
+    RTCUserCallback = NULL;
+    callbackUserData = NULL;
+  }
 }
 
 /**
@@ -859,6 +933,22 @@ void HAL_RTC_AlarmAEventCallback(RTC_HandleTypeDef *hrtc)
     RTCUserCallback(callbackUserData);
   }
 }
+
+#ifdef RTC_ALARM_B
+/**
+  * @brief  Alarm B callback.
+  * @param  hrtc RTC handle
+  * @retval None
+  */
+void HAL_RTCEx_AlarmBEventCallback(RTC_HandleTypeDef *hrtc)
+{
+  UNUSED(hrtc);
+
+  if (RTCUserCallbackB != NULL) {
+    RTCUserCallbackB(callbackUserDataB);
+  }
+}
+#endif
 
 /**
   * @brief  RTC Alarm IRQHandler

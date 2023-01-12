@@ -5,6 +5,9 @@
   It uses the optional 'data' alarm callback parameters to
   reload alarm with 'atime' offset indefinitely.
 
+  If a second alarm (B) is available, it is configured
+  to trigger each second.
+
   Creation 25 May 2018
   by Frederic Pillon for STMicroelectronics
   Modified 03 Jul 2020
@@ -22,6 +25,9 @@ STM32RTC& rtc = STM32RTC::getInstance();
 
 /* Declare it volatile since it's incremented inside an interrupt */
 volatile int alarmMatch_counter = 0;
+#ifdef RTC_ALARM_B
+volatile int alarmBMatch_counter = 0;
+#endif
 
 /* Change this value to set alarm match offset in millisecond */
 /* Note that STM32F1xx does not manage subsecond only second */
@@ -54,6 +60,13 @@ void setup()
   rtc.setAlarmDay(day);
   rtc.setAlarmTime(16, 0, 10, 567);
   rtc.enableAlarm(rtc.MATCH_DHHMMSS);
+
+#ifdef RTC_ALARM_B
+  rtc.attachInterrupt(alarmBMatch, STM32RTC::ALARM_B);
+  rtc.setAlarmDay(day, STM32RTC::ALARM_B);
+  rtc.setAlarmTime(16, 0, 11, 567, STM32RTC::ALARM_B);
+  rtc.enableAlarm(rtc.MATCH_DHHMMSS, STM32RTC::ALARM_B);
+#endif
 }
 
 void loop()
@@ -97,3 +110,12 @@ void alarmMatch(void *data)
   Serial.printf("Alarm Match %i\n", ++alarmMatch_counter);
   rtc.setAlarmEpoch(epoc + sec, STM32RTC::MATCH_SS, epoc_ms);
 }
+
+#ifdef RTC_ALARM_B
+void alarmBMatch(void *data)
+{
+  (void)data;
+  Serial.printf("Alarm B Match %i\n", ++alarmBMatch_counter);
+  rtc.setAlarmEpoch(rtc.getEpoch() + 2, STM32RTC::MATCH_SS, STM32RTC::ALARM_B);
+}
+#endif

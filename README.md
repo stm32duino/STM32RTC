@@ -72,7 +72,7 @@ _SubSeconds alarm management_
     * **`void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0, AM_PM period = AM)`**
     * **`uint32_t getEpoch(uint32_t *subSeconds = nullptr)`**
     * **`void setEpoch(uint32_t ts, uint32_t subSeconds = 0)`**
-    * **`void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0)`** 
+    * **`void setAlarmEpoch(uint32_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0)`**
 
 _Library version management_
 
@@ -105,7 +105,7 @@ _Library version management_
 _One-Second interrupt_
 
   STM32 RTC includes a one-second interrupt for generating a periodic interrupt signal.
-  - This feature is native on the stm32F1xx and mapped on the existing WakeUp interrupt on other stm32 mcus. 
+  - This feature is native on the stm32F1xx and mapped on the existing WakeUp interrupt on other stm32 mcus.
   - It is not available on some stm32F0 devices.
 
   * **new API:**
@@ -136,6 +136,21 @@ To know if a time has already been set use:
     rtc.setMinutes(minutes);
     rtc.setSeconds(seconds);
   }
+```
+
+### Since STM32RTC version higher than 1.3.4
+_Second alarm (Alarm B)_
+
+Some STM32 RTC have a second alarm named `RTC_ALARM_B`.
+It is possible to use it thanks all alarm API with an extra argument:
+  - `STM32RTC::ALARM_A`
+  - `STM32RTC::ALARM_B`
+
+```C++
+    rtc.attachInterrupt(myCallback, &myCallbackdata, STM32RTC::ALARM_B);
+    rtc.setAlarmDay(day, STM32RTC::ALARM_B);
+    rtc.setAlarmTime(hours, minutes, seconds + 5, 567, STM32RTC::ALARM_B);
+    rtc.enableAlarm(rtc.MATCH_DHHMMSS, STM32RTC::ALARM_B);
 ```
 
 Refer to the Arduino RTC documentation for the other functions

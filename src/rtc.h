@@ -74,6 +74,13 @@ typedef enum {
   Y_MSK   = 32
 } alarmMask_t;
 
+typedef enum {
+  ALARM_A = RTC_ALARM_A,
+#ifdef RTC_ALARM_B
+  ALARM_B = RTC_ALARM_B
+#endif
+} alarm_t;
+
 typedef void(*voidCallbackPtr)(void *);
 
 /* Exported constants --------------------------------------------------------*/
@@ -176,12 +183,12 @@ void RTC_GetTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *s
 void RTC_SetDate(uint8_t year, uint8_t month, uint8_t day, uint8_t wday);
 void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday);
 
-void RTC_StartAlarm(uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask);
-void RTC_StopAlarm(void);
-bool RTC_IsAlarmSet(void);
-void RTC_GetAlarm(uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
-void attachAlarmCallback(voidCallbackPtr func, void *data);
-void detachAlarmCallback(void);
+void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask);
+void RTC_StopAlarm(alarm_t name);
+bool RTC_IsAlarmSet(alarm_t name);
+void RTC_GetAlarm(alarm_t name, uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
+void attachAlarmCallback(voidCallbackPtr func, void *data, alarm_t name);
+void detachAlarmCallback(alarm_t name);
 #ifdef ONESECOND_IRQn
 void attachSecondsIrqCallback(voidCallbackPtr func);
 void detachSecondsIrqCallback(void);

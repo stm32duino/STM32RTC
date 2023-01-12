@@ -102,6 +102,13 @@ class STM32RTC {
       HSE_CLOCK = ::HSE_CLOCK
     };
 
+    enum Alarm : uint32_t {
+      ALARM_A = ::ALARM_A,
+#ifdef RTC_ALARM_B
+      ALARM_B = ::ALARM_B
+#endif
+    };
+
     static STM32RTC &getInstance()
     {
       static STM32RTC instance; // Guaranteed to be destroyed.
@@ -120,11 +127,12 @@ class STM32RTC {
     Source_Clock getClockSource(void);
     void setClockSource(Source_Clock source);
 
-    void enableAlarm(Alarm_Match match);
-    void disableAlarm(void);
+    void enableAlarm(Alarm_Match match, Alarm name = ALARM_A);
+    void disableAlarm(Alarm name = ALARM_A);
 
-    void attachInterrupt(voidFuncPtr callback, void *data = nullptr);
-    void detachInterrupt(void);
+    void attachInterrupt(voidFuncPtr callback, Alarm name);
+    void attachInterrupt(voidFuncPtr callback, void *data = nullptr, Alarm name = ALARM_A);
+    void detachInterrupt(Alarm name = ALARM_A);
 
 #ifdef ONESECOND_IRQn
     // Other mcu than stm32F1 will use the WakeUp feature to interrupt each second.
@@ -149,16 +157,17 @@ class STM32RTC {
     uint8_t getYear(void);
     void getDate(uint8_t *weekDay, uint8_t *day, uint8_t *month, uint8_t *year);
 
-    uint32_t getAlarmSubSeconds(void);
-    uint8_t getAlarmSeconds(void);
-    uint8_t getAlarmMinutes(void);
-    uint8_t getAlarmHours(AM_PM *period = nullptr);
+    uint32_t getAlarmSubSeconds(Alarm name = ALARM_A);
+    uint8_t getAlarmSeconds(Alarm name = ALARM_A);
+    uint8_t getAlarmMinutes(Alarm name = ALARM_A);
+    uint8_t getAlarmHours(Alarm name);
+    uint8_t getAlarmHours(AM_PM *period = nullptr, Alarm name = ALARM_A);
 
-    uint8_t getAlarmDay(void);
+    uint8_t getAlarmDay(Alarm name = ALARM_A);
 
     // Kept for compatibility with Arduino RTCZero library.
-    uint8_t getAlarmMonth();
-    uint8_t getAlarmYear();
+    uint8_t getAlarmMonth(void);
+    uint8_t getAlarmYear(void);
 
     /* Set Functions */
 
@@ -175,18 +184,21 @@ class STM32RTC {
     void setDate(uint8_t day, uint8_t month, uint8_t year);
     void setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year);
 
-    void setAlarmSubSeconds(uint32_t subSeconds);
-    void setAlarmSeconds(uint8_t seconds);
-    void setAlarmMinutes(uint8_t minutes);
-    void setAlarmHours(uint8_t hours, AM_PM period = AM);
-    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0, AM_PM period = AM);
+    void setAlarmSubSeconds(uint32_t subSeconds, Alarm name = ALARM_A);
+    void setAlarmSeconds(uint8_t seconds, Alarm name = ALARM_A);
+    void setAlarmMinutes(uint8_t minutes, Alarm name = ALARM_A);
+    void setAlarmHours(uint8_t hours, Alarm name);
+    void setAlarmHours(uint8_t hours, AM_PM period = AM, Alarm name = ALARM_A);
+    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, Alarm name);
+    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, Alarm name);
+    void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0, AM_PM period = AM, Alarm name = ALARM_A);
 
-    void setAlarmDay(uint8_t day);
+    void setAlarmDay(uint8_t day, Alarm name = ALARM_A);
 
     // Kept for compatibility with Arduino RTCZero library.
     void setAlarmMonth(uint8_t month);
     void setAlarmYear(uint8_t year);
-    void setAlarmDate(uint8_t day, uint8_t month, uint8_t year);
+    void setAlarmDate(uint8_t day, uint8_t month, uint8_t year, Alarm name = ALARM_A);
 
     /* Epoch Functions */
 
@@ -194,7 +206,8 @@ class STM32RTC {
     time_t getY2kEpoch(void);
     void setEpoch(time_t ts, uint32_t subSeconds = 0);
     void setY2kEpoch(time_t ts);
-    void setAlarmEpoch(time_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0);
+    void setAlarmEpoch(time_t ts, Alarm_Match match, Alarm name);
+    void setAlarmEpoch(time_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0, Alarm name = ALARM_A);
 
 #if defined(STM32F1xx)
     void getPrediv(uint32_t *predivA, int16_t *dummy = nullptr);
@@ -207,10 +220,7 @@ class STM32RTC {
     {
       return RTC_IsConfigured();
     }
-    bool isAlarmEnabled(void)
-    {
-      return RTC_IsAlarmSet();
-    }
+    bool isAlarmEnabled(Alarm name = ALARM_A);
     bool isTimeSet(void)
     {
 #if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01050000)
@@ -238,6 +248,7 @@ class STM32RTC {
     uint8_t     _day;
     uint8_t     _wday;
 
+    /* ALARM A */
     uint8_t     _alarmDay;
     uint8_t     _alarmHours;
     uint8_t     _alarmMinutes;
@@ -246,13 +257,24 @@ class STM32RTC {
     AM_PM       _alarmPeriod;
     Alarm_Match _alarmMatch;
 
+#ifdef RTC_ALARM_B
+    /* ALARM B */
+    uint8_t     _alarmBDay;
+    uint8_t     _alarmBHours;
+    uint8_t     _alarmBMinutes;
+    uint8_t     _alarmBSeconds;
+    uint32_t    _alarmBSubSeconds;
+    AM_PM       _alarmBPeriod;
+    Alarm_Match _alarmBMatch;
+#endif
+
     Source_Clock _clockSource;
 
     void configForLowPower(Source_Clock source);
 
     void syncTime(void);
     void syncDate(void);
-    void syncAlarmTime(void);
+    void syncAlarmTime(Alarm name = ALARM_A);
 
 };
 
