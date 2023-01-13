@@ -38,9 +38,10 @@
 #define __STM32_RTC_H
 
 #include "Arduino.h"
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000)
-  #include "rtc.h"
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  < 0x02000000)
+  #error "This library is not compatible with core version used. Please update the core."
 #endif
+#include "rtc.h"
 // Check if RTC HAL enable in variants/board_name/stm32yzxx_hal_conf.h
 #ifndef HAL_RTC_MODULE_ENABLED
   #error "RTC configuration is missing. Check flag HAL_RTC_MODULE_ENABLED in variants/board_name/stm32yzxx_hal_conf.h"
