@@ -70,6 +70,7 @@ detachSecondsInterrupt	KEYWORD2
 
 getClockSource	KEYWORD2
 setClockSource	KEYWORD2
+isAlarmEnabled	KEYWORD2
 isConfigured	KEYWORD2
 isTimeSet	KEYWORD2
 
