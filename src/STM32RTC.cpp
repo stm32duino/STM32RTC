@@ -73,7 +73,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
 
   syncTime();
   syncDate();
-
+  syncAlarmTime();
   if (!IS_RTC_DATE(_alarmDay)) {
     // Use current time to init alarm members,
     // specially in case _alarmDay is 0 (reset value) which is an invalid value
@@ -85,6 +85,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
     _alarmPeriod = _hoursPeriod;
   }
 #ifdef RTC_ALARM_B
+  syncAlarmTime(ALARM_B);
   if (!IS_RTC_DATE(_alarmBDay)) {
     // Use current time to init alarm members,
     // specially in case _alarmDay is 0 (reset value) which is an invalid value
