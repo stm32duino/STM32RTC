@@ -1078,6 +1078,60 @@ time_t STM32RTC::getY2kEpoch(void)
 }
 
 /**
+  * @brief  get alarm epoch time
+  * @param  name: ALARM_A or ALARM_B if exists
+  * @retval epoch time in seconds
+  */
+time_t STM32RTC::getAlarmEpoch(Alarm name)
+{
+  return getAlarmEpoch(nullptr, name);
+}
+
+/**
+  * @brief  get alarm epoch time
+  * @param  subSeconds: optional pointer to where to store subseconds of the epoch in ms
+  * @param  name: optional (default: ALARM_A)
+  *         ALARM_A or ALARM_B if exists
+  * @retval epoch time in seconds
+  */
+time_t STM32RTC::getAlarmEpoch(uint32_t *subSeconds, Alarm name)
+{
+  struct tm tm;
+
+  tm.tm_isdst = -1;
+  /*
+   * mktime ignores the values supplied by the caller in the
+   * tm_wday and tm_yday fields
+   */
+  tm.tm_yday = 0;
+  tm.tm_wday = 0;
+  tm.tm_year = _year + EPOCH_TIME_YEAR_OFF;
+  tm.tm_mon = _month - 1;
+  syncAlarmTime(name);
+#ifdef RTC_ALARM_B
+  if (name == ALARM_B) {
+    tm.tm_mday = _alarmBDay;
+    tm.tm_hour = _alarmBHours;
+    tm.tm_min = _alarmBMinutes;
+    tm.tm_sec = _alarmBSeconds;
+    if (subSeconds != nullptr) {
+      *subSeconds = _alarmBSubSeconds;
+    }
+  } else
+#endif
+  {
+    tm.tm_mday = _alarmDay;
+    tm.tm_hour = _alarmHours;
+    tm.tm_min = _alarmMinutes;
+    tm.tm_sec = _alarmSeconds;
+    if (subSeconds != nullptr) {
+      *subSeconds = _alarmSubSeconds;
+    }
+  }
+  return mktime(&tm);
+}
+
+/**
   * @brief  set RTC alarm from epoch time
   * @param  epoch time in seconds
   * @param  Alarm_Match match enum

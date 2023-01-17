@@ -206,6 +206,8 @@ class STM32RTC {
     time_t getY2kEpoch(void);
     void setEpoch(time_t ts, uint32_t subSeconds = 0);
     void setY2kEpoch(time_t ts);
+    time_t getAlarmEpoch(Alarm name);
+    time_t getAlarmEpoch(uint32_t *subSeconds = nullptr, Alarm name = ALARM_A);
     void setAlarmEpoch(time_t ts, Alarm_Match match, Alarm name);
     void setAlarmEpoch(time_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0, Alarm name = ALARM_A);
 

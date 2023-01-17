@@ -38,6 +38,7 @@ setTime	KEYWORD2
 
 getEpoch	KEYWORD2
 getY2kEpoch	KEYWORD2
+getAlarmEpoch	KEYWORD2
 setEpoch	KEYWORD2
 setY2kEpoch	KEYWORD2
 setAlarmEpoch	KEYWORD2
