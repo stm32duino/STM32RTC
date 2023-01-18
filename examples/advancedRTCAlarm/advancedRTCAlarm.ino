@@ -30,9 +30,12 @@ volatile int alarmBMatch_counter = 0;
 #endif
 
 /* Change this value to set alarm match offset in millisecond */
-/* Note that STM32F1xx does not manage subsecond only second */
+/* Note that only mcu with RTC_SSR_SS defined managed subsecond else only second */
+#if defined(RTC_SSR_SS)
 static uint32_t atime = 678;
-
+#else
+static uint32_t atime = 1000;
+#endif
 /* Change these values to set the current initial time */
 const byte seconds = 0;
 const byte minutes = 0;
@@ -83,14 +86,10 @@ void alarmMatch(void *data)
 
   if (data != NULL) {
     _millis = *(uint32_t*)data;
-    // Minimum is 1 second
-    if (sec == 0) {
-      sec = 1;
-    }
   }
 
   sec = _millis / 1000;
-#ifdef STM32F1xx
+#if !defined(RTC_SSR_SS)
   // Minimum is 1 second
   if (sec == 0) {
     sec = 1;
