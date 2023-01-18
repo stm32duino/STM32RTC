@@ -33,9 +33,6 @@
   *
   ******************************************************************************
   */
-
-#include <time.h>
-
 #include "STM32RTC.h"
 
 #define EPOCH_TIME_OFF      946684800  // This is 1st January 2000, 00:00:00 in epoch time

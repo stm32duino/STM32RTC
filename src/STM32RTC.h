@@ -46,6 +46,7 @@
 #ifndef HAL_RTC_MODULE_ENABLED
   #error "RTC configuration is missing. Check flag HAL_RTC_MODULE_ENABLED in variants/board_name/stm32yzxx_hal_conf.h"
 #endif
+#include <time.h>
 
 /**
  * @brief STM32 RTC library version number
