@@ -38,6 +38,7 @@ setTime	KEYWORD2
 
 getEpoch	KEYWORD2
 getY2kEpoch	KEYWORD2
+getAlarmEpoch	KEYWORD2
 setEpoch	KEYWORD2
 setY2kEpoch	KEYWORD2
 setAlarmEpoch	KEYWORD2
@@ -70,6 +71,7 @@ detachSecondsInterrupt	KEYWORD2
 
 getClockSource	KEYWORD2
 setClockSource	KEYWORD2
+isAlarmEnabled	KEYWORD2
 isConfigured	KEYWORD2
 isTimeSet	KEYWORD2
 
@@ -96,3 +98,5 @@ PM	LITERAL1
 LSE_CLOCK	LITERAL1
 LSI_CLOCK	LITERAL1
 HSE_CLOCK	LITERAL1
+ALARM_A	LITERAL1
+ALARM_B	LITERAL1

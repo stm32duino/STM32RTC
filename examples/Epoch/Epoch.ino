@@ -14,7 +14,6 @@
 */
 
 #include <STM32RTC.h>
-#include <time.h>
 
 /* Get the rtc object */
 STM32RTC& rtc = STM32RTC::getInstance();
