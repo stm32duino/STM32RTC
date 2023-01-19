@@ -226,11 +226,7 @@ class STM32RTC {
     bool isAlarmEnabled(Alarm name = ALARM_A);
     bool isTimeSet(void)
     {
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01050000)
       return _timeSet;
-#else
-      return false;
-#endif
     }
 
     friend class STM32LowPower;

@@ -43,8 +43,7 @@
 #include "backup.h"
 #include "clock.h"
 
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000) &&\
-    defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
+#if defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
 
 #ifdef __cplusplus
 extern "C" {

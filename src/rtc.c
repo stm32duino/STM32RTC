@@ -38,8 +38,7 @@
 #include "stm32yyxx_ll_rtc.h"
 #include <string.h>
 
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  > 0x01090000) &&\
-    defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
+#if defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
 #if defined(STM32MP1xx)
   /**
   * Currently there is no RTC driver for STM32MP1xx. If RTC is used in the future
