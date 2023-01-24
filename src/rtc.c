@@ -485,6 +485,8 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
       RTC_initClock(source);
 #if defined(STM32F1xx)
       memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
+      /* Update date automatically by calling HAL_RTC_GetDate */
+      RTC_GetDate(&years, &month, &days, &weekDay);
       /* and fill the new RTC Date value */
       RTC_SetDate(RtcHandle.DateToUpdate.Year, RtcHandle.DateToUpdate.Month,
                   RtcHandle.DateToUpdate.Date, RtcHandle.DateToUpdate.WeekDay);
