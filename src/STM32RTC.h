@@ -85,6 +85,12 @@ class STM32RTC {
       PM = HOUR_PM
     };
 
+    enum RTC_Mode : uint8_t {
+      MODE_BCD = MODE_BINARY_NONE, /* not used */
+      MODE_BIN = MODE_BINARY_ONLY,
+      MODE_MIX = MODE_BINARY_MIX
+    };
+
     enum Alarm_Match : uint8_t {
       MATCH_OFF          = OFF_MSK,                          // Never
       MATCH_SS           = SS_MSK,                           // Every Minute
@@ -120,7 +126,7 @@ class STM32RTC {
     STM32RTC(STM32RTC const &)        = delete;
     void operator=(STM32RTC const &)  = delete;
 
-    void begin(bool resetTime, Hour_Format format = HOUR_24);
+    void begin(bool resetTime, Hour_Format format = HOUR_24, RTC_Mode mode = MODE_BCD);
     void begin(Hour_Format format = HOUR_24);
 
     void end(void);
@@ -237,6 +243,7 @@ class STM32RTC {
     static bool _timeSet;
 
     Hour_Format _format;
+    RTC_Mode    _mode;
     AM_PM       _hoursPeriod;
     uint8_t     _hours;
     uint8_t     _minutes;

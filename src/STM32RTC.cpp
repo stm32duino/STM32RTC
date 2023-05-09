@@ -48,21 +48,26 @@ bool STM32RTC::_timeSet = false;
   */
 void STM32RTC::begin(Hour_Format format)
 {
-  begin(false, format);
+  /* Keep format binary MODE_BCD : Binary NONE */
+  begin(false, format, STM32RTC::MODE_BCD);
 }
 
 /**
   * @brief initializes the RTC
   * @param resetTime: if true reconfigures the RTC
   * @param format: hour format: HOUR_12 or HOUR_24(default)
+  * @param mode: rtc mode  MODE_BIN or MODE_MIX or MODE_BCD(default)
   * @retval None
   */
-void STM32RTC::begin(bool resetTime, Hour_Format format)
+void STM32RTC::begin(bool resetTime, Hour_Format format, RTC_Mode mode)
 {
   bool reinit;
 
   _format = format;
+  _mode = mode;
+
   reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
+                    (mode == MODE_MIX) ? MODE_BINARY_MIX : ((mode == MODE_BIN) ? MODE_BINARY_ONLY : MODE_BINARY_NONE),
                     (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                     (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
                     , resetTime);

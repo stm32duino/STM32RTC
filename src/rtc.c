@@ -77,6 +77,7 @@ static uint32_t prediv = RTC_AUTO_1_SECOND;
 #endif /* !STM32F1xx */
 
 static hourFormat_t initFormat = HOUR_FORMAT_12;
+static rtcMode_t initMode = MODE_BINARY_NONE;
 
 /* Private function prototypes -----------------------------------------------*/
 static void RTC_initClock(sourceClock_t source);
@@ -334,11 +335,12 @@ static void RTC_computePrediv(int8_t *asynch, int16_t *synch)
   *        RTC is set to the 1st January 2001
   *        Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
   * @param format: enable the RTC in 12 or 24 hours mode
+  * @param mode: enable the RTC in BCD or Mix or Binary mode
   * @param source: RTC clock source: LSE, LSI or HSE
   * @param reset: force RTC reset, even if previously configured
   * @retval True if RTC is reinitialized, else false
   */
-bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
+bool RTC_init(hourFormat_t format, rtcMode_t mode, sourceClock_t source, bool reset)
 {
   bool reinit = false;
   hourAM_PM_t period = HOUR_AM, alarmPeriod = HOUR_AM;
@@ -360,6 +362,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #endif
 
   initFormat = format;
+  initMode = mode;
   RtcHandle.Instance = RTC;
 
   /* Ensure backup domain is enabled before we init the RTC so we can use the backup registers for date retention on stm32f1xx boards */
@@ -390,7 +393,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #else
   if (!LL_RTC_IsActiveFlag_INITS(RtcHandle.Instance) || reset) {
     // RTC needs initialization
-    RtcHandle.Init.HourFormat = format == HOUR_FORMAT_12 ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
+    RtcHandle.Init.HourFormat = (format == HOUR_FORMAT_12) ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
     RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
     RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
@@ -400,9 +403,9 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #if defined(RTC_OUTPUT_REMAP_NONE)
     RtcHandle.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
 #endif /* RTC_OUTPUT_REMAP_NONE */
-#if defined(RTC_BINARY_NONE)
-    RtcHandle.Init.BinMode = RTC_BINARY_NONE;
-#endif
+
+    RtcHandle.Init.BinMode = (mode == MODE_BINARY_MIX) ? RTC_BINARY_MIX : ((mode == MODE_BINARY_ONLY) ? RTC_BINARY_ONLY : RTC_BINARY_NONE);
+
     RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
 #endif // STM32F1xx
     // Init RTC clock
