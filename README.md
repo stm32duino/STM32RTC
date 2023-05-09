@@ -34,8 +34,8 @@ _RTC clock source_
 * **`void setClockSource(Source_Clock source)`** : this function must be called before `begin()`.
 
 _RTC Asynchronous and Synchronous prescaler_
-* **`void getPrediv(int8_t *predivA, int16_t *predivS)`** : get (a)synchronous prescaler values if set else computed ones for the current clock source.
-* **`void setPrediv(int8_t predivA, int16_t predivS)`** : set (a)synchronous prescaler values.  This function must be called before `begin()`. Use -1 to reset value and use computed ones. Those values have to match the following conditions: **_1Hz = RTC CLK source / ((predivA + 1) * (predivS + 1))_**
+* **`void getPrediv(uint32_t *predivA, uint32_t *predivS)`** : get (a)synchronous prescaler values if set else computed ones for the current clock source.
+* **`void setPrediv(uint32_t predivA, uint32_t predivS)`** : set (a)synchronous prescaler values.  This function must be called before `begin()`. Use `(PREDIVA_MAX + 1)` and `(PREDIVS_MAX +1)` to reset value and use computed ones. Those values have to match the following conditions: **_1Hz = RTC CLK source / ((predivA + 1) * (predivS + 1))_**
 
 _SubSeconds management_
 * **`uint32_t getSubSeconds(void)`**
