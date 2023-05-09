@@ -63,6 +63,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
 
   _format = format;
   reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
+                    (_mode == MODE_MIX) ? ::MODE_BINARY_MIX : ((_mode == MODE_BIN) ? ::MODE_BINARY_ONLY : ::MODE_BINARY_NONE),
                     (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                     (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
                     , resetTime);
@@ -129,6 +130,26 @@ void STM32RTC::setClockSource(Source_Clock source)
     RTC_SetClockSource((_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                        (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK);
   }
+}
+
+/**
+  * @brief get the Binary Mode.
+  * @retval mode: MODE_BCD, MODE_BIN or MODE_MIX
+  */
+STM32RTC::Binary_Mode STM32RTC::getBinaryMode(void)
+{
+  return _mode;
+}
+
+/**
+  * @brief set the Binary Mode. By default MODE_BCD is selected. This
+  *        method must be called before begin().
+  * @param mode: the RTC mode: MODE_BCD, MODE_BIN or MODE_MIX
+  * @retval None
+  */
+void STM32RTC::setBinaryMode(Binary_Mode mode)
+{
+  _mode = mode;
 }
 
 #if defined(STM32F1xx)

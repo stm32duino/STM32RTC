@@ -85,6 +85,12 @@ class STM32RTC {
       PM = HOUR_PM
     };
 
+    enum Binary_Mode : uint8_t {
+      MODE_BCD = MODE_BINARY_NONE, /* not used */
+      MODE_BIN = MODE_BINARY_ONLY,
+      MODE_MIX = MODE_BINARY_MIX
+    };
+
     enum Alarm_Match : uint8_t {
       MATCH_OFF          = OFF_MSK,                          // Never
       MATCH_SS           = SS_MSK,                           // Every Minute
@@ -127,6 +133,9 @@ class STM32RTC {
 
     Source_Clock getClockSource(void);
     void setClockSource(Source_Clock source);
+
+    Binary_Mode getBinaryMode(void);
+    void setBinaryMode(Binary_Mode mode);
 
     void enableAlarm(Alarm_Match match, Alarm name = ALARM_A);
     void disableAlarm(Alarm name = ALARM_A);
@@ -237,6 +246,7 @@ class STM32RTC {
     static bool _timeSet;
 
     Hour_Format _format;
+    Binary_Mode _mode;
     AM_PM       _hoursPeriod;
     uint8_t     _hours;
     uint8_t     _minutes;

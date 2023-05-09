@@ -66,9 +66,10 @@ static void *callbackUserDataB = NULL;
 static voidCallbackPtr RTCSecondsIrqCallback = NULL;
 
 static sourceClock_t clkSrc = LSI_CLOCK;
+static uint32_t clkVal = 0;
 static uint8_t HSEDiv = 0;
 #if !defined(STM32F1xx)
-/* predividers values */
+/* predividers values (-1 means not initialised values) */
 static uint8_t predivSync_bits = 0xFF;
 static int8_t predivAsync = -1;
 static int16_t predivSync = -1;
@@ -77,12 +78,16 @@ static uint32_t prediv = RTC_AUTO_1_SECOND;
 #endif /* !STM32F1xx */
 
 static hourFormat_t initFormat = HOUR_FORMAT_12;
+static binaryMode_t initMode = MODE_BINARY_NONE;
 
 /* Private function prototypes -----------------------------------------------*/
 static void RTC_initClock(sourceClock_t source);
 #if !defined(STM32F1xx)
 static void RTC_computePrediv(int8_t *asynch, int16_t *synch);
 #endif /* !STM32F1xx */
+#if defined(RTC_BINARY_NONE)
+static void RTC_BinaryConf(binaryMode_t mode);
+#endif
 
 static inline int _log2(int x)
 {
@@ -134,6 +139,7 @@ static void RTC_initClock(sourceClock_t source)
       Error_Handler();
     }
     clkSrc = LSE_CLOCK;
+    clkVal = LSE_VALUE;
   } else if (source == HSE_CLOCK) {
     /* Enable the clock if not already set by user */
     enableClock(HSE_CLOCK);
@@ -192,6 +198,7 @@ static void RTC_initClock(sourceClock_t source)
       Error_Handler();
     }
     clkSrc = HSE_CLOCK;
+    clkVal = HSE_VALUE / HSEDiv;
   } else if (source == LSI_CLOCK) {
     /* Enable the clock if not already set by user */
     enableClock(LSI_CLOCK);
@@ -202,6 +209,7 @@ static void RTC_initClock(sourceClock_t source)
       Error_Handler();
     }
     clkSrc = LSI_CLOCK;
+    clkVal = LSI_VALUE;
   } else {
     Error_Handler();
   }
@@ -237,8 +245,11 @@ void RTC_setPrediv(int8_t asynch, int16_t synch)
   } else {
     RTC_computePrediv(&predivAsync, &predivSync);
   }
+
   predivSync_bits = (uint8_t)_log2(predivSync) + 1;
 }
+
+
 #endif /* STM32F1xx */
 
 #if defined(STM32F1xx)
@@ -285,29 +296,17 @@ void RTC_getPrediv(int8_t *asynch, int16_t *synch)
 static void RTC_computePrediv(int8_t *asynch, int16_t *synch)
 {
   uint32_t predivS = PREDIVS_MAX + 1;
-  uint32_t clk = 0;
 
   /* Get user predividers if manually configured */
   if ((asynch == NULL) || (synch == NULL)) {
     return;
   }
 
-  /* Get clock frequency */
-  if (clkSrc == LSE_CLOCK) {
-    clk = LSE_VALUE;
-  } else if (clkSrc == LSI_CLOCK) {
-    clk = LSI_VALUE;
-  } else if (clkSrc == HSE_CLOCK) {
-    clk = HSE_VALUE / HSEDiv;
-  } else {
-    Error_Handler();
-  }
-
   /* Find (a)synchronous prescalers to obtain the 1Hz calendar clock */
   for (*asynch = PREDIVA_MAX; *asynch >= 0; (*asynch)--) {
-    predivS = (clk / (*asynch + 1)) - 1;
+    predivS = (clkVal / (*asynch + 1)) - 1;
 
-    if (((predivS + 1) * (*asynch + 1)) == clk) {
+    if (((predivS + 1) * (*asynch + 1)) == clkVal) {
       break;
     }
   }
@@ -318,7 +317,7 @@ static void RTC_computePrediv(int8_t *asynch, int16_t *synch)
    */
   if ((predivS > PREDIVS_MAX) || (*asynch < 0)) {
     *asynch = PREDIVA_MAX;
-    predivS = (clk / (*asynch + 1)) - 1;
+    predivS = (clkVal / (*asynch + 1)) - 1;
   }
 
   if (predivS > PREDIVS_MAX) {
@@ -328,17 +327,49 @@ static void RTC_computePrediv(int8_t *asynch, int16_t *synch)
 }
 #endif /* !STM32F1xx */
 
+#if defined(RTC_BINARY_NONE)
+static void RTC_BinaryConf(binaryMode_t mode)
+{
+  RtcHandle.Init.BinMode = (mode == MODE_BINARY_MIX) ? RTC_BINARY_MIX : ((mode == MODE_BINARY_ONLY) ? RTC_BINARY_ONLY : RTC_BINARY_NONE);
+  if (RtcHandle.Init.BinMode == RTC_BINARY_MIX) {
+    /* Configure the 1s BCD calendar increment */
+
+    uint32_t inc = 1 / (1.0 / ((float)clkVal / (float)(predivAsync + 1.0)));
+    if (inc <= 256) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_0;
+    } else if (inc < (256 << 1)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_1;
+    } else if (inc < (256 << 2)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_2;
+    } else if (inc < (256 << 3)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_3;
+    } else if (inc < (256 << 4)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_4;
+    } else if (inc < (256 << 5)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_5;
+    } else if (inc < (256 << 6)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_6;
+    } else if (inc < (256 << 7)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_7;
+    } else {
+      Error_Handler();
+    }
+  }
+}
+#endif /* RTC_BINARY_NONE */
+
 /**
   * @brief RTC Initialization
   *        This function configures the RTC time and calendar. By default, the
   *        RTC is set to the 1st January 2001
   *        Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
   * @param format: enable the RTC in 12 or 24 hours mode
+  * @param mode: enable the RTC in BCD or Mix or Binary mode
   * @param source: RTC clock source: LSE, LSI or HSE
   * @param reset: force RTC reset, even if previously configured
   * @retval True if RTC is reinitialized, else false
   */
-bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
+bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool reset)
 {
   bool reinit = false;
   hourAM_PM_t period = HOUR_AM, alarmPeriod = HOUR_AM;
@@ -360,6 +391,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #endif
 
   initFormat = format;
+  initMode = mode;
   RtcHandle.Instance = RTC;
 
   /* Ensure backup domain is enabled before we init the RTC so we can use the backup registers for date retention on stm32f1xx boards */
@@ -387,10 +419,12 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
     /* Let HAL calculate the prescaler */
     RtcHandle.Init.AsynchPrediv = prediv;
     RtcHandle.Init.OutPut = RTC_OUTPUTSOURCE_NONE;
+    // Init RTC clock
+    RTC_initClock(source);
 #else
   if (!LL_RTC_IsActiveFlag_INITS(RtcHandle.Instance) || reset) {
     // RTC needs initialization
-    RtcHandle.Init.HourFormat = format == HOUR_FORMAT_12 ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
+    RtcHandle.Init.HourFormat = (format == HOUR_FORMAT_12) ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
     RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
     RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
@@ -400,13 +434,14 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #if defined(RTC_OUTPUT_REMAP_NONE)
     RtcHandle.Init.OutPutRemap = RTC_OUTPUT_REMAP_NONE;
 #endif /* RTC_OUTPUT_REMAP_NONE */
-#if defined(RTC_BINARY_NONE)
-    RtcHandle.Init.BinMode = RTC_BINARY_NONE;
-#endif
-    RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
-#endif // STM32F1xx
     // Init RTC clock
     RTC_initClock(source);
+
+    RTC_getPrediv((int8_t *) & (RtcHandle.Init.AsynchPrediv), (int16_t *) & (RtcHandle.Init.SynchPrediv));
+#if defined(RTC_BINARY_NONE)
+    RTC_BinaryConf(mode);
+#endif /* RTC_BINARY_NONE */
+#endif  // STM32F1xx
 
     HAL_RTC_Init(&RtcHandle);
     // Default: saturday 1st of January 2001
@@ -445,22 +480,23 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
       // In case of RTC source clock change, Backup Domain is reset by RTC_initClock()
       // Save current config before call to RTC_initClock()
       RTC_GetDate(&years, &month, &days, &weekDay);
-      RTC_GetTime(&hours, &minutes, &seconds, &subSeconds, &period);
+      RTC_GetTime(mode, &hours, &minutes, &seconds, &subSeconds, &period);
+      if (isAlarmASet) {
+        RTC_GetAlarm(mode, ALARM_A, &alarmDay, &alarmHours, &alarmMinutes, &alarmSeconds, &alarmSubseconds, &alarmPeriod, &alarmMask);
+      }
+#ifdef RTC_ALARM_B
+      if (isAlarmBSet) {
+        RTC_GetAlarm(mode, ALARM_B, &alarmBDay, &alarmBHours, &alarmBMinutes, &alarmBSeconds, &alarmBSubseconds, &alarmBPeriod, &alarmBMask);
+      }
+#endif
+      // Init RTC clock
+      RTC_initClock(source);
+
 #if defined(STM32F1xx)
       RTC_getPrediv(&asynch);
 #else
       RTC_getPrediv(&asynch, &sync);
 #endif  // STM32F1xx
-      if (isAlarmASet) {
-        RTC_GetAlarm(ALARM_A, &alarmDay, &alarmHours, &alarmMinutes, &alarmSeconds, &alarmSubseconds, &alarmPeriod, &alarmMask);
-      }
-#ifdef RTC_ALARM_B
-      if (isAlarmBSet) {
-        RTC_GetAlarm(ALARM_B, &alarmBDay, &alarmBHours, &alarmBMinutes, &alarmBSeconds, &alarmBSubseconds, &alarmBPeriod, &alarmBMask);
-      }
-#endif
-      // Init RTC clock
-      RTC_initClock(source);
 
       // Restore config
       RTC_SetTime(hours, minutes, seconds, subSeconds, period);
@@ -483,6 +519,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 
       // Init RTC clock
       RTC_initClock(source);
+
 #if defined(STM32F1xx)
       memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
       /* Update date automatically by calling HAL_RTC_GetDate */
@@ -494,7 +531,11 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
       // This initialize variables: predivAsync, predivSync and predivSync_bits
       RTC_getPrediv(NULL, NULL);
 #endif // STM32F1xx
+#if defined(RTC_BINARY_NONE)
+      RTC_BinaryConf(mode);
+#endif /* RTC_BINARY_NONE */
     }
+
   }
 
 #if defined(RTC_CR_BYPSHAD)
