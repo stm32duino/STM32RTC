@@ -739,11 +739,12 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
     period = HOUR_AM;
   }
 
+  /* Use alarm A by default because it is common to all STM32 HAL */
+  RTC_AlarmStructure.Alarm = name;
+
   if ((((initFormat == HOUR_FORMAT_24) && IS_RTC_HOUR24(hours)) || IS_RTC_HOUR12(hours))
       && IS_RTC_DATE(day) && IS_RTC_MINUTES(minutes) && IS_RTC_SECONDS(seconds)) {
     /* Set RTC_AlarmStructure with calculated values*/
-    /* Use alarm A by default because it is common to all STM32 HAL */
-    RTC_AlarmStructure.Alarm = name;
     RTC_AlarmStructure.AlarmTime.Seconds = seconds;
     RTC_AlarmStructure.AlarmTime.Minutes = minutes;
     RTC_AlarmStructure.AlarmTime.Hours = hours;
@@ -799,6 +800,38 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
     UNUSED(mask);
 #endif /* !STM32F1xx */
 
+    /* Set RTC_Alarm */
+    HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
+    HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
+    HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+  } else if (RtcHandle.Init.BinMode != MODE_BINARY_NONE) {
+    /* We have an SubSecond alarm to set in RTC_BINARY_MIX or RTC_BINARY_ONLY mode */
+#if defined(RTC_SSR_SS)
+    {
+#if defined(RTC_ALRMASSR_SSCLR)
+      RTC_AlarmStructure.BinaryAutoClr = RTC_ALARMSUBSECONDBIN_AUTOCLR_NO;
+#endif /* RTC_ALRMASSR_SSCLR */
+      RTC_AlarmStructure.AlarmMask = RTC_ALARMMASK_NONE;
+
+#ifdef RTC_ALARM_B
+      if (name == ALARM_B) {
+        /* Expecting RTC_ALARMSUBSECONDBINMASK_NONE for the subsecond mask on ALARM B */
+        RTC_AlarmStructure.AlarmMask = RTC_ALARMMASK_ALL;
+        RTC_AlarmStructure.AlarmSubSecondMask = mask << RTC_ALRMBSSR_MASKSS_Pos;
+      } else
+#endif
+      {
+        /* Expecting RTC_ALARMSUBSECONDBINMASK_NONE for the subsecond mask on ALARM A */
+        RTC_AlarmStructure.AlarmMask = RTC_ALARMMASK_ALL;
+        RTC_AlarmStructure.AlarmSubSecondMask = mask << RTC_ALRMASSR_MASKSS_Pos;
+      }
+      /* Special case for ALARM B configuration for stm32WL Lorawan */
+      RTC_AlarmStructure.AlarmTime.SubSeconds = subSeconds;
+    }
+
+#else
+    UNUSED(subSeconds);
+#endif /* RTC_SSR_SS */
     /* Set RTC_Alarm */
     HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
     HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);

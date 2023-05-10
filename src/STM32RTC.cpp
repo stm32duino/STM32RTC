@@ -243,6 +243,7 @@ void STM32RTC::enableAlarm(Alarm_Match match, Alarm name)
     case MATCH_HHMMSS:
     case MATCH_MMSS:
     case MATCH_SS:
+    case MATCH_SUBSEC:
 #ifdef RTC_ALARM_B
       if (name == ALARM_B) {
         RTC_StartAlarm(::ALARM_B, _alarmBDay, _alarmBHours, _alarmBMinutes, _alarmBSeconds,
