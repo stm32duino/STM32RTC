@@ -93,6 +93,7 @@ class STM32RTC {
 
     enum Alarm_Match : uint8_t {
       MATCH_OFF          = OFF_MSK,                          // Never
+      MATCH_SUBSEC       = SUBSEC_MSK,                       // Every Subsecond
       MATCH_SS           = SS_MSK,                           // Every Minute
       MATCH_MMSS         = SS_MSK | MM_MSK,                  // Every Hour
       MATCH_HHMMSS       = SS_MSK | MM_MSK | HH_MSK,         // Every Day
