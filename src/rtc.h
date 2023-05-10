@@ -76,7 +76,9 @@ typedef enum {
   /* NOTE: STM32 RTC can't assign a month or a year to an alarm. Those enum
   are kept for compatibility but are ignored inside enableAlarm(). */
   M_MSK   = 16,
-  Y_MSK   = 32
+  Y_MSK   = 32,
+  SUBSEC_MSK = 48,
+  ALL_MSK = 0xFF
 } alarmMask_t;
 
 typedef enum {
