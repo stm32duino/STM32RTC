@@ -191,7 +191,7 @@
         {
           "pattern": "RTC_Seconds",
           "applicable": false,
-          "boards": [ "NUCLEO_F030R8", "NUCLEO_F031K6", "NUCLEO_F042K6"]
+          "boards": [ "NUCLEO_C031C6", "NUCLEO_F030R8", "NUCLEO_F031K6", "NUCLEO_F042K6"]
         },
         {
           "pattern": "F1RTCDateRetention",
