@@ -56,7 +56,6 @@ extern "C" {
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static RTC_HandleTypeDef RtcHandle = {0};
 static voidCallbackPtr RTCUserCallback = NULL;
 static void *callbackUserData = NULL;
 #ifdef RTC_ALARM_B
@@ -94,7 +93,55 @@ static inline int _log2(int x)
   return (x > 0) ? (sizeof(int) * 8 - __builtin_clz(x) - 1) : 0;
 }
 
+/* Exported variable --------------------------------------------------------*/
+RTC_HandleTypeDef RtcHandle = {0};
+
 /* Exported functions --------------------------------------------------------*/
+
+/* HAL MSP function used for RTC_Init */
+void HAL_RTC_MspInit(RTC_HandleTypeDef *rtcHandle)
+{
+#if defined(STM32WLxx)
+  /* Only the STM32WLxx series has a TAMP_STAMP_LSECSS_SSRU_IRQn */
+  if (rtcHandle->Instance == RTC)
+  {
+    if (HAL_RTCEx_SetSSRU_IT(rtcHandle) != HAL_OK) {
+      Error_Handler();
+    }
+    /* Give init value for the RtcFeatures enable */
+    rtcHandle->IsEnabled.RtcFeatures = 0;
+
+    /* RTC interrupt Init */
+    HAL_NVIC_SetPriority(TAMP_STAMP_LSECSS_SSRU_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
+
+  }
+#else
+  UNUSED(rtcHandle);
+#endif /* STM32WLxx */
+  /* RTC_Alarm_IRQn is enabled when enabling Alarm */
+}
+
+void HAL_RTC_MspDeInit(RTC_HandleTypeDef *rtcHandle)
+{
+
+  if (rtcHandle->Instance == RTC)
+  {
+    /* USER CODE BEGIN RTC_MspDeInit 0 */
+
+    /* USER CODE END RTC_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_RTC_DISABLE();
+    __HAL_RCC_RTCAPB_CLK_DISABLE();
+
+    /* RTC interrupt Deinit */
+    HAL_NVIC_DisableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
+    HAL_NVIC_DisableIRQ(RTC_Alarm_IRQn);
+    /* USER CODE BEGIN RTC_MspDeInit 1 */
+
+    /* USER CODE END RTC_MspDeInit 1 */
+  }
+}
 
 /**
   * @brief Set RTC clock source
@@ -737,7 +784,7 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
   */
 void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask)
 {
-  RTC_AlarmTypeDef RTC_AlarmStructure;
+  RTC_AlarmTypeDef RTC_AlarmStructure = {0};
 
   /* Ignore time AM PM configuration if in 24 hours format */
   if (initFormat == HOUR_FORMAT_24) {
