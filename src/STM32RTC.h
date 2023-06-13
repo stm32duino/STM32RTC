@@ -132,6 +132,12 @@ class STM32RTC {
 
     void end(void);
 
+    // Could be used to mix Arduino API and STM32Cube HAL API (ex: DMA). Use at your own risk.
+    RTC_HandleTypeDef *getHandle(void)
+    {
+      return RTC_GetHandle();
+    }
+
     Source_Clock getClockSource(void);
     void setClockSource(Source_Clock source, uint32_t predivA = (PREDIVA_MAX + 1), uint32_t predivS = (PREDIVS_MAX + 1));
     void getPrediv(uint32_t *predivA, uint32_t *predivS);

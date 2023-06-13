@@ -153,6 +153,12 @@ It is possible to use it thanks all alarm API with an extra argument:
     rtc.enableAlarm(rtc.MATCH_DHHMMSS, STM32RTC::ALARM_B);
 ```
 
+### Since STM32RTC version higher than 1.3.7
+_Get the RTC handle_
+
+* **`RTC_HandleTypeDef *RTC_GetHandle(void)`**
+
+
 Refer to the Arduino RTC documentation for the other functions
 http://arduino.cc/en/Reference/RTC
 

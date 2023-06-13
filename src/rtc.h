@@ -173,6 +173,7 @@ typedef void(*voidCallbackPtr)(void *);
 
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
+RTC_HandleTypeDef *RTC_GetHandle(void);
 void RTC_SetClockSource(sourceClock_t source);
 void RTC_getPrediv(uint32_t *asynch, uint32_t *synch);
 void RTC_setPrediv(uint32_t asynch, uint32_t synch);

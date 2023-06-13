@@ -99,6 +99,15 @@ static inline int _log2(int x)
 /* Exported functions --------------------------------------------------------*/
 
 /**
+  * @brief Get pointer to RTC_HandleTypeDef
+  * @param None
+  * @retval pointer to RTC_HandleTypeDef
+  */
+RTC_HandleTypeDef *RTC_GetHandle(void) {
+  return &RtcHandle;
+}
+
+/**
   * @brief Set RTC clock source
   * @param source: RTC clock source: LSE, LSI or HSE
   * @retval None
