@@ -56,7 +56,6 @@ extern "C" {
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static RTC_HandleTypeDef RtcHandle = {.Instance = RTC};
 static voidCallbackPtr RTCUserCallback = NULL;
 static void *callbackUserData = NULL;
 #ifdef RTC_ALARM_B
@@ -96,6 +95,9 @@ static inline int _log2(int x)
 {
   return (x > 0) ? (sizeof(int) * 8 - __builtin_clz(x) - 1) : 0;
 }
+
+/* Exported variable --------------------------------------------------------*/
+RTC_HandleTypeDef RtcHandle = {.Instance = RTC};
 
 /* Exported functions --------------------------------------------------------*/
 
@@ -759,7 +761,7 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
   */
 void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask)
 {
-  RTC_AlarmTypeDef RTC_AlarmStructure;
+  RTC_AlarmTypeDef RTC_AlarmStructure = {0};
 
   /* Ignore time AM PM configuration if in 24 hours format */
   if (initFormat == HOUR_FORMAT_24) {
