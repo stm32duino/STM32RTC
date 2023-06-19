@@ -1276,7 +1276,7 @@ void STM32RTC::syncAlarmTime(Alarm name)
     RTC_GetAlarm(::ALARM_B, &_alarmBDay, &_alarmBHours, &_alarmBMinutes, &_alarmBSeconds,
                  &_alarmBSubSeconds, &p, &match);
     _alarmBPeriod = (p == HOUR_AM) ? AM : PM;
-  }
+  } else
 #else
   UNUSED(name);
 #endif
