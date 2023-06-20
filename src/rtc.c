@@ -571,6 +571,10 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
 #else
       RTC_getPrediv(&(RtcHandle.Init.AsynchPrediv), &(RtcHandle.Init.SynchPrediv));
 #endif
+      /*
+       * TODO: RTC is already initialized, but RTC BIN mode is changed
+       * force the update of the BIN register in the RTC_ICSR
+       */
 #if defined(RTC_BINARY_NONE)
       RTC_BinaryConf(mode);
 #endif /* RTC_BINARY_NONE */
@@ -615,6 +619,11 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
   HAL_RTCEx_EnableBypassShadow(&RtcHandle);
 #endif
 
+  /*
+   * NOTE: freezing the RTC during stop mode (lowPower deepSleep)
+   * could inhibit the alarm interrupt and prevent the system to wakeUp
+   * from stop mode even if the RTC alarm flag is set.
+   */
   return reinit;
 }
 
@@ -733,19 +742,16 @@ void RTC_GetTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *s
     if (subSeconds != NULL) {
       /*
        * The subsecond is the free-running downcounter, to be converted in milliseconds.
-       * Give one more to compensate the fqce_apre uncertainty
        */
-      if (initMode == MODE_BINARY_MIX) {
+      if (initMode == MODE_BINARY_ONLY) {
         *subSeconds = (((UINT32_MAX - RTC_TimeStruct.SubSeconds + 1) & UINT32_MAX)
                        * 1000) / fqce_apre;
-        *subSeconds = *subSeconds % 1000; /* nb of milliseconds [0..999] */
-      } else if (initMode == MODE_BINARY_ONLY) {
-        *subSeconds = (((UINT32_MAX - RTC_TimeStruct.SubSeconds + 1) & UINT32_MAX)
+      } else if (initMode == MODE_BINARY_MIX) {
+        *subSeconds = (((UINT32_MAX - RTC_TimeStruct.SubSeconds) & predivSync)
                        * 1000) / fqce_apre;
       } else {
         /* the subsecond register value is converted in millisec on 32bit */
-        *subSeconds = (((predivSync - RTC_TimeStruct.SubSeconds + 1) & predivSync)
-                       * 1000) / fqce_apre;
+        *subSeconds = ((predivSync - RTC_TimeStruct.SubSeconds) * 1000) / (predivSync + 1);
       }
     }
 #else
@@ -854,13 +860,13 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
       }
       /*
        * The subsecond param is a nb of milliseconds to be converted in a subsecond
-       * downcounter value and to be comapred to the SubSecond register
+       * downcounter value and to be compared to the SubSecond register
        */
-      if ((initMode == MODE_BINARY_MIX) || (initMode == MODE_BINARY_NONE)) {
+      if ((initMode == MODE_BINARY_ONLY) || (initMode == MODE_BINARY_MIX)) {
         /* the subsecond is the millisecond to be converted in a subsecond downcounter value */
-        RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - (subSeconds * (predivSync + 1)) / 1000 + 1;
+        RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - (subSeconds * (predivSync + 1)) / 1000;
       } else {
-        RTC_AlarmStructure.AlarmTime.SubSeconds = predivSync - (subSeconds * (predivSync + 1)) / 1000 + 1;
+        RTC_AlarmStructure.AlarmTime.SubSeconds = predivSync - (subSeconds * (predivSync + 1)) / 1000;
       }
     } else {
       RTC_AlarmStructure.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
@@ -922,7 +928,7 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
       RTC_AlarmStructure.AlarmSubSecondMask = mask << RTC_ALRMASSR_MASKSS_Pos;
     }
 #if defined(RTC_ICSR_BIN)
-    if ((initMode == MODE_BINARY_MIX) || (initMode == MODE_BINARY_ONLY)) {
+    if ((initMode == MODE_BINARY_ONLY) || (initMode == MODE_BINARY_MIX)) {
       /* We have an SubSecond alarm to set in RTC_BINARY_MIX or RTC_BINARY_ONLY mode */
       /* The subsecond in ms is converted in ticks unit 1 tick is 1000 / fqce_apre */
       RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - (subSeconds * (predivSync + 1)) / 1000;
@@ -1026,11 +1032,11 @@ void RTC_GetAlarm(alarm_t name, uint8_t *day, uint8_t *hours, uint8_t *minutes, 
        * The subsecond is the bit SS[14:0] of the ALARM SSR register (not ALARMxINR)
        * to be converted in milliseconds
        */
-      if ((initMode == MODE_BINARY_MIX) || (initMode == MODE_BINARY_ONLY)) {
+      if ((initMode == MODE_BINARY_ONLY) || (initMode == MODE_BINARY_MIX)) {
         /* read the ALARM SSR register on SS[14:0] bits --> 0x7FFF */
         *subSeconds = (((0x7fff - RTC_AlarmStructure.AlarmTime.SubSeconds + 1) & 0x7fff) * 1000) / fqce_apre;
       } else {
-        *subSeconds = (((predivSync - RTC_AlarmStructure.AlarmTime.SubSeconds + 1) & predivSync) * 1000) / (predivSync + 1);
+        *subSeconds = ((predivSync - RTC_AlarmStructure.AlarmTime.SubSeconds) * 1000) / (predivSync + 1);
       }
     }
 #else

@@ -1205,10 +1205,13 @@ void STM32RTC::setAlarmEpoch(time_t ts, Alarm_Match match, uint32_t subSeconds, 
   time_t t = ts;
   struct tm *tmp = gmtime(&t);
 
-  setAlarmDay(tmp->tm_mday, name);
-  setAlarmHours(tmp->tm_hour, name);
-  setAlarmMinutes(tmp->tm_min, name);
-  setAlarmSeconds(tmp->tm_sec, name);
+  /* in BIN only mode, the time_t is not relevant, but only the subSeconds in ms */
+  if (_mode != MODE_BIN) {
+    setAlarmDay(tmp->tm_mday, name);
+    setAlarmHours(tmp->tm_hour, name);
+    setAlarmMinutes(tmp->tm_min, name);
+    setAlarmSeconds(tmp->tm_sec, name);
+  }
   setAlarmSubSeconds(subSeconds, name);
   enableAlarm(match, name);
 }
