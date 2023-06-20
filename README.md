@@ -174,8 +174,10 @@ Three RTC functional modes are available:
 
 Any API using the Subsecond parameter is expressed in milliseconds
 whatever the RTC input clock. This parameter is [0..999] in MIX or BCD mode
-and [0..0xFFFFFFFF] in BIN mode. In this configuration, time and date registers
-are not used by the RTC.
+and [0..0xFFFFFFFF] in BIN mode. In BIN only mode, time and date registers are not used
+by the RTC. Thus the getEpoch function is only to be called to get the subsecond [0..0xFFFFFFFF]
+(returned time_t is not valid). The setAlarmEpoch only uses the sub-second [0..0xFFFFFFFF]
+(time_t value is useless).
 
 Refer to the Arduino RTC documentation for the other functions
 http://arduino.cc/en/Reference/RTC
