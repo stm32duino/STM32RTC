@@ -480,13 +480,14 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
       // In case of RTC source clock change, Backup Domain is reset by RTC_initClock()
       // Save current config before call to RTC_initClock()
       RTC_GetDate(&years, &month, &days, &weekDay);
-      RTC_GetTime(mode, &hours, &minutes, &seconds, &subSeconds, &period);
+      RTC_GetTime(&hours, &minutes, &seconds, &subSeconds, &period);
+
       if (isAlarmASet) {
-        RTC_GetAlarm(mode, ALARM_A, &alarmDay, &alarmHours, &alarmMinutes, &alarmSeconds, &alarmSubseconds, &alarmPeriod, &alarmMask);
+        RTC_GetAlarm(ALARM_A, &alarmDay, &alarmHours, &alarmMinutes, &alarmSeconds, &alarmSubseconds, &alarmPeriod, &alarmMask);
       }
 #ifdef RTC_ALARM_B
       if (isAlarmBSet) {
-        RTC_GetAlarm(mode, ALARM_B, &alarmBDay, &alarmBHours, &alarmBMinutes, &alarmBSeconds, &alarmBSubseconds, &alarmBPeriod, &alarmBMask);
+        RTC_GetAlarm(ALARM_B, &alarmBDay, &alarmBHours, &alarmBMinutes, &alarmBSeconds, &alarmBSubseconds, &alarmBPeriod, &alarmBMask);
       }
 #endif
       // Init RTC clock
@@ -583,14 +584,14 @@ bool RTC_IsConfigured(void)
   * @param hours: 0-12 or 0-23. Depends on the format used.
   * @param minutes: 0-59
   * @param seconds: 0-59
-  * @param subSeconds: 0-999
+  * @param subSeconds: 0-999 (not used)
   * @param period: select HOUR_AM or HOUR_PM period in case RTC is set in 12 hours mode. Else ignored.
   * @retval None
   */
 void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period)
 {
   RTC_TimeTypeDef RTC_TimeStruct;
-  UNUSED(subSeconds);
+  UNUSED(subSeconds); /* not used (read-only register) */
   /* Ignore time AM PM configuration if in 24 hours format */
   if (initFormat == HOUR_FORMAT_24) {
     period = HOUR_AM;
@@ -656,7 +657,11 @@ void RTC_GetTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *s
     }
 #if defined(RTC_SSR_SS)
     if (subSeconds != NULL) {
-      *subSeconds = ((predivSync - RTC_TimeStruct.SubSeconds) * 1000) / (predivSync + 1);
+      if (initMode == MODE_BINARY_MIX) {
+        *subSeconds = UINT32_MAX - RTC_TimeStruct.SubSeconds;
+      } else {
+        *subSeconds = ((predivSync - RTC_TimeStruct.SubSeconds) * 1000) / (predivSync + 1);
+      }
     }
 #else
     UNUSED(subSeconds);
@@ -811,21 +816,19 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
 #if defined(RTC_ALRMASSR_SSCLR)
       RTC_AlarmStructure.BinaryAutoClr = RTC_ALARMSUBSECONDBIN_AUTOCLR_NO;
 #endif /* RTC_ALRMASSR_SSCLR */
-      RTC_AlarmStructure.AlarmMask = RTC_ALARMMASK_NONE;
+      RTC_AlarmStructure.AlarmMask = RTC_ALARMMASK_ALL;
 
 #ifdef RTC_ALARM_B
       if (name == ALARM_B) {
         /* Expecting RTC_ALARMSUBSECONDBINMASK_NONE for the subsecond mask on ALARM B */
-        RTC_AlarmStructure.AlarmMask = RTC_ALARMMASK_ALL;
         RTC_AlarmStructure.AlarmSubSecondMask = mask << RTC_ALRMBSSR_MASKSS_Pos;
       } else
 #endif
       {
         /* Expecting RTC_ALARMSUBSECONDBINMASK_NONE for the subsecond mask on ALARM A */
-        RTC_AlarmStructure.AlarmMask = RTC_ALARMMASK_ALL;
         RTC_AlarmStructure.AlarmSubSecondMask = mask << RTC_ALRMASSR_MASKSS_Pos;
       }
-      /* Special case for ALARM B configuration for stm32WL Lorawan */
+      /* Special case for ALARM B configuration when using subsecond reg. in RTC Mix mode */
       RTC_AlarmStructure.AlarmTime.SubSeconds = subSeconds;
     }
 
@@ -922,7 +925,11 @@ void RTC_GetAlarm(alarm_t name, uint8_t *day, uint8_t *hours, uint8_t *minutes, 
     }
 #if defined(RTC_SSR_SS)
     if (subSeconds != NULL) {
-      *subSeconds = ((predivSync - RTC_AlarmStructure.AlarmTime.SubSeconds) * 1000) / (predivSync + 1);
+      if (initMode == MODE_BINARY_MIX) {
+        *subSeconds = UINT32_MAX - RTC_AlarmStructure.AlarmTime.SubSeconds;
+      } else {
+        *subSeconds = ((predivSync - RTC_AlarmStructure.AlarmTime.SubSeconds) * 1000) / (predivSync + 1);
+      }
     }
 #else
     UNUSED(subSeconds);
