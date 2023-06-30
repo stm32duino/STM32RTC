@@ -237,13 +237,27 @@ void STM32RTC::enableAlarm(Alarm_Match match, Alarm name)
         RTC_StopAlarm(::ALARM_A);
       }
       break;
+    case MATCH_SUBSEC:
+      /* force _alarmday to 0 to go to the right alarm config in MIX mode */
+#ifdef RTC_ALARM_B
+      if (name == ALARM_B) {
+        RTC_StartAlarm(::ALARM_B, 0, 0, 0, 0,
+                       (UINT32_MAX - _alarmBSubSeconds), (_alarmBPeriod == AM) ? HOUR_AM : HOUR_PM,
+                       static_cast<uint8_t>(31UL));
+      } else
+#endif
+      {
+        RTC_StartAlarm(::ALARM_A, 0, 0, 0, 0,
+                       (UINT32_MAX - _alarmSubSeconds), (_alarmPeriod == AM) ? HOUR_AM : HOUR_PM,
+                       static_cast<uint8_t>(31UL));
+      }
+      break;
     case MATCH_YYMMDDHHMMSS://kept for compatibility
     case MATCH_MMDDHHMMSS:  //kept for compatibility
     case MATCH_DHHMMSS:
     case MATCH_HHMMSS:
     case MATCH_MMSS:
     case MATCH_SS:
-    case MATCH_SUBSEC:
 #ifdef RTC_ALARM_B
       if (name == ALARM_B) {
         RTC_StartAlarm(::ALARM_B, _alarmBDay, _alarmBHours, _alarmBMinutes, _alarmBSeconds,
@@ -845,7 +859,8 @@ void STM32RTC::setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year
   */
 void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 {
-  if (subSeconds < 1000) {
+
+  if (getBinaryMode() == MODE_MIX) {
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSubSeconds = subSeconds;
@@ -855,6 +870,19 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 #endif
     {
       _alarmSubSeconds = subSeconds;
+    }
+  } else {
+    if (subSeconds < 1000) {
+#ifdef RTC_ALARM_B
+      if (name == ALARM_B) {
+        _alarmBSubSeconds = subSeconds;
+      }
+#else
+      UNUSED(name);
+#endif
+      {
+        _alarmSubSeconds = subSeconds;
+      }
     }
   }
 }
@@ -1268,6 +1296,7 @@ bool STM32RTC::isAlarmEnabled(Alarm name)
 void STM32RTC::syncTime(void)
 {
   hourAM_PM_t p = HOUR_AM;
+
   RTC_GetTime(&_hours, &_minutes, &_seconds, &_subSeconds, &p);
   _hoursPeriod = (p == HOUR_AM) ? AM : PM;
 }
