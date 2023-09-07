@@ -242,13 +242,13 @@ void STM32RTC::enableAlarm(Alarm_Match match, Alarm name)
 #ifdef RTC_ALARM_B
       if (name == ALARM_B) {
         RTC_StartAlarm(::ALARM_B, 0, 0, 0, 0,
-                       (UINT32_MAX - _alarmBSubSeconds), (_alarmBPeriod == AM) ? HOUR_AM : HOUR_PM,
+                       _alarmBSubSeconds, (_alarmBPeriod == AM) ? HOUR_AM : HOUR_PM,
                        static_cast<uint8_t>(31UL));
       } else
 #endif
       {
         RTC_StartAlarm(::ALARM_A, 0, 0, 0, 0,
-                       (UINT32_MAX - _alarmSubSeconds), (_alarmPeriod == AM) ? HOUR_AM : HOUR_PM,
+                       _alarmSubSeconds, (_alarmPeriod == AM) ? HOUR_AM : HOUR_PM,
                        static_cast<uint8_t>(31UL));
       }
       break;
@@ -647,7 +647,7 @@ uint8_t STM32RTC::getAlarmYear(void)
 
 /**
   * @brief  set RTC subseconds.
-  * @param  subseconds: 0-999
+  * @param  subseconds: 0-999 milliseconds
   * @retval none
   */
 void STM32RTC::setSubSeconds(uint32_t subSeconds)
@@ -859,8 +859,7 @@ void STM32RTC::setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year
   */
 void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 {
-
-  if (getBinaryMode() == MODE_MIX) {
+  if (subSeconds < 1000) {
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSubSeconds = subSeconds;
@@ -870,19 +869,6 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 #endif
     {
       _alarmSubSeconds = subSeconds;
-    }
-  } else {
-    if (subSeconds < 1000) {
-#ifdef RTC_ALARM_B
-      if (name == ALARM_B) {
-        _alarmBSubSeconds = subSeconds;
-      }
-#else
-      UNUSED(name);
-#endif
-      {
-        _alarmSubSeconds = subSeconds;
-      }
     }
   }
 }
