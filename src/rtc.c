@@ -390,7 +390,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #else
   if (!LL_RTC_IsActiveFlag_INITS(RtcHandle.Instance) || reset) {
     // RTC needs initialization
-    RtcHandle.Init.HourFormat = format == HOUR_FORMAT_12 ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
+    RtcHandle.Init.HourFormat = (format == HOUR_FORMAT_12) ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
     RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
     RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
