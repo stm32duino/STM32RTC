@@ -56,6 +56,12 @@ typedef enum {
 } hourFormat_t;
 
 typedef enum {
+  MODE_BINARY_NONE, /* BCD only */
+  MODE_BINARY_ONLY,
+  MODE_BINARY_MIX
+} binaryMode_t;
+
+typedef enum {
   HOUR_AM,
   HOUR_PM
 } hourAM_PM_t;
@@ -169,7 +175,7 @@ void RTC_SetClockSource(sourceClock_t source);
 void RTC_getPrediv(uint32_t *asynch, uint32_t *synch);
 void RTC_setPrediv(uint32_t asynch, uint32_t synch);
 
-bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset);
+bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool reset);
 void RTC_DeInit(bool reset_cb);
 bool RTC_IsConfigured(void);
 
