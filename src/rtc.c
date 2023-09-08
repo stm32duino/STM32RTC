@@ -79,12 +79,16 @@ static uint32_t predivAsync = RTC_AUTO_1_SECOND;
 #endif /* !STM32F1xx */
 
 static hourFormat_t initFormat = HOUR_FORMAT_12;
+static binaryMode_t initMode = MODE_BINARY_NONE;
 
 /* Private function prototypes -----------------------------------------------*/
 static void RTC_initClock(sourceClock_t source);
 #if !defined(STM32F1xx)
 static void RTC_computePrediv(uint32_t *asynch, uint32_t *synch);
 #endif /* !STM32F1xx */
+#if defined(RTC_BINARY_NONE)
+static void RTC_BinaryConf(binaryMode_t mode);
+#endif
 
 static inline int _log2(int x)
 {
@@ -334,17 +338,49 @@ static void RTC_computePrediv(uint32_t *asynch, uint32_t *synch)
 }
 #endif /* !STM32F1xx */
 
+#if defined(RTC_BINARY_NONE)
+static void RTC_BinaryConf(binaryMode_t mode)
+{
+  RtcHandle.Init.BinMode = (mode == MODE_BINARY_MIX) ? RTC_BINARY_MIX : ((mode == MODE_BINARY_ONLY) ? RTC_BINARY_ONLY : RTC_BINARY_NONE);
+  if (RtcHandle.Init.BinMode == RTC_BINARY_MIX) {
+    /* Configure the 1s BCD calendar increment */
+
+    uint32_t inc = 1 / (1.0 / ((float)clkVal / (float)(predivAsync + 1.0)));
+    if (inc <= 256) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_0;
+    } else if (inc < (256 << 1)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_1;
+    } else if (inc < (256 << 2)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_2;
+    } else if (inc < (256 << 3)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_3;
+    } else if (inc < (256 << 4)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_4;
+    } else if (inc < (256 << 5)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_5;
+    } else if (inc < (256 << 6)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_6;
+    } else if (inc < (256 << 7)) {
+      RtcHandle.Init.BinMixBcdU = RTC_BINARY_MIX_BCDU_7;
+    } else {
+      Error_Handler();
+    }
+  }
+}
+#endif /* RTC_BINARY_NONE */
+
 /**
   * @brief RTC Initialization
   *        This function configures the RTC time and calendar. By default, the
   *        RTC is set to the 1st January 2001
   *        Note: year 2000 is invalid as it is the hardware reset value and doesn't raise INITS flag
   * @param format: enable the RTC in 12 or 24 hours mode
+  * @param mode: enable the RTC in BCD or Mix or Binary mode
   * @param source: RTC clock source: LSE, LSI or HSE
   * @param reset: force RTC reset, even if previously configured
   * @retval True if RTC is reinitialized, else false
   */
-bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
+bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool reset)
 {
   bool reinit = false;
   hourAM_PM_t period = HOUR_AM, alarmPeriod = HOUR_AM;
@@ -360,7 +396,7 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #endif
 
   initFormat = format;
-
+  initMode = mode;
   /* Ensure all RtcHandle properly set */
   RtcHandle.Instance = RTC;
 #if defined(STM32F1xx)
@@ -409,7 +445,10 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
     // Init RTC clock
     RTC_initClock(source);
     RTC_getPrediv(&(RtcHandle.Init.AsynchPrediv), &(RtcHandle.Init.SynchPrediv));
-#endif // STM32F1xx
+#if defined(RTC_BINARY_NONE)
+    RTC_BinaryConf(mode);
+#endif /* RTC_BINARY_NONE */
+#endif  // STM32F1xx
 
     HAL_RTC_Init(&RtcHandle);
     // Default: saturday 1st of January 2001
@@ -471,6 +510,9 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #else
       RTC_getPrediv(&(RtcHandle.Init.AsynchPrediv), &(RtcHandle.Init.SynchPrediv));
 #endif
+#if defined(RTC_BINARY_NONE)
+      RTC_BinaryConf(mode);
+#endif /* RTC_BINARY_NONE */
       HAL_RTC_Init(&RtcHandle);
       // Restore config
       RTC_SetTime(hours, minutes, seconds, subSeconds, period);
@@ -493,6 +535,9 @@ bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset)
 #else
       RTC_getPrediv(&(RtcHandle.Init.AsynchPrediv), &(RtcHandle.Init.SynchPrediv));
 #endif
+#if defined(RTC_BINARY_NONE)
+      RTC_BinaryConf(mode);
+#endif /* RTC_BINARY_NONE */
 #if defined(STM32F1xx)
       memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
       /* Update date automatically by calling HAL_RTC_GetDate */
