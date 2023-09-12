@@ -56,7 +56,7 @@ extern "C" {
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-static RTC_HandleTypeDef RtcHandle = {0};
+static RTC_HandleTypeDef RtcHandle = {.Instance = RTC};
 static voidCallbackPtr RTCUserCallback = NULL;
 static void *callbackUserData = NULL;
 #ifdef RTC_ALARM_B
