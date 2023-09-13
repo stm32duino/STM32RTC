@@ -31,7 +31,7 @@ _RTC hours mode (12 or 24)_
 
 _RTC clock source_
 * **`Source_Clock getClockSource(void)`** : get current clock source.
-* **`void setClockSource(Source_Clock source)`** : this function must be called before `begin()`.
+* **`void setClockSource(Source_Clock source, uint32_t predivA, uint32_t predivS)`** : set the clock source (`LSI_CLOCK`, `LSE_CLOCK` or `HSE_CLOCK`) and (a)synchronous prescaler values. This function must be called before `begin()`. Use `(PREDIVA_MAX + 1)` and `(PREDIVS_MAX +1)` to reset value and use computed ones. Those values have to match the following conditions: **_1Hz = RTC CLK source / ((predivA + 1) * (predivS + 1))_**
 
 _RTC Asynchronous and Synchronous prescaler_
 * **`void getPrediv(uint32_t *predivA, uint32_t *predivS)`** : get (a)synchronous prescaler values if set else computed ones for the current clock source.
