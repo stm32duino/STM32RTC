@@ -117,18 +117,23 @@ STM32RTC::Source_Clock STM32RTC::getClockSource(void)
 }
 
 /**
-  * @brief set the RTC clock source. By default LSI clock is selected. This
-  * method must be called before begin().
+  * @brief set the RTC clock source and user (a)synchronous prescalers values.
+  * @note  By default LSI clock is selected. This method must be called before begin().
   * @param source: clock source: LSI_CLOCK, LSE_CLOCK or HSE_CLOCK
+  * @param  predivA: Asynchronous prescaler value.
+  * @note   Reset value: RTC_AUTO_1_SECOND for STM32F1xx series, else (PREDIVA_MAX + 1)
+  * @param  predivS: Synchronous prescaler value.
+  * @note   Reset value: (PREDIVS_MAX + 1), not used for STM32F1xx series.
   * @retval None
   */
-void STM32RTC::setClockSource(Source_Clock source)
+void STM32RTC::setClockSource(Source_Clock source, uint32_t predivA, uint32_t predivS)
 {
   if (IS_CLOCK_SOURCE(source)) {
     _clockSource = source;
     RTC_SetClockSource((_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                        (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK);
   }
+  RTC_setPrediv(predivA, predivS);
 }
 
 /**
@@ -151,7 +156,7 @@ void STM32RTC::getPrediv(uint32_t *predivA, uint32_t *predivS)
 }
 
 /**
-  * @brief  set user (a)synchronous prescalers value.
+  * @brief  set user (a)synchronous prescalers values.
   * @note   This method must be called before begin().
   * @param  predivA: Asynchronous prescaler value.
   * @note   Reset value: RTC_AUTO_1_SECOND for STM32F1xx series, else (PREDIVA_MAX + 1)
@@ -161,7 +166,7 @@ void STM32RTC::getPrediv(uint32_t *predivA, uint32_t *predivS)
   */
 void STM32RTC::setPrediv(uint32_t predivA, uint32_t predivS)
 {
-  RTC_setPrediv(predivA, predivS);
+  setClockSource(_clockSource, predivA, predivS);
 }
 
 /**

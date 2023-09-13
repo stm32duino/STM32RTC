@@ -126,7 +126,9 @@ class STM32RTC {
     void end(void);
 
     Source_Clock getClockSource(void);
-    void setClockSource(Source_Clock source);
+    void setClockSource(Source_Clock source, uint32_t predivA = (PREDIVS_MAX + 1), uint32_t predivS = (PREDIVS_MAX + 1));
+    void getPrediv(uint32_t *predivA, uint32_t *predivS);
+    void setPrediv(uint32_t predivA, uint32_t predivS);
 
     void enableAlarm(Alarm_Match match, Alarm name = ALARM_A);
     void disableAlarm(Alarm name = ALARM_A);
@@ -211,9 +213,6 @@ class STM32RTC {
     time_t getAlarmEpoch(uint32_t *subSeconds = nullptr, Alarm name = ALARM_A);
     void setAlarmEpoch(time_t ts, Alarm_Match match, Alarm name);
     void setAlarmEpoch(time_t ts, Alarm_Match match = MATCH_DHHMMSS, uint32_t subSeconds = 0, Alarm name = ALARM_A);
-
-    void getPrediv(uint32_t *predivA, uint32_t *predivS);
-    void setPrediv(uint32_t predivA, uint32_t predivS);
 
     bool isConfigured(void)
     {
