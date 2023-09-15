@@ -36,9 +36,9 @@ typedef struct {
   bool alarm_a;
 } cb_data_t;
 
-static cb_data_t atime = { 2222, true};
+static cb_data_t atime = { 2222, true };
 #ifdef RTC_ALARM_B
-static cb_data_t btime = { 3333, false};
+static cb_data_t btime = { 3333, false };
 #endif
 static byte seconds = 0;
 static byte minutes = 0;
@@ -64,7 +64,7 @@ static uint8_t conv2d(const char* p) {
 }
 
 // sample input: date = "Dec 26 2009", time = "12:34:56"
-void initDateTime (void) {
+void initDateTime(void) {
   Serial.printf("Build date & time %s, %s\n", mydate, mytime);
 
   year = conv2d(mydate + 9);
@@ -89,15 +89,15 @@ void initDateTime (void) {
   seconds = conv2d(mytime + 6);
 }
 
-void setup()
-{
+void setup() {
   pinMode(USER_BTN, INPUT_PULLUP);
   int32_t default_state = digitalRead(USER_BTN);
-
-  Serial.begin(9600);
-  while (!Serial);
+  Serial.begin(115200);
+  while (!Serial)
+    ;
   // Wait user input to start
-  while (digitalRead(USER_BTN) == default_state);
+  while (digitalRead(USER_BTN) == default_state)
+    ;
   // Convenient function to init date and time variables
   initDateTime();
 
@@ -110,7 +110,7 @@ void setup()
 #ifdef RTC_ALARM_B
   rtc.attachInterrupt(alarmMatch, &btime, STM32RTC::ALARM_B);
 #endif
-  rtc.begin(); // Initialize RTC 24H format
+  rtc.begin();  // Initialize RTC 24H format
   if (!rtc.isTimeSet()) {
     Serial.printf("RTC time not set\n Set it.\n");
     // Set the time
@@ -129,6 +129,10 @@ void setup()
   } else {
     // RTC already initialized
     time_t epoc, alarm_epoc;
+    rtc.getTime(&hours, &minutes, &seconds, &subSeconds, &period);
+    year = rtc.getYear();
+    month = rtc.getMonth();
+    day = rtc.getDay();
     if (rtc.isAlarmEnabled()) {
       rtc.enableAlarm(rtc.MATCH_DHHMMSS);
       alarm_epoc = rtc.getAlarmEpoch();
@@ -156,16 +160,28 @@ void setup()
 #endif
     Serial.printf("RTC time already set\n");
   }
-  Serial.printf("Alarm A enable status: %s\n", (rtc.isAlarmEnabled(STM32RTC::ALARM_A)) ? "True" : "False");
+  // For STM32F1xx series, alarm is always disabled after a reset.
+  bool alarmA = rtc.isAlarmEnabled(STM32RTC::ALARM_A);
+  Serial.printf("Alarm A enable status: %s\n", (alarmA) ? "True" : "False");
+  if (!alarmA) {
+    rtc.setAlarmDay(day);
+    rtc.setAlarmTime(hours, minutes, seconds + 5, 567);
+    rtc.enableAlarm(rtc.MATCH_DHHMMSS);
+  }
 #ifdef RTC_ALARM_B
-  Serial.printf("Alarm B enable status: %s\n", (rtc.isAlarmEnabled(STM32RTC::ALARM_B)) ? "True" : "False");
+  bool alarmB = rtc.isAlarmEnabled(STM32RTC::ALARM_B);
+  Serial.printf("Alarm B enable status: %s\n", (alarmB) ? "True" : "False");
+  if (!alarmB) {
+    rtc.setAlarmDay(day, STM32RTC::ALARM_B);
+    rtc.setAlarmTime(hours, minutes, seconds + 5, 567, STM32RTC::ALARM_B);
+    rtc.enableAlarm(rtc.MATCH_DHHMMSS, STM32RTC::ALARM_B);
+  }
 #else
   Serial.println("Alarm B not available.");
 #endif
 }
 
-void loop()
-{
+void loop() {
   rtc.getTime(&hours, &minutes, &seconds, &subSeconds, &period);
   // Print current date & time
   Serial.printf("\n%02d/%02d/%02d %02d:%02d:%02d.%03d\n", rtc.getDay(), rtc.getMonth(), rtc.getYear(), hours, minutes, seconds, subSeconds);
@@ -177,13 +193,12 @@ void loop()
   delay(1000);
 }
 
-void alarmMatch(void *data)
-{
+void alarmMatch(void* data) {
   time_t epoc;
   uint32_t epoc_ms;
   uint32_t sec = 0;
   uint32_t _millis = 1000;
-  cb_data_t cbdata = {.next = 1000, .alarm_a = true};
+  cb_data_t cbdata = { .next = 1000, .alarm_a = true };
   if (data != NULL) {
     cbdata.next = ((cb_data_t*)data)->next;
     cbdata.alarm_a = ((cb_data_t*)data)->alarm_a;
@@ -204,7 +219,7 @@ void alarmMatch(void *data)
   // Update epoch_ms - might need to add a second to epoch
   epoc_ms += _millis;
   if (epoc_ms >= 1000) {
-    sec ++;
+    sec++;
     epoc_ms -= 1000;
   }
 #endif
