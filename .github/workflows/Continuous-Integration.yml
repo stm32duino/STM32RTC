@@ -27,7 +27,6 @@ jobs:
       id: Compile
       uses: stm32duino/actions/compile-examples@main
       with:
-        board-pattern: ".*NUCLEO.*"
         custom-config: "./extras/rtc_cores_config.json"
 
     # Use the output from the `Compile` step
