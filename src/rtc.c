@@ -98,6 +98,54 @@ static inline int _log2(int x)
 
 /* Exported functions --------------------------------------------------------*/
 
+/* HAL MSP function used for RTC_Init */
+void HAL_RTC_MspInit(RTC_HandleTypeDef *rtcHandle)
+{
+#if defined(RTC_SCR_CSSRUF)
+  if (rtcHandle->Instance == RTC) {
+    /* In BINARY mode (MIX or ONLY), set the SSR Underflow interrupt */
+    if (rtcHandle->Init.BinMode != RTC_BINARY_NONE) {
+#if defined(STM32WLxx)
+      /* Only the STM32WLxx series has a TAMP_STAMP_LSECSS_SSRU_IRQn */
+      if (HAL_RTCEx_SetSSRU_IT(rtcHandle) != HAL_OK) {
+        Error_Handler();
+      }
+      /* Give init value for the RtcFeatures enable */
+      rtcHandle->IsEnabled.RtcFeatures = 0;
+
+      /* RTC interrupt Init */
+      HAL_NVIC_SetPriority(TAMP_STAMP_LSECSS_SSRU_IRQn, 0, 0);
+      HAL_NVIC_EnableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
+#else
+      /* The STM32U5, STM32H5, STM32L4plus have common RTC interrupt and a SSRU flag */
+      __HAL_RTC_SSRU_ENABLE_IT(rtcHandle, RTC_IT_SSRU);
+#endif /* STM32WLxx */
+    }
+  }
+#else /* RTC_SCR_CSSRUF */
+  UNUSED(rtcHandle);
+#endif /* RTC_SCR_CSSRUF */
+  /* RTC_Alarm_IRQn is enabled when enabling Alarm */
+}
+
+void HAL_RTC_MspDeInit(RTC_HandleTypeDef *rtcHandle)
+{
+
+  if (rtcHandle->Instance == RTC) {
+    /* Peripheral clock disable */
+    __HAL_RCC_RTC_DISABLE();
+#ifdef __HAL_RCC_RTCAPB_CLK_DISABLE
+    __HAL_RCC_RTCAPB_CLK_DISABLE();
+#endif
+    /* RTC interrupt Deinit */
+#if defined(STM32WLxx)
+    /* Only the STM32WLxx series has a TAMP_STAMP_LSECSS_SSRU_IRQn */
+    HAL_NVIC_DisableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
+#endif /* STM32WLxx */
+    HAL_NVIC_DisableIRQ(RTC_Alarm_IRQn);
+  }
+}
+
 /**
   * @brief Get pointer to RTC_HandleTypeDef
   * @param None
