@@ -955,6 +955,18 @@ void STM32RTC::setAlarmHours(uint8_t hours, AM_PM period, Alarm name)
   }
 }
 
+
+/**
+  * @brief  set RTC alarm time.
+  * @param  subSeconds: 0-999 ms or 32bit nb of milliseconds in BIN mode
+  * @param  name: ALARM_A or ALARM_B if exists
+  * @retval none
+  */
+void STM32RTC::setAlarmTime(uint32_t subSeconds, Alarm name)
+{
+  setAlarmTime(0, 0, 0, subSeconds, AM, name);
+}
+
 /**
   * @brief  set RTC alarm time.
   * @param  hours: 0-23

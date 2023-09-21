@@ -202,6 +202,7 @@ class STM32RTC {
     void setAlarmMinutes(uint8_t minutes, Alarm name = ALARM_A);
     void setAlarmHours(uint8_t hours, Alarm name);
     void setAlarmHours(uint8_t hours, AM_PM period = AM, Alarm name = ALARM_A);
+    void setAlarmTime(uint32_t subSeconds, Alarm name = ALARM_A);
     void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, Alarm name);
     void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, Alarm name);
     void setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds = 0, AM_PM period = AM, Alarm name = ALARM_A);
