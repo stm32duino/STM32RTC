@@ -894,7 +894,7 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
   else if ((initMode == MODE_BINARY_MIX) || (initMode == MODE_BINARY_ONLY)) {
     /* We have an SubSecond alarm to set in RTC_BINARY_MIX or RTC_BINARY_ONLY mode */
 #else
-  else {
+  else { /*  */
 #endif /* RTC_ICSR_BIN */
 #if defined(RTC_SSR_SS)
     {
@@ -917,11 +917,11 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
       /* The subsecond in ms is converted in ticks unit 1 tick is 1000 / fqce_apre */
       RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - (subSeconds * fqce_apre) / 1000;
     }
-#endif /* RTC_SSR_SS */
     /* Set RTC_Alarm */
     HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
     HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+#endif /* RTC_SSR_SS */
   }
 #if defined(RTC_ICSR_BIN)
   else {
@@ -945,11 +945,11 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
       }
       RTC_AlarmStructure.AlarmTime.SubSeconds = subSeconds * fqce_apre / 1000;
     }
-#endif /* RTC_SSR_SS */
     /* Set RTC_Alarm */
     HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
     HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+#endif /* RTC_SSR_SS */
   }
 #endif /* RTC_ICSR_BIN */
 }
