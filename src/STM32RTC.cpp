@@ -846,7 +846,7 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSubSeconds = subSeconds;
-    }
+    } else
 #else
     UNUSED(name);
 #endif
@@ -857,7 +857,7 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSubSeconds = subSeconds;
-    }
+    } else
 #else
     UNUSED(name);
 #endif
@@ -880,7 +880,7 @@ void STM32RTC::setAlarmSeconds(uint8_t seconds, Alarm name)
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSeconds = seconds;
-    }
+    } else
 #else
     UNUSED(name);
 #endif
@@ -903,7 +903,7 @@ void STM32RTC::setAlarmMinutes(uint8_t minutes, Alarm name)
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBMinutes = minutes;
-    }
+    } else
 #else
     UNUSED(name);
 #endif
@@ -942,7 +942,7 @@ void STM32RTC::setAlarmHours(uint8_t hours, AM_PM period, Alarm name)
       if (_format == HOUR_12) {
         _alarmBPeriod = period;
       }
-    }
+    } else
 #else
     UNUSED(name);
 #endif
