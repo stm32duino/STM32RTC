@@ -813,7 +813,9 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
 void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask)
 {
   RTC_AlarmTypeDef RTC_AlarmStructure = {0};
-
+#if !defined(RTC_SSR_SS)
+  UNUSED(subSeconds);
+#endif
   /* Ignore time AM PM configuration if in 24 hours format */
   if (initFormat == HOUR_FORMAT_24) {
     period = HOUR_AM;
@@ -849,8 +851,6 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
     } else {
       RTC_AlarmStructure.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
     }
-#else
-    UNUSED(subSeconds);
 #endif /* RTC_SSR_SS */
     if (period == HOUR_PM) {
       RTC_AlarmStructure.AlarmTime.TimeFormat = RTC_HOURFORMAT12_PM;
@@ -880,7 +880,6 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
       }
     }
 #else
-    UNUSED(subSeconds);
     UNUSED(period);
     UNUSED(day);
     UNUSED(mask);
@@ -890,11 +889,12 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
     HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
     HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+  }
 #if defined(RTC_ICSR_BIN)
-  } else if ((initMode == MODE_BINARY_MIX) || (initMode == MODE_BINARY_ONLY)) {
+  else if ((initMode == MODE_BINARY_MIX) || (initMode == MODE_BINARY_ONLY)) {
     /* We have an SubSecond alarm to set in RTC_BINARY_MIX or RTC_BINARY_ONLY mode */
 #else
-  } else {
+  else {
 #endif /* RTC_ICSR_BIN */
 #if defined(RTC_SSR_SS)
     {
@@ -917,16 +917,14 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
       /* The subsecond in ms is converted in ticks unit 1 tick is 1000 / fqce_apre */
       RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - (subSeconds * fqce_apre) / 1000;
     }
-
-#else
-    UNUSED(subSeconds);
 #endif /* RTC_SSR_SS */
     /* Set RTC_Alarm */
     HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
     HAL_NVIC_SetPriority(RTC_Alarm_IRQn, RTC_IRQ_PRIO, RTC_IRQ_SUBPRIO);
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
+  }
 #if defined(RTC_ICSR_BIN)
-  } else {
+  else {
     /* We have an SubSecond alarm to set in BCD (RTC_BINARY_NONE) mode */
 #if defined(RTC_SSR_SS)
     {
@@ -947,9 +945,6 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
       }
       RTC_AlarmStructure.AlarmTime.SubSeconds = subSeconds * fqce_apre / 1000;
     }
-
-#else
-    UNUSED(subSeconds);
 #endif /* RTC_SSR_SS */
     /* Set RTC_Alarm */
     HAL_RTC_SetAlarm_IT(&RtcHandle, &RTC_AlarmStructure, RTC_FORMAT_BIN);
@@ -957,7 +952,6 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   }
 #endif /* RTC_ICSR_BIN */
-
 }
 
 /**
