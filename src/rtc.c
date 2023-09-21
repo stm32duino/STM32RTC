@@ -723,14 +723,18 @@ void RTC_GetTime(uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *s
     }
 #if defined(RTC_SSR_SS)
     if (subSeconds != NULL) {
-      if ((initMode == MODE_BINARY_MIX) || (initMode == MODE_BINARY_ONLY)) {
+      if (initMode == MODE_BINARY_MIX) {
         /* The subsecond is the free-running downcounter, to be converted in milliseconds */
         *subSeconds = (((UINT32_MAX - RTC_TimeStruct.SubSeconds + 1) & UINT32_MAX)
                        * 1000) / fqce_apre; /* give one more to compensate the 3.9ms uncertainty */
-        *subSeconds = *subSeconds % 1000; /* nb of milliseconds */
+        *subSeconds = *subSeconds % 1000; /* nb of milliseconds [0..999] */
         /* predivAsync is 0x7F with LSE clock source */
+      } else if (initMode == MODE_BINARY_ONLY) {
+        /* The subsecond is the free-running downcounter, to be converted in milliseconds */
+        *subSeconds = (((UINT32_MAX - RTC_TimeStruct.SubSeconds + 1) & UINT32_MAX)
+                       * 1000) / fqce_apre; /* give one more to compensate the 3.9ms uncertainty */
       } else {
-        /* the subsecond register value is converted in millisec */
+        /* the subsecond register value is converted in millisec on 32bit*/
         *subSeconds = ((predivSync - RTC_TimeStruct.SubSeconds) * 1000) / (predivSync + 1);
       }
     }
