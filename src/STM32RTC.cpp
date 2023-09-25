@@ -63,6 +63,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
 
   _format = format;
   reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
+                    (_mode == MODE_MIX) ? ::MODE_BINARY_MIX : ((_mode == MODE_BIN) ? ::MODE_BINARY_ONLY : ::MODE_BINARY_NONE),
                     (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                     (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
                     , resetTime);
@@ -103,7 +104,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
   */
 void STM32RTC::end(void)
 {
-  RTC_DeInit();
+  RTC_DeInit(true);
   _timeSet = false;
 }
 
@@ -117,74 +118,77 @@ STM32RTC::Source_Clock STM32RTC::getClockSource(void)
 }
 
 /**
-  * @brief set the RTC clock source. By default LSI clock is selected. This
-  * method must be called before begin().
+  * @brief set the RTC clock source and user (a)synchronous prescalers values.
+  * @note  By default LSI clock is selected. This method must be called before begin().
   * @param source: clock source: LSI_CLOCK, LSE_CLOCK or HSE_CLOCK
+  * @param  predivA: Asynchronous prescaler value.
+  * @note   Reset value: RTC_AUTO_1_SECOND for STM32F1xx series, else (PREDIVA_MAX + 1)
+  * @param  predivS: Synchronous prescaler value.
+  * @note   Reset value: (PREDIVS_MAX + 1), not used for STM32F1xx series.
   * @retval None
   */
-void STM32RTC::setClockSource(Source_Clock source)
+void STM32RTC::setClockSource(Source_Clock source, uint32_t predivA, uint32_t predivS)
 {
   if (IS_CLOCK_SOURCE(source)) {
     _clockSource = source;
     RTC_SetClockSource((_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                        (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK);
   }
+  RTC_setPrediv(predivA, predivS);
 }
 
-#if defined(STM32F1xx)
 /**
-  * @brief  get user asynchronous prescaler value for the current clock source.
-  * @param  predivA: pointer to the current Asynchronous prescaler value
-  * @param  dummy : not used (kept for compatibility reason)
+  * @brief get the Binary Mode.
+  * @retval mode: MODE_BCD, MODE_BIN or MODE_MIX
+  */
+STM32RTC::Binary_Mode STM32RTC::getBinaryMode(void)
+{
+  return _mode;
+}
+
+/**
+  * @brief set the Binary Mode. By default MODE_BCD is selected. This
+  *        method must be called before begin().
+  * @param mode: the RTC mode: MODE_BCD, MODE_BIN or MODE_MIX
   * @retval None
   */
-void STM32RTC::getPrediv(uint32_t *predivA, int16_t *dummy)
+void STM32RTC::setBinaryMode(Binary_Mode mode)
 {
-  UNUSED(dummy);
-  RTC_getPrediv(predivA);
+  _mode = mode;
 }
-#else
+
 /**
   * @brief  get user (a)synchronous prescaler values if set else computed
   *         ones for the current clock source.
   * @param  predivA: pointer to the current Asynchronous prescaler value
-  * @param  predivS: pointer to the current Synchronous prescaler value
+  * @param  predivS: pointer to the current Synchronous prescaler value,
+  *         not used for STM32F1xx series.
   * @retval None
   */
-void STM32RTC::getPrediv(int8_t *predivA, int16_t *predivS)
+void STM32RTC::getPrediv(uint32_t *predivA, uint32_t *predivS)
 {
-  if ((predivA != nullptr) && (predivS != nullptr)) {
+  if ((predivA != nullptr)
+#if !defined(STM32F1xx)
+      && (predivS != nullptr)
+#endif /* STM32F1xx */
+     ) {
     RTC_getPrediv(predivA, predivS);
   }
 }
-#endif /* STM32F1xx */
 
-#if defined(STM32F1xx)
 /**
-  * @brief  set user asynchronous prescalers value.
+  * @brief  set user (a)synchronous prescalers values.
   * @note   This method must be called before begin().
-  * @param  predivA: Asynchronous prescaler value. Reset value: RTC_AUTO_1_SECOND
-  * @param  dummy : not used (kept for compatibility reason)
+  * @param  predivA: Asynchronous prescaler value.
+  * @note   Reset value: RTC_AUTO_1_SECOND for STM32F1xx series, else (PREDIVA_MAX + 1)
+  * @param  predivS: Synchronous prescaler value.
+  * @note   Reset value: (PREDIVS_MAX + 1), not used for STM32F1xx series.
   * @retval None
   */
-void STM32RTC::setPrediv(uint32_t predivA, int16_t dummy)
+void STM32RTC::setPrediv(uint32_t predivA, uint32_t predivS)
 {
-  UNUSED(dummy);
-  RTC_setPrediv(predivA);
+  setClockSource(_clockSource, predivA, predivS);
 }
-#else
-/**
-  * @brief  set user (a)synchronous prescalers value.
-  * @note   This method must be called before begin().
-  * @param  predivA: Asynchronous prescaler value. Reset value: -1
-  * @param  predivS: Synchronous prescaler value. Reset value: -1
-  * @retval None
-  */
-void STM32RTC::setPrediv(int8_t predivA, int16_t predivS)
-{
-  RTC_setPrediv(predivA, predivS);
-}
-#endif /* STM32F1xx */
 
 /**
   * @brief enable the RTC alarm.
@@ -827,7 +831,7 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSubSeconds = subSeconds;
-    }
+    } else
 #else
     UNUSED(name);
 #endif
@@ -850,7 +854,7 @@ void STM32RTC::setAlarmSeconds(uint8_t seconds, Alarm name)
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSeconds = seconds;
-    }
+    } else
 #else
     UNUSED(name);
 #endif
@@ -873,7 +877,7 @@ void STM32RTC::setAlarmMinutes(uint8_t minutes, Alarm name)
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBMinutes = minutes;
-    }
+    } else
 #else
     UNUSED(name);
 #endif

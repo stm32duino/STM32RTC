@@ -56,6 +56,12 @@ typedef enum {
 } hourFormat_t;
 
 typedef enum {
+  MODE_BINARY_NONE, /* BCD only */
+  MODE_BINARY_ONLY,
+  MODE_BINARY_MIX
+} binaryMode_t;
+
+typedef enum {
   HOUR_AM,
   HOUR_PM
 } hourAM_PM_t;
@@ -113,6 +119,7 @@ typedef void(*voidCallbackPtr)(void *);
 #else
 /* for stm32F1 the MAX value is combining PREDIV low & high registers */
 #define PREDIVA_MAX 0xFFFFFU
+#define PREDIVS_MAX 0xFFFFFFFFU /* Unused for STM32F1xx series */
 #endif /* !STM32F1xx */
 
 #if defined(STM32C0xx) || defined(STM32F0xx) || defined(STM32H5xx) || \
@@ -165,16 +172,11 @@ typedef void(*voidCallbackPtr)(void *);
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 void RTC_SetClockSource(sourceClock_t source);
-#if defined(STM32F1xx)
-void RTC_getPrediv(uint32_t *asynch);
-void RTC_setPrediv(uint32_t asynch);
-#else
-void RTC_getPrediv(int8_t *asynch, int16_t *synch);
-void RTC_setPrediv(int8_t asynch, int16_t synch);
-#endif /* STM32F1xx */
+void RTC_getPrediv(uint32_t *asynch, uint32_t *synch);
+void RTC_setPrediv(uint32_t asynch, uint32_t synch);
 
-bool RTC_init(hourFormat_t format, sourceClock_t source, bool reset);
-void RTC_DeInit(void);
+bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool reset);
+void RTC_DeInit(bool reset_cb);
 bool RTC_IsConfigured(void);
 
 void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period);
