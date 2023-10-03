@@ -132,17 +132,11 @@ void HAL_RTC_MspDeInit(RTC_HandleTypeDef *rtcHandle)
 {
 
   if (rtcHandle->Instance == RTC) {
-    /* Peripheral clock disable */
-    __HAL_RCC_RTC_DISABLE();
-#ifdef __HAL_RCC_RTCAPB_CLK_DISABLE
-    __HAL_RCC_RTCAPB_CLK_DISABLE();
-#endif
     /* RTC interrupt Deinit */
 #if defined(STM32WLxx)
     /* Only the STM32WLxx series has a TAMP_STAMP_LSECSS_SSRU_IRQn */
     HAL_NVIC_DisableIRQ(TAMP_STAMP_LSECSS_SSRU_IRQn);
 #endif /* STM32WLxx */
-    HAL_NVIC_DisableIRQ(RTC_Alarm_IRQn);
   }
 }
 
@@ -635,6 +629,15 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
 void RTC_DeInit(bool reset_cb)
 {
   HAL_RTC_DeInit(&RtcHandle);
+  /* Peripheral clock disable */
+  __HAL_RCC_RTC_DISABLE();
+#ifdef __HAL_RCC_RTCAPB_CLK_DISABLE
+  __HAL_RCC_RTCAPB_CLK_DISABLE();
+#endif
+  HAL_NVIC_DisableIRQ(RTC_Alarm_IRQn);
+#ifdef ONESECOND_IRQn
+  HAL_NVIC_DisableIRQ(ONESECOND_IRQn);
+#endif
   if (reset_cb) {
     RTCUserCallback = NULL;
     callbackUserData = NULL;
