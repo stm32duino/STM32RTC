@@ -334,6 +334,31 @@ void STM32RTC::detachSecondsInterrupt(void)
 }
 
 #endif /* ONESECOND_IRQn */
+
+#ifdef STM32WLxx
+/**
+  * @brief attach a callback to the RTC SubSeconds underflow interrupt.
+  * @note  only for STM32WLxx
+  * @param callback: pointer to the callback
+  * @retval None
+  */
+void STM32RTC::attachSubSecondsUnderflowInterrupt(voidFuncPtr callback)
+{
+  attachSubSecondsUnderflowIrqCallback(callback);
+}
+
+/**
+  * @brief detach the RTC SubSeconds underflow callback.
+  * @retval None
+  */
+void STM32RTC::detachSubSecondsUnderflowInterrupt(void)
+{
+  detachSubSecondsUnderflowIrqCallback();
+}
+
+#endif /* STM32WLxx */
+
+
 // Kept for compatibility. Use STM32LowPower library.
 void STM32RTC::standbyMode(void)
 {

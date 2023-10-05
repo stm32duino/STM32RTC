@@ -179,6 +179,14 @@ by the RTC. Thus the getEpoch function is only to be called to get the subsecond
 (returned time_t is not valid). The setAlarmEpoch only uses the sub-second [0..0xFFFFFFFF]
 (time_t value is useless).
 
+_SubSeconds underflow_
+
+Only dor STM32WLxx. Manage interrupt (SSRU) when SubSeconds register
+underflow. Used by STM32LoRaWAN.
+
+* **`void attachSubSecondsUnderflowInterrupt(voidFuncPtr callback);`**
+* **`void detachSubSecondsUnderflowInterrupt(void);`**
+
 Refer to the Arduino RTC documentation for the other functions
 http://arduino.cc/en/Reference/RTC
 
