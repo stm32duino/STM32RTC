@@ -63,8 +63,9 @@ static void *callbackUserData = NULL;
 static voidCallbackPtr RTCUserCallbackB = NULL;
 static void *callbackUserDataB = NULL;
 #endif
+#ifdef ONESECOND_IRQn
 static voidCallbackPtr RTCSecondsIrqCallback = NULL;
-
+#endif
 static sourceClock_t clkSrc = LSI_CLOCK;
 static uint32_t clkVal = LSI_VALUE;
 static uint8_t HSEDiv = 0;
@@ -645,7 +646,9 @@ void RTC_DeInit(bool reset_cb)
     RTCUserCallbackB = NULL;
     callbackUserDataB = NULL;
 #endif
+#ifdef ONESECOND_IRQn
     RTCSecondsIrqCallback = NULL;
+#endif
   }
 }
 
