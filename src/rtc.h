@@ -108,8 +108,12 @@ typedef void(*voidCallbackPtr)(void *);
 #ifndef RTC_IRQ_SUBPRIO
 #define RTC_IRQ_SUBPRIO    0
 #endif
-
-
+#ifndef RTC_IRQ_SSRU_PRIO
+#define RTC_IRQ_SSRU_PRIO     0
+#endif
+#ifndef RTC_IRQ_SSRU_SUBPRIO
+#define RTC_IRQ_SSRU_SUBPRIO  0
+#endif
 #define HSE_RTC_MAX 1000000U
 
 #if !defined(STM32F1xx)
@@ -198,7 +202,10 @@ void detachAlarmCallback(alarm_t name);
 void attachSecondsIrqCallback(voidCallbackPtr func);
 void detachSecondsIrqCallback(void);
 #endif /* ONESECOND_IRQn */
-
+#ifdef STM32WLxx
+void attachSubSecondsUnderflowIrqCallback(voidCallbackPtr func);
+void detachSubSecondsUnderflowIrqCallback(void);
+#endif /* STM32WLxx */
 #if defined(STM32F1xx)
 void RTC_StoreDate(void);
 #endif

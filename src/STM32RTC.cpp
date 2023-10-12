@@ -334,6 +334,31 @@ void STM32RTC::detachSecondsInterrupt(void)
 }
 
 #endif /* ONESECOND_IRQn */
+
+#ifdef STM32WLxx
+/**
+  * @brief attach a callback to the RTC SubSeconds underflow interrupt.
+  * @note  only for STM32WLxx
+  * @param callback: pointer to the callback
+  * @retval None
+  */
+void STM32RTC::attachSubSecondsUnderflowInterrupt(voidFuncPtr callback)
+{
+  attachSubSecondsUnderflowIrqCallback(callback);
+}
+
+/**
+  * @brief detach the RTC SubSeconds underflow callback.
+  * @retval None
+  */
+void STM32RTC::detachSubSecondsUnderflowInterrupt(void)
+{
+  detachSubSecondsUnderflowIrqCallback();
+}
+
+#endif /* STM32WLxx */
+
+
 // Kept for compatibility. Use STM32LowPower library.
 void STM32RTC::standbyMode(void)
 {
@@ -851,16 +876,7 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 #ifndef RTC_ALARM_B
   UNUSED(name);
 #endif
-  if (_mode == MODE_BIN) {
-#ifdef RTC_ALARM_B
-    if (name == ALARM_B) {
-      _alarmBSubSeconds = subSeconds;
-    } else
-#endif
-    {
-      _alarmSubSeconds = subSeconds;
-    }
-  } else if (subSeconds < 1000) {
+  if ((_mode == MODE_BIN) || (subSeconds < 1000)) {
 #ifdef RTC_ALARM_B
     if (name == ALARM_B) {
       _alarmBSubSeconds = subSeconds;

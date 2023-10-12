@@ -159,6 +159,11 @@ class STM32RTC {
     void detachSecondsInterrupt(void);
 
 #endif /* ONESECOND_IRQn */
+#ifdef STM32WLxx
+    // STM32WLxx has a dedicated IRQ
+    void attachSubSecondsUnderflowInterrupt(voidFuncPtr callback);
+    void detachSubSecondsUnderflowInterrupt(void);
+#endif /* STM32WLxx */
     // Kept for compatibility: use STM32LowPower library.
     void standbyMode();
 
