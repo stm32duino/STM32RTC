@@ -240,6 +240,10 @@ class STM32RTC {
     {
       return RTC_IsConfigured();
     }
+    bool isFormat_24hour(void)
+    {
+      return (_format == HOUR_24);
+    }
     bool isAlarmEnabled(Alarm name = ALARM_A);
     bool isTimeSet(void)
     {
