@@ -190,6 +190,12 @@ underflow. Used by STM32LoRaWAN.
 Refer to the Arduino RTC documentation for the other functions
 http://arduino.cc/en/Reference/RTC
 
+### Since STM32RTC version higher than 1.4.0
+_IsFormat_24Hour_
+
+Returns True if the current Hour Format is HOUR_24 else false if Hour format is HOUR_12
+
+
 ## Source
 
 Source files available at:
