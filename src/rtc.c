@@ -441,8 +441,9 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
 #ifdef __HAL_RCC_RTCAPB_CLK_ENABLE
   __HAL_RCC_RTCAPB_CLK_ENABLE();
 #endif
+#ifdef __HAL_RCC_RTC_ENABLE
   __HAL_RCC_RTC_ENABLE();
-
+#endif
   isAlarmASet = RTC_IsAlarmSet(ALARM_A);
 #ifdef RTC_ALARM_B
   isAlarmBSet = RTC_IsAlarmSet(ALARM_B);
@@ -591,7 +592,9 @@ void RTC_DeInit(bool reset_cb)
 {
   HAL_RTC_DeInit(&RtcHandle);
   /* Peripheral clock disable */
+#ifdef __HAL_RCC_RTC_DISABLE
   __HAL_RCC_RTC_DISABLE();
+#endif
 #ifdef __HAL_RCC_RTCAPB_CLK_DISABLE
   __HAL_RCC_RTCAPB_CLK_DISABLE();
 #endif
@@ -1124,7 +1127,8 @@ void RTC_Alarm_IRQHandler(void)
 #if defined(STM32F071xB) || defined(STM32F072xB) || defined(STM32F078xx) || \
     defined(STM32F091xC) || defined(STM32F098xx) || defined(STM32F070xB) || \
     defined(STM32F030xC) || defined(STM32G0xx) || defined(STM32H5xx) || \
-    defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U5xx)
+    defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U5xx) || \
+    defined(STM32WBAxx)
   // In some cases, the same vector is used to manage WakeupTimer,
   // but with a dedicated HAL IRQHandler
   HAL_RTCEx_WakeUpTimerIRQHandler(&RtcHandle);
