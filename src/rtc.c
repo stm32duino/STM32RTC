@@ -93,6 +93,7 @@ static void RTC_computePrediv(uint32_t *asynch, uint32_t *synch);
 #endif /* !STM32F1xx */
 #if defined(RTC_BINARY_NONE)
 static void RTC_BinaryConf(binaryMode_t mode);
+static void RTC_SetBinaryConf(void);
 #endif
 
 static inline int _log2(int x)
@@ -383,6 +384,34 @@ static void RTC_BinaryConf(binaryMode_t mode)
     }
   }
 }
+
+/*
+* Function to check if the RTC ICSR register must be updated with new bit
+* field BIN and BCDU. To be called just after the RTC_BinaryConf
+* Map the LL RTC bin mode to the corresponding RtcHandle.Init.BinMode values
+* assuming the LL_RTC_BINARY_xxx is identical to RTC_BINARY_xxx (RTC_ICSR_BIN_xxx)
+* Idem for the LL_RTC_BINARY_MIX_BCDU_n and RTC_BINARY_MIX_BCDU_n
+*/
+#if (RTC_BINARY_MIX != LL_RTC_BINARY_MIX)
+#error "RTC_BINARY_MIX and LL_RTC_BINARY_MIX do not match"
+#endif
+#if (RTC_BINARY_MIX_BCDU_7 != LL_RTC_BINARY_MIX_BCDU_7)
+#error "RTC_BINARY_MIX_BCDU_n and LL_RTC_BINARY_MIX_BCDU_n do not match"
+#endif
+static void RTC_SetBinaryConf(void)
+{
+  if (LL_RTC_GetBinaryMode(RtcHandle.Instance) != RtcHandle.Init.BinMode) {
+    LL_RTC_DisableWriteProtection(RtcHandle.Instance);
+    LL_RTC_EnableInitMode(RtcHandle.Instance);
+
+    LL_RTC_SetBinaryMode(RtcHandle.Instance, RtcHandle.Init.BinMode);
+    if (RtcHandle.Init.BinMode == RTC_BINARY_MIX) {
+      LL_RTC_SetBinMixBCDU(RtcHandle.Instance, RtcHandle.Init.BinMixBcdU);
+    }
+    LL_RTC_ExitInitMode(RtcHandle.Instance);
+    LL_RTC_EnableWriteProtection(RtcHandle.Instance);
+  }
+}
 #endif /* RTC_BINARY_NONE */
 
 /**
@@ -462,6 +491,10 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
     RTC_initClock(source);
     RTC_getPrediv(&(RtcHandle.Init.AsynchPrediv), &(RtcHandle.Init.SynchPrediv));
 #if defined(RTC_BINARY_NONE)
+    /*
+     * If RTC BIN mode changed, calling the HAL_RTC_Init will
+     * force the update of the BIN register in the RTC_ICSR
+     */
     RTC_BinaryConf(mode);
 #endif /* RTC_BINARY_NONE */
 #endif  // STM32F1xx
@@ -526,11 +559,11 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
 #else
       RTC_getPrediv(&(RtcHandle.Init.AsynchPrediv), &(RtcHandle.Init.SynchPrediv));
 #endif
+#if defined(RTC_BINARY_NONE)
       /*
-       * TODO: RTC is already initialized, but RTC BIN mode is changed
+       * If RTC BIN mode changed, calling the HAL_RTC_Init will
        * force the update of the BIN register in the RTC_ICSR
        */
-#if defined(RTC_BINARY_NONE)
       RTC_BinaryConf(mode);
 #endif /* RTC_BINARY_NONE */
       HAL_RTC_Init(&RtcHandle);
@@ -557,6 +590,13 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
 #endif
 #if defined(RTC_BINARY_NONE)
       RTC_BinaryConf(mode);
+      /*
+       * RTC is already initialized, but RTC BIN mode is changed :
+       * force the update of the BIN register and BCDu in the RTC_ICSR
+       * by the RTC_SetBinaryConf function
+       */
+      RTC_SetBinaryConf();
+
 #endif /* RTC_BINARY_NONE */
 #if defined(STM32F1xx)
       memcpy(&RtcHandle.DateToUpdate, &BackupDate, 4);
