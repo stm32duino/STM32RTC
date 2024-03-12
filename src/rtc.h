@@ -194,6 +194,7 @@ void RTC_SetDate(uint8_t year, uint8_t month, uint8_t day, uint8_t wday);
 void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday);
 
 void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask);
+void RTC_StartAlarm64(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint64_t subSeconds, hourAM_PM_t period, uint8_t mask);
 void RTC_StopAlarm(alarm_t name);
 bool RTC_IsAlarmSet(alarm_t name);
 void RTC_GetAlarm(alarm_t name, uint8_t *day, uint8_t *hours, uint8_t *minutes, uint8_t *seconds, uint32_t *subSeconds, hourAM_PM_t *period, uint8_t *mask);
