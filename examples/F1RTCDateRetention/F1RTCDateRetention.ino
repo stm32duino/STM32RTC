@@ -46,6 +46,9 @@ byte year;
 void setup()
 {
   Serial.begin(115200);
+  while (!Serial) ;
+
+  delay(2000);
 
   // Select RTC clock source: LSI_CLOCK, LSE_CLOCK or HSE_CLOCK.
   // By default the LSI is selected as source.
@@ -58,9 +61,19 @@ void setup()
   // get the date if stored in BackUp reg
   rtc.getDate(&weekDay, &day, &month, &year);
   if (reset_bkup) {
-    Serial.printf("reset the date to %02d/%02d/%02d\n", day, month, year);
+    Serial.print("reset the date to ");
+    Serial.print(day);
+    Serial.print("/");
+    Serial.print(month);
+    Serial.print("/");
+    Serial.println(year);
   } else {
-    Serial.printf("date from the BackUp %02d/%02d/%02d\n", day, month, year);
+    Serial.print("date from the BackUp ");
+    Serial.print(day);
+    Serial.print("/");
+    Serial.print(month);
+    Serial.print("/");
+    Serial.println(year);
   }
 
   // Check if date is valid = read in the backUp reg.
@@ -89,7 +102,12 @@ if ((day == 1) && (month == RTC_MONTH_JANUARY) && (year == 1)) {
 void loop()
 {
   // Print date...
-  Serial.printf("%02d/%02d/%02d \t", rtc.getDay(), rtc.getMonth(), rtc.getYear());
+  Serial.print(rtc.getDay());
+  Serial.print("/");
+  Serial.print(rtc.getMonth());
+  Serial.print("/");
+  Serial.print(rtc.getYear());
+  Serial.print(" ");
 
   uint8_t sec = 0;
   uint8_t mn = 0;
@@ -98,7 +116,11 @@ void loop()
   rtc.getTime(&hrs, &mn, &sec, &subs);
 
   // ...and time
-  Serial.printf("%02d:%02d:%02d\n", hrs, mn, sec);
+  Serial.print(hrs);
+  Serial.print(":");
+  Serial.print(mn);
+  Serial.print(":");
+  Serial.println(sec);
 
   delay(1000);
 }

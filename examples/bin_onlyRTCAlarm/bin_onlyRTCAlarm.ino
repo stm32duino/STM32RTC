@@ -25,6 +25,9 @@ uint32_t timeout;
 void setup()
 {
   Serial.begin(115200);
+  while (!Serial) ;
+
+  delay(2000);
 
   // Select RTC clock source: LSI_CLOCK, LSE_CLOCK or HSE_CLOCK.
   rtc.setClockSource(STM32RTC::LSE_CLOCK);
@@ -39,7 +42,9 @@ void setup()
   delay(300);
 
   /* subsecond expressed in milliseconds */
-  Serial.printf("Start at %d ms \r\n", rtc.getSubSeconds());
+  Serial.print("Start at ");
+  Serial.print(rtc.getSubSeconds());
+  Serial.println(" ms");
 
   /* Attach the callback function before enabling Interrupt */
   rtc.attachInterrupt(alarmAMatch);
@@ -47,7 +52,9 @@ void setup()
   /* Program the AlarmA in 12 seconds */
   rtc.setAlarmTime(0, 0, 0, 12000);
   rtc.enableAlarm(rtc.MATCH_SUBSEC);
-  Serial.printf("Set Alarm A in 12s (at %d ms)\r\n", rtc.getAlarmSubSeconds());
+  Serial.print("Set Alarm A in 12s (at ");
+  Serial.print(rtc.getSubSeconds());
+  Serial.println(" ms)");
 
 #ifdef RTC_ALARM_B
   /* Program ALARM B in 600ms ms from now (keep timeout < 1000ms) */
@@ -56,10 +63,12 @@ void setup()
   rtc.attachInterrupt(alarmBMatch, STM32RTC::ALARM_B);
   rtc.setAlarmSubSeconds(timeout, STM32RTC::ALARM_B);
   rtc.enableAlarm(rtc.MATCH_SUBSEC, STM32RTC::ALARM_B);
-  Serial.printf("Set Alarm B (in %d ms) at %d ms\r\n", 600,
-          rtc.getAlarmSubSeconds(STM32RTC::ALARM_B));
+  Serial.print("Set Alarm B (in 600 ms) at ");
+  Serial.print(rtc.getSubSeconds());
+  Serial.println(" ms");
 #endif /* RTC_ALARM_B */
 
+  Serial.println("Wait for Alarm A or B");
 }
 
 void loop()
@@ -71,7 +80,9 @@ void alarmAMatch(void *data)
 {
   UNUSED(data);
   rtc.disableAlarm(STM32RTC::ALARM_A);
-  Serial.printf("Alarm A Match at %d ms \r\n", rtc.getSubSeconds());
+  Serial.print("Alarm A Match at ");
+  Serial.print(rtc.getSubSeconds());
+  Serial.println(" ms");
 }
 
 #ifdef RTC_ALARM_B
@@ -79,7 +90,8 @@ void alarmBMatch(void *data)
 {
   UNUSED(data);
   rtc.disableAlarm(STM32RTC::ALARM_B); /* Else it will trig again */
-  Serial.printf("Alarm B Match at %d ms\r\n", rtc.getSubSeconds());
+  Serial.print("Alarm B Match at ");
+  Serial.print(rtc.getSubSeconds());
+  Serial.println(" ms");
 }
 #endif /* RTC_ALARM_B */
-

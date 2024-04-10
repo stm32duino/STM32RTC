@@ -21,6 +21,9 @@ bool rtc_mode_changed;
 void setup()
 {
   Serial.begin(115200);
+  while (!Serial) ;
+
+  delay(2000);
 
   // Select RTC clock source: LSI_CLOCK, LSE_CLOCK or HSE_CLOCK.
   rtc.setClockSource(STM32RTC::LSE_CLOCK);
@@ -43,6 +46,8 @@ void setup()
   rtc.attachInterrupt(alarmMatch);
   rtc.setAlarmSeconds(5, STM32RTC::ALARM_A);
   rtc.enableAlarm(rtc.MATCH_SS, STM32RTC::ALARM_A);
+
+  Serial.println("Wait for Alarm A");
 }
 
 void loop()
@@ -50,15 +55,24 @@ void loop()
   /* Reports the RTC  mode when it has been changed */
   if (rtc_mode_changed) {
     if (rtc.getBinaryMode() == STM32RTC::MODE_BCD) {
-      Serial.printf("RTC mode is MODE_BCD at ");
+      Serial.print("RTC mode is MODE_BCD at ");
     } else if (rtc.getBinaryMode() == STM32RTC::MODE_MIX) {
-      Serial.printf("RTC mode is MODE_MIX at ");
+      Serial.print("RTC mode is MODE_MIX at ");
     } else {
-      Serial.printf("RTC mode is MODE_BIN at ");
+      Serial.print("RTC mode is MODE_BIN at ");
     }
 
-    Serial.printf("%02d/%02d/%02d - ", rtc.getDay(), rtc.getMonth(), rtc.getYear());
-    Serial.printf("%02d:%02d:%02d \n", rtc.getHours(), rtc.getMinutes(), rtc.getSeconds());
+    Serial.print(rtc.getDay());
+    Serial.print("/");
+    Serial.print(rtc.getMonth());
+    Serial.print("/");
+    Serial.print(rtc.getYear());
+    Serial.print(" - ");
+    Serial.print(rtc.getHours());
+    Serial.print(":");
+    Serial.print(rtc.getMinutes());
+    Serial.print(":");
+    Serial.println(rtc.getSeconds());
 
     rtc_mode_changed = false;
   }
@@ -67,8 +81,12 @@ void loop()
 void alarmMatch(void *data)
 {
   UNUSED(data);
-  Serial.printf("Alarm A Match! : change RTC mode at ");
-  Serial.printf("%02d:%02d:%02d \n", rtc.getHours(), rtc.getMinutes(), rtc.getSeconds());
+  Serial.print("Alarm A Match! : change RTC mode at ");
+  Serial.print(rtc.getHours());
+  Serial.print(":");
+  Serial.print(rtc.getMinutes());
+  Serial.print(":");
+  Serial.println(rtc.getSeconds());
 
    /* Configure the new RTC mode */
   if (rtc.getBinaryMode() == STM32RTC::MODE_BCD) {

@@ -48,11 +48,14 @@ const byte year = 15;
 
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  while (!Serial) ;
+
+  delay(2000);
 
   // Select RTC clock source: LSI_CLOCK, LSE_CLOCK or HSE_CLOCK.
   // By default the LSI is selected as source.
-  //rtc.setClockSource(STM32RTC::LSE_CLOCK);
+  // rtc.setClockSource(STM32RTC::LSE_CLOCK);
 
   rtc.begin(); // initialize RTC 24H format
 
@@ -70,6 +73,8 @@ void setup()
   rtc.setAlarmTime(16, 0, 11, 567, STM32RTC::ALARM_B);
   rtc.enableAlarm(rtc.MATCH_DHHMMSS, STM32RTC::ALARM_B);
 #endif
+
+  Serial.println("Wait for Alarm A or B");
 }
 
 void loop()
@@ -106,7 +111,8 @@ void alarmMatch(void *data)
     epoc_ms -= 1000;
   }
 #endif
-  Serial.printf("Alarm Match %i\n", ++alarmMatch_counter);
+  Serial.print("Alarm Match ");
+  Serial.println(++alarmMatch_counter);
   rtc.setAlarmEpoch(epoc + sec, STM32RTC::MATCH_SS, epoc_ms);
 }
 
@@ -114,7 +120,8 @@ void alarmMatch(void *data)
 void alarmBMatch(void *data)
 {
   (void)data;
-  Serial.printf("Alarm B Match %i\n", ++alarmBMatch_counter);
+  Serial.print("Alarm B Match ");
+  Serial.println(++alarmBMatch_counter);
   rtc.setAlarmEpoch(rtc.getEpoch() + 2, STM32RTC::MATCH_SS, STM32RTC::ALARM_B);
 }
 #endif

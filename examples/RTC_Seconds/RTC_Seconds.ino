@@ -54,7 +54,9 @@ static STM32RTC::AM_PM period = STM32RTC::AM;
 void setup()
 {
   Serial.begin(115200);
-  while (!Serial) {}
+  while (!Serial) ;
+
+  delay(2000);
 
 #if defined(LED_BUILTIN)
   // configure pin in output mode
@@ -95,9 +97,17 @@ void loop()
   rtc.getTime(&hrs, &mn, &sec, &subs);
 
   if (toggling) {
-   Serial.printf("%02d:%02d:%02d\n", hrs, mn, sec);
+    Serial.print(hrs);
+    Serial.print(":");
+    Serial.print(mn);
+    Serial.print(":");
+    Serial.println(sec);
   } else {
-   Serial.printf("%02d %02d %02d\n", hrs, mn, sec);
+    Serial.print(hrs);
+    Serial.print(" ");
+    Serial.print(mn);
+    Serial.print(" ");
+    Serial.println(sec);
   }
 #if defined(LED_BUILTIN)
   digitalWrite(pin, toggling);
