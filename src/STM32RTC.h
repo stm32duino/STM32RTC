@@ -66,7 +66,7 @@
                                         |(STM32_RTC_VERSION_PATCH << 8U )\
                                         |(STM32_RTC_VERSION_EXTRA))
 
-typedef void(*voidFuncPtr)(void *);
+typedef void(*isrFuncPtr)(void *);
 
 #define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::LSI_CLOCK) || ((SRC) == STM32RTC::LSE_CLOCK) ||\
                               ((SRC) == STM32RTC::HSE_CLOCK))
@@ -149,19 +149,19 @@ class STM32RTC {
     void enableAlarm(Alarm_Match match, Alarm name = ALARM_A);
     void disableAlarm(Alarm name = ALARM_A);
 
-    void attachInterrupt(voidFuncPtr callback, Alarm name);
-    void attachInterrupt(voidFuncPtr callback, void *data = nullptr, Alarm name = ALARM_A);
+    void attachInterrupt(isrFuncPtr callback, Alarm name);
+    void attachInterrupt(isrFuncPtr callback, void *data = nullptr, Alarm name = ALARM_A);
     void detachInterrupt(Alarm name = ALARM_A);
 
 #ifdef ONESECOND_IRQn
     // Other mcu than stm32F1 will use the WakeUp feature to interrupt each second.
-    void attachSecondsInterrupt(voidFuncPtr callback);
+    void attachSecondsInterrupt(isrFuncPtr callback);
     void detachSecondsInterrupt(void);
 
 #endif /* ONESECOND_IRQn */
 #ifdef STM32WLxx
     // STM32WLxx has a dedicated IRQ
-    void attachSubSecondsUnderflowInterrupt(voidFuncPtr callback);
+    void attachSubSecondsUnderflowInterrupt(isrFuncPtr callback);
     void detachSubSecondsUnderflowInterrupt(void);
 #endif /* STM32WLxx */
     // Kept for compatibility: use STM32LowPower library.

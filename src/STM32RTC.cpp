@@ -284,7 +284,7 @@ void STM32RTC::disableAlarm(Alarm name)
   *        ALARM_A or ALARM_B if exists
   * @retval None
   */
-void STM32RTC::attachInterrupt(voidFuncPtr callback, Alarm name)
+void STM32RTC::attachInterrupt(isrFuncPtr callback, Alarm name)
 {
   attachInterrupt(callback, nullptr, name);
 }
@@ -297,7 +297,7 @@ void STM32RTC::attachInterrupt(voidFuncPtr callback, Alarm name)
   *        ALARM_A or ALARM_B if exists
   * @retval None
   */
-void STM32RTC::attachInterrupt(voidFuncPtr callback, void *data, Alarm name)
+void STM32RTC::attachInterrupt(isrFuncPtr callback, void *data, Alarm name)
 {
   attachAlarmCallback(callback, data, static_cast<alarm_t>(name));
 }
@@ -319,7 +319,7 @@ void STM32RTC::detachInterrupt(Alarm name)
   * @param callback: pointer to the callback
   * @retval None
   */
-void STM32RTC::attachSecondsInterrupt(voidFuncPtr callback)
+void STM32RTC::attachSecondsInterrupt(isrFuncPtr callback)
 {
   attachSecondsIrqCallback(callback);
 }
@@ -342,7 +342,7 @@ void STM32RTC::detachSecondsInterrupt(void)
   * @param callback: pointer to the callback
   * @retval None
   */
-void STM32RTC::attachSubSecondsUnderflowInterrupt(voidFuncPtr callback)
+void STM32RTC::attachSubSecondsUnderflowInterrupt(isrFuncPtr callback)
 {
   attachSubSecondsUnderflowIrqCallback(callback);
 }
