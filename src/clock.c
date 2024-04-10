@@ -62,7 +62,11 @@ void osSystickHandler() __attribute__((weak, alias("noOsSystickHandler")));
   * @param  None
   * @retval None
   */
-void SysTick_Handler(void)
+// NOTE: Because `SysTick_Handler()` is already implemented in libmbed.a, marked as `WEAK`.
+//       To override this function,
+//         - Rename this function to `__wrap_SysTick_Handler`
+//         - Add `-Wl,--wrap,SysTick_Handler` to `variants/PORTENTA_H7_M7/ldflags.txt`
+WEAK void SysTick_Handler(void)
 {
   HAL_IncTick();
   HAL_SYSTICK_IRQHandler();
