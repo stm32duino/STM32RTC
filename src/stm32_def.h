@@ -1,6 +1,12 @@
 #ifndef _STM32_DEF_
 #define _STM32_DEF_
 
+// Currently ArduinoCore-mbed supports STM32H747x only
+#if defined(TARGET_STM32H7)
+#ifndef STM32H7xx
+#define STM32H7xx 1
+#endif
+#endif
 
 /**
  * @brief STM32 core version number
