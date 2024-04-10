@@ -1,8 +1,11 @@
-# STM32RTC
+# STM32RTCMbed
 A RTC library for STM32.
 
+> [!IMPORTANT]
+> This library is a fork of [STM32RTC](https://github.com/stm32duino/STM32RTC) based on [ArduinoCore-mbed](https://github.com/arduino/ArduinoCore-mbed) instead of [Arduino_Core_STM32](https://github.com/stm32duino/Arduino_Core_STM32). Therefore, currently only `STM32H747xx` is supported by this library.
+
 ## Requirement
-* [Arduino_Core_STM32](https://github.com/stm32duino/Arduino_Core_STM32) version >= 1.3.0
+* [ArduinoCore-mbed](https://github.com/arduino/ArduinoCore-mbed) version >= 4.4.1
 
 # API
 
@@ -109,7 +112,7 @@ _One-Second interrupt_
   - It is not available on some stm32F0 devices.
 
   * **new API:**
-    * **`void attachSecondsInterrupt(voidFuncPtr callback)`**
+    * **`void attachSecondsInterrupt(isrFuncPtr callback)`**
     * **`void detachSecondsInterrupt(void)`**
 
 
@@ -184,7 +187,7 @@ _SubSeconds underflow_
 Only dor STM32WLxx. Manage interrupt (SSRU) when SubSeconds register
 underflow. Used by STM32LoRaWAN.
 
-* **`void attachSubSecondsUnderflowInterrupt(voidFuncPtr callback);`**
+* **`void attachSubSecondsUnderflowInterrupt(isrFuncPtr callback);`**
 * **`void detachSubSecondsUnderflowInterrupt(void);`**
 
 Refer to the Arduino RTC documentation for the other functions
