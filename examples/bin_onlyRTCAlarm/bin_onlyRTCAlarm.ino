@@ -15,7 +15,7 @@
   https://github.com/stm32duino/STM32RTC
 */
 
-#include <STM32RTC.h>
+#include <STM32RTCMbed.h>
 
 /* Get the rtc object */
 STM32RTC& rtc = STM32RTC::getInstance();

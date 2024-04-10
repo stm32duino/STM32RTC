@@ -15,7 +15,7 @@
 
 */
 
-#include <STM32RTC.h>
+#include <STM32RTCMbed.h>
 
 #ifndef ONESECOND_IRQn
 #error "RTC has no feature for One-Second interrupt"
