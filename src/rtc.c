@@ -829,19 +829,20 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
 }
 
 /**
-  * @brief Set RTC alarm and activate it with IT mode
+  * @brief Set RTC alarm and activate it with IT mode with 64bit accuracy on subsecond param
+  *        Mainly used by Lorawan in RTC BIN or MIX mode
   * @param name: ALARM_A or ALARM_B if exists
   * @param day: 1-31 (day of the month)
   * @param hours: 0-12 or 0-23 depends on the hours mode.
   * @param minutes: 0-59
   * @param seconds: 0-59
-  * @param subSeconds: 0-999 milliseconds
+  * @param subSeconds: 0-999 milliseconds or 64bit nb of milliseconds in no BCD mode
   * @param period: HOUR_AM or HOUR_PM if in 12 hours mode else ignored.
   * @param mask: configure alarm behavior using alarmMask_t combination.
   *              See AN4579 Table 5 for possible values.
   * @retval None
   */
-void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask)
+void RTC_StartAlarm64(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint64_t subSeconds, hourAM_PM_t period, uint8_t mask)
 {
 #if !defined(RTC_SSR_SS)
   UNUSED(subSeconds);
@@ -879,9 +880,9 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
        */
       if ((initMode == MODE_BINARY_ONLY) || (initMode == MODE_BINARY_MIX)) {
         /* the subsecond is the millisecond to be converted in a subsecond downcounter value */
-        RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - (subSeconds * (predivSync + 1)) / 1000;
+        RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - ((uint32_t)subSeconds * (predivSync + 1)) / 1000;
       } else {
-        RTC_AlarmStructure.AlarmTime.SubSeconds = predivSync - (subSeconds * (predivSync + 1)) / 1000;
+        RTC_AlarmStructure.AlarmTime.SubSeconds = predivSync - ((uint32_t)subSeconds * (predivSync + 1)) / 1000;
       }
     } else {
       RTC_AlarmStructure.AlarmSubSecondMask = RTC_ALARMSUBSECONDMASK_ALL;
@@ -945,8 +946,15 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
 #if defined(RTC_ICSR_BIN)
     if ((initMode == MODE_BINARY_ONLY) || (initMode == MODE_BINARY_MIX)) {
       /* We have an SubSecond alarm to set in RTC_BINARY_MIX or RTC_BINARY_ONLY mode */
-      /* The subsecond in ms is converted in ticks unit 1 tick is 1000 / fqce_apre */
-      RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - (subSeconds * (predivSync + 1)) / 1000;
+      /* The subsecond in ms is converted in ticks unit 1 tick is 1000 / fqce_apre
+       * It keeps the subsecond accuracy on 64 bits if needed
+       */
+      if (subSeconds > (uint64_t)UINT32_MAX) {
+        uint64_t tmp = (subSeconds * (uint64_t)(predivSync + 1)) / (uint64_t)1000;
+        RTC_AlarmStructure.AlarmTime.SubSeconds = (uint32_t)UINT32_MAX - (uint32_t)tmp;
+      } else {
+        RTC_AlarmStructure.AlarmTime.SubSeconds = (uint32_t)((uint32_t)UINT32_MAX - (uint32_t)(subSeconds * (predivSync + 1)) / 1000);
+      }
     } else
 #endif /* RTC_ICSR_BIN */
     {
@@ -958,6 +966,25 @@ void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, u
     HAL_NVIC_EnableIRQ(RTC_Alarm_IRQn);
   }
 #endif /* RTC_SSR_SS */
+}
+
+/**
+  * @brief Set RTC alarm and activate it with IT mode
+  * @param name: ALARM_A or ALARM_B if exists
+  * @param day: 1-31 (day of the month)
+  * @param hours: 0-12 or 0-23 depends on the hours mode.
+  * @param minutes: 0-59
+  * @param seconds: 0-59
+  * @param subSeconds: 0-999 milliseconds
+  * @param period: HOUR_AM or HOUR_PM if in 12 hours mode else ignored.
+  * @param mask: configure alarm behavior using alarmMask_t combination.
+  *              See AN4579 Table 5 for possible values.
+  * @retval None
+  */
+void RTC_StartAlarm(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSeconds, hourAM_PM_t period, uint8_t mask)
+{
+  /* Same RTC_StartAlarm where the nb of SubSeconds is lower than UINT32_MAX */
+  RTC_StartAlarm64(name, day, hours, minutes, seconds, (uint64_t)subSeconds, period, mask);
 }
 
 /**
