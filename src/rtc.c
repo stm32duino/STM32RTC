@@ -836,7 +836,7 @@ void RTC_GetDate(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *wday)
   * @param hours: 0-12 or 0-23 depends on the hours mode.
   * @param minutes: 0-59
   * @param seconds: 0-59
-  * @param subSeconds: 0-999 milliseeconds or 64bit nb of milliseconds in no BCD mode
+  * @param subSeconds: 0-999 milliseconds or 64bit nb of milliseconds in no BCD mode
   * @param period: HOUR_AM or HOUR_PM if in 12 hours mode else ignored.
   * @param mask: configure alarm behavior using alarmMask_t combination.
   *              See AN4579 Table 5 for possible values.
