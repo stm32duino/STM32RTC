@@ -134,7 +134,7 @@ typedef void(*voidCallbackPtr)(void *);
 #define RTC_Alarm_IRQn RTC_IRQn
 #define RTC_Alarm_IRQHandler RTC_IRQHandler
 #endif
-#if defined(STM32G0xx)
+#if defined(STM32G0xx) || defined(STM32U0xx)
 #define RTC_Alarm_IRQn RTC_TAMP_IRQn
 #define RTC_Alarm_IRQHandler RTC_TAMP_IRQHandler
 #endif
@@ -148,7 +148,7 @@ typedef void(*voidCallbackPtr)(void *);
 #elif defined(STM32MP1xx)
 // global RTC interrupt
 #define ONESECOND_IRQn RTC_WKUP_ALARM_IRQn
-#elif defined(STM32G0xx)
+#elif defined(STM32G0xx) || defined(STM32U0xx)
 // global RTC/TAMP interrupt
 #define ONESECOND_IRQn RTC_TAMP_IRQn
 #elif defined(CORE_CM0PLUS) && \
