@@ -811,7 +811,7 @@
         {
           "pattern": "^[^F][^1].*",
           "applicable": true,
-          "boards": [ 
+          "boards": [
             "NUCLEO_C031C6",
             "NUCLEO_F091RC",
             "NUCLEO_F103RB",
@@ -829,8 +829,10 @@
             "NUCLEO_L452REP",
             "NUCLEO_L4R5ZI_P",
             "NUCLEO_L552ZE_Q",
+            "NUCLEO_U083RC",
             "NUCLEO_U575ZI_Q",
             "NUCLEO_WB15CC",
+            "NUCLEO_WBA55CG",
             "NUCLEO_WL55JC1"
           ]
         },
@@ -842,7 +844,7 @@
         {
           "pattern": "RTC_Seconds",
           "applicable": false,
-          "boards": [ 
+          "boards": [
             "NUCLEO_C031C6"
           ]
         }
