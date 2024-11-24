@@ -947,14 +947,11 @@ void RTC_StartAlarm64(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes,
     if ((initMode == MODE_BINARY_ONLY) || (initMode == MODE_BINARY_MIX)) {
       /* We have an SubSecond alarm to set in RTC_BINARY_MIX or RTC_BINARY_ONLY mode */
       /* The subsecond in ms is converted in ticks unit 1 tick is 1000 / fqce_apre
-       * It keeps the subsecond accuracy on 64 bits if needed
+       * For the conversion, we keep the accuracy on 64 bits, since otherwise we might
+       * have an overflow even though the conversion result still fits in 32 bits.
        */
-      if (subSeconds > (uint64_t)UINT32_MAX) {
-        uint64_t tmp = (subSeconds * (uint64_t)(predivSync + 1)) / (uint64_t)1000;
-        RTC_AlarmStructure.AlarmTime.SubSeconds = (uint32_t)UINT32_MAX - (uint32_t)tmp;
-      } else {
-        RTC_AlarmStructure.AlarmTime.SubSeconds = (uint32_t)((uint32_t)UINT32_MAX - (uint32_t)(subSeconds * (predivSync + 1)) / 1000);
-      }
+      uint64_t tmp = (subSeconds * (uint64_t)(predivSync + 1)) / (uint64_t)1000;
+      RTC_AlarmStructure.AlarmTime.SubSeconds = (uint32_t)UINT32_MAX - (uint32_t)tmp;
     } else
 #endif /* RTC_ICSR_BIN */
     {
