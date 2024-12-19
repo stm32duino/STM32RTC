@@ -69,8 +69,14 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
                     , resetTime);
   _timeSet = !reinit;
 
-  syncTime();
   syncDate();
+  syncTime();
+
+  /* fix race condition where date may have changed between reading date and time */
+  if (_seconds == 0 && _minutes == 0 && _hours == 0) {
+    syncDate();
+  }
+
   syncAlarmTime();
   if (!IS_RTC_DATE(_alarmDay)) {
     // Use current time to init alarm members,
@@ -1108,6 +1114,11 @@ time_t STM32RTC::getEpoch(uint32_t *subSeconds)
 
   syncDate();
   syncTime();
+
+  /* fix race condition where date may have changed between reading date and time */
+  if (_seconds == 0 && _minutes == 0 && _hours == 0) {
+    syncDate();
+  }
 
   tm.tm_isdst = -1;
   /*
