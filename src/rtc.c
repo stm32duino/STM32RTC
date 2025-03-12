@@ -1192,7 +1192,7 @@ void RTC_Alarm_IRQHandler(void)
     defined(STM32F091xC) || defined(STM32F098xx) || defined(STM32F070xB) || \
     defined(STM32F030xC) || defined(STM32G0xx) || defined(STM32H5xx) || \
     defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U0xx) ||\
-    defined(STM32U5xx) || defined(STM32WBAxx)
+    defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WBAxx)
   // In some cases, the same vector is used to manage WakeupTimer,
   // but with a dedicated HAL IRQHandler
   HAL_RTCEx_WakeUpTimerIRQHandler(&RtcHandle);
