@@ -68,8 +68,13 @@
 
 typedef void(*voidFuncPtr)(void *);
 
+#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048)
+#define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::LSI_CLOCK) || ((SRC) == STM32RTC::LSE_CLOCK) ||\
+                              ((SRC) == STM32RTC::HSI_CLOCK))
+#else
 #define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::LSI_CLOCK) || ((SRC) == STM32RTC::LSE_CLOCK) ||\
                               ((SRC) == STM32RTC::HSE_CLOCK))
+#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 */
 #define IS_HOUR_FORMAT(FMT)  (((FMT) == STM32RTC::HOUR_12) || ((FMT) == STM32RTC::HOUR_24))
 
 class STM32RTC {
@@ -107,7 +112,11 @@ class STM32RTC {
     enum Source_Clock : uint8_t {
       LSI_CLOCK = ::LSI_CLOCK,
       LSE_CLOCK = ::LSE_CLOCK,
+#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048)
+      HSI_CLOCK = ::HSI_CLOCK,
+#else
       HSE_CLOCK = ::HSE_CLOCK
+#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 */
     };
 
     enum Alarm : uint32_t {

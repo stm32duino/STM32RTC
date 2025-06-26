@@ -62,11 +62,19 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
   bool reinit;
 
   _format = format;
+#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048)
+  reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
+                    (_mode == MODE_MIX) ? ::MODE_BINARY_MIX : ((_mode == MODE_BIN) ? ::MODE_BINARY_ONLY : ::MODE_BINARY_NONE),
+                    (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
+                    (_clockSource == HSI_CLOCK) ? ::HSI_CLOCK : ::LSI_CLOCK
+                    , resetTime);
+#else
   reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
                     (_mode == MODE_MIX) ? ::MODE_BINARY_MIX : ((_mode == MODE_BIN) ? ::MODE_BINARY_ONLY : ::MODE_BINARY_NONE),
                     (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                     (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
                     , resetTime);
+#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 */
   _timeSet = !reinit;
 
   syncDate();
@@ -137,8 +145,13 @@ void STM32RTC::setClockSource(Source_Clock source, uint32_t predivA, uint32_t pr
 {
   if (IS_CLOCK_SOURCE(source)) {
     _clockSource = source;
+#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048)
+    RTC_SetClockSource((_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
+                       (_clockSource == HSI_CLOCK) ? ::HSI_CLOCK : ::LSI_CLOCK);
+#else
     RTC_SetClockSource((_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                        (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK);
+#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 */
   }
   RTC_setPrediv(predivA, predivS);
 }
@@ -1293,6 +1306,9 @@ void STM32RTC::configForLowPower(Source_Clock source)
 #if defined(HAL_PWR_MODULE_ENABLED)
 #ifdef __HAL_RCC_RTCAPB_CLKAM_ENABLE
   __HAL_RCC_RTCAPB_CLKAM_ENABLE();
+#endif
+#if defined(PWR_WAKEUP_PIN_RTC)
+  HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN_RTC, PWR_WUP_RISIEDG);
 #endif
 #if defined(PWR_WAKEUP_LINE7)
   HAL_PWR_EnableWakeUpLine(PWR_WAKEUP_LINE7, PWR_WAKEUP_SELECT_3, PWR_WAKEUP_POLARITY_HIGH);

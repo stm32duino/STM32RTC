@@ -71,7 +71,9 @@ static voidCallbackPtr RTCSubSecondsUnderflowIrqCallback = NULL;
 #endif
 static sourceClock_t clkSrc = LSI_CLOCK;
 static uint32_t clkVal = LSI_VALUE;
+#if !defined(LL_RCC_LSCO_CLKSOURCE_HSI64M_DIV2048)
 static uint8_t HSEDiv = 0;
+#endif
 #if !defined(STM32F1xx)
 /* predividers values */
 static uint8_t predivSync_bits = 0xFF;
@@ -122,6 +124,13 @@ void RTC_SetClockSource(sourceClock_t source)
   clkSrc = source;
   if (source == LSE_CLOCK) {
     clkVal = LSE_VALUE;
+#if defined(LL_RCC_LSCO_CLKSOURCE_HSI64M_DIV2048)
+  } else if (source == HSI_CLOCK) {
+    /* HSI division factor for RTC clock must be define to ensure that
+     * the clock supplied to the RTC is less than or equal to 1 MHz
+     */
+    clkVal = 32000; /* HSI64M divided by 64 --> 1 MHz */
+#else
   } else if (source == HSE_CLOCK) {
     /* HSE division factor for RTC clock must be define to ensure that
      * the clock supplied to the RTC is less than or equal to 1 MHz
@@ -163,6 +172,7 @@ void RTC_SetClockSource(sourceClock_t source)
       Error_Handler();
     }
     clkVal = HSE_VALUE / HSEDiv;
+#endif
   } else if (source == LSI_CLOCK) {
     clkVal = LSI_VALUE;
   } else {
@@ -187,16 +197,20 @@ static void RTC_initClock(sourceClock_t source)
   if (source == LSE_CLOCK) {
     /* Enable the clock if not already set by user */
     enableClock(LSE_CLOCK);
-
+#if defined(RCC_PERIPHCLK_RTC_WDG_BLEWKUP)
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_BLEWKUP;
+    PeriphClkInit.RTCWDGBLEWKUPClockSelection = RCC_RTC_WDG_BLEWKUP_CLKSOURCE_LSE;
+  } else if (source == HSI_CLOCK) {
+    /* Enable the clock if not already set by user */
+    enableClock(HSI_CLOCK);
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_BLEWKUP;
+    PeriphClkInit.RTCWDGBLEWKUPClockSelection = RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048;
+#else
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-      Error_Handler();
-    }
   } else if (source == HSE_CLOCK) {
     /* Enable the clock if not already set by user */
     enableClock(HSE_CLOCK);
-
     /* HSE division factor for RTC clock must be set to ensure that
      * the clock supplied to the RTC is less than or equal to 1 MHz
      */
@@ -230,21 +244,27 @@ static void RTC_initClock(sourceClock_t source)
 #else
 #error "Could not define RTCClockSelection"
 #endif /* STM32F1xx */
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-      Error_Handler();
-    }
+#endif /* RCC_PERIPHCLK_RTC_WDG_BLEWKUP */
   } else if (source == LSI_CLOCK) {
     /* Enable the clock if not already set by user */
     enableClock(LSI_CLOCK);
-
+#if defined(RCC_PERIPHCLK_RTC_WDG_BLEWKUP)
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_BLEWKUP;
+    PeriphClkInit.RTCWDGBLEWKUPClockSelection = RCC_RTC_WDG_BLEWKUP_CLKSOURCE_LSI;
+#else
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
-    if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
-      Error_Handler();
-    }
+#endif /* RCC_PERIPHCLK_RTC_WDG_BLEWKUP */
   } else {
+    /* Invalid clock source */
     Error_Handler();
   }
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK) {
+    Error_Handler();
+  }
+#if defined(__HAL_RCC_RTC_CLK_ENABLE)
+  __HAL_RCC_RTC_CLK_ENABLE();
+#endif
 }
 
 /**
@@ -451,7 +471,9 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
   RtcHandle.Init.HourFormat = (format == HOUR_FORMAT_12) ? RTC_HOURFORMAT_12 : RTC_HOURFORMAT_24;
   RtcHandle.Init.OutPut = RTC_OUTPUT_DISABLE;
   RtcHandle.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
+#if defined(RTC_OUTPUT_TYPE_OPENDRAIN)
   RtcHandle.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+#endif
 #if defined(RTC_OUTPUT_PULLUP_NONE)
   RtcHandle.Init.OutPutPullUp = RTC_OUTPUT_PULLUP_NONE;
 #endif
@@ -507,6 +529,14 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
     reinit = true;
   } else {
     // RTC is already initialized
+#if defined(__HAL_RCC_GET_RTC_WDG_BLEWKUP_CLK_CONFIG)
+    uint32_t oldRtcClockSource = __HAL_RCC_GET_RTC_WDG_BLEWKUP_CLK_CONFIG();
+    oldRtcClockSource = ((oldRtcClockSource == RCC_RTC_WDG_BLEWKUP_CLKSOURCE_LSE) ? LSE_CLOCK :
+                         (oldRtcClockSource == RCC_RTC_WDG_BLEWKUP_CLKSOURCE_LSI) ? LSI_CLOCK :
+                         (oldRtcClockSource == RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048) ? HSI_CLOCK :
+                         // default case corresponding to no clock source
+                         0xFFFFFFFF);
+#else
     uint32_t oldRtcClockSource = __HAL_RCC_GET_RTC_SOURCE();
     oldRtcClockSource = ((oldRtcClockSource == RCC_RTCCLKSOURCE_LSE) ? LSE_CLOCK :
                          (oldRtcClockSource == RCC_RTCCLKSOURCE_LSI) ? LSI_CLOCK :
@@ -521,7 +551,7 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
 #endif
                          // default case corresponding to no clock source
                          0xFFFFFFFF);
-
+#endif
 #if defined(STM32F1xx)
     if ((RtcHandle.DateToUpdate.WeekDay == 0)
         && (RtcHandle.DateToUpdate.Month == 0)
@@ -711,8 +741,8 @@ void RTC_SetTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uint32_t subSe
     /*RTC_TimeStruct.SubSeconds = subSeconds;*/
     /*RTC_TimeStruct.SecondFraction = 0;*/
 #endif /* RTC_SSR_SS */
-    RTC_TimeStruct.DayLightSaving = RTC_STOREOPERATION_RESET;
-    RTC_TimeStruct.StoreOperation = RTC_DAYLIGHTSAVING_NONE;
+    RTC_TimeStruct.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+    RTC_TimeStruct.StoreOperation = RTC_STOREOPERATION_RESET;
 #else
     UNUSED(period);
 #endif /* !STM32F1xx */
@@ -1192,7 +1222,8 @@ void RTC_Alarm_IRQHandler(void)
     defined(STM32F091xC) || defined(STM32F098xx) || defined(STM32F070xB) || \
     defined(STM32F030xC) || defined(STM32G0xx) || defined(STM32H5xx) || \
     defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U0xx) ||\
-    defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WBAxx)
+    defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WB0x) || \
+    defined(STM32WBAxx)
   // In some cases, the same vector is used to manage WakeupTimer,
   // but with a dedicated HAL IRQHandler
   HAL_RTCEx_WakeUpTimerIRQHandler(&RtcHandle);
