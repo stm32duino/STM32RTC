@@ -62,7 +62,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
   bool reinit;
 
   _format = format;
-#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048)
+#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048) || defined(RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_DIV512)
   reinit = RTC_init((format == HOUR_12) ? HOUR_FORMAT_12 : HOUR_FORMAT_24,
                     (_mode == MODE_MIX) ? ::MODE_BINARY_MIX : ((_mode == MODE_BIN) ? ::MODE_BINARY_ONLY : ::MODE_BINARY_NONE),
                     (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
@@ -74,7 +74,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
                     (_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                     (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK
                     , resetTime);
-#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 */
+#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 || RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_DIV512 */
   _timeSet = !reinit;
 
   syncDate();
@@ -145,13 +145,13 @@ void STM32RTC::setClockSource(Source_Clock source, uint32_t predivA, uint32_t pr
 {
   if (IS_CLOCK_SOURCE(source)) {
     _clockSource = source;
-#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048)
+#if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048) || defined(RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_DIV512)
     RTC_SetClockSource((_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                        (_clockSource == HSI_CLOCK) ? ::HSI_CLOCK : ::LSI_CLOCK);
 #else
     RTC_SetClockSource((_clockSource == LSE_CLOCK) ? ::LSE_CLOCK :
                        (_clockSource == HSE_CLOCK) ? ::HSE_CLOCK : ::LSI_CLOCK);
-#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 */
+#endif /* RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048 || RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_DIV512 */
   }
   RTC_setPrediv(predivA, predivS);
 }

@@ -131,7 +131,7 @@ typedef void(*voidCallbackPtr)(void *);
 #if defined(STM32C0xx) || defined(STM32F0xx) || defined(STM32H5xx) || \
     defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U3xx) || \
     defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WB0x) || \
-    defined(STM32WBAxx)
+    defined(STM32WBAxx) || defined(STM32WL3x)
 #define RTC_Alarm_IRQn RTC_IRQn
 #define RTC_Alarm_IRQHandler RTC_IRQHandler
 #endif
@@ -144,7 +144,7 @@ typedef void(*voidCallbackPtr)(void *);
 #if defined(STM32F1xx) || (defined(STM32F0xx) && defined(RTC_CR_WUTE)) || \
     defined(STM32H5xx) || defined(STM32L0xx) || defined(STM32L5xx) || \
     defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WB0x) || \
-    defined(STM32WBAxx)
+    defined(STM32WBAxx) || defined(STM32WL3x)
 // specific WakeUp interrupt
 #define ONESECOND_IRQn RTC_IRQn
 #elif defined(STM32MP1xx)

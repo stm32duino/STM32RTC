@@ -205,6 +205,14 @@ static void RTC_initClock(sourceClock_t source)
     enableClock(HSI_CLOCK);
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_BLEWKUP;
     PeriphClkInit.RTCWDGBLEWKUPClockSelection = RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048;
+#elif defined(RCC_PERIPHCLK_RTC_WDG_SUBG_LPAWUR_LCD_LCSC)
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_SUBG_LPAWUR_LCD_LCSC;
+    PeriphClkInit.RTCWDGSUBGLPAWURLCDLCSCClockSelection = RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_LSE;
+  } else if (source == HSI_CLOCK) {
+    /* Enable the clock if not already set by user */
+    enableClock(HSI_CLOCK);
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_SUBG_LPAWUR_LCD_LCSC;
+    PeriphClkInit.RTCWDGSUBGLPAWURLCDLCSCClockSelection = RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_DIV512;
 #else
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
@@ -251,6 +259,9 @@ static void RTC_initClock(sourceClock_t source)
 #if defined(RCC_PERIPHCLK_RTC_WDG_BLEWKUP)
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_BLEWKUP;
     PeriphClkInit.RTCWDGBLEWKUPClockSelection = RCC_RTC_WDG_BLEWKUP_CLKSOURCE_LSI;
+#elif defined(RCC_PERIPHCLK_RTC_WDG_SUBG_LPAWUR_LCD_LCSC)
+    PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC_WDG_SUBG_LPAWUR_LCD_LCSC;
+    PeriphClkInit.RTCWDGSUBGLPAWURLCDLCSCClockSelection = RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_LSI;
 #else
     PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC;
     PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSI;
@@ -534,6 +545,13 @@ bool RTC_init(hourFormat_t format, binaryMode_t mode, sourceClock_t source, bool
     oldRtcClockSource = ((oldRtcClockSource == RCC_RTC_WDG_BLEWKUP_CLKSOURCE_LSE) ? LSE_CLOCK :
                          (oldRtcClockSource == RCC_RTC_WDG_BLEWKUP_CLKSOURCE_LSI) ? LSI_CLOCK :
                          (oldRtcClockSource == RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048) ? HSI_CLOCK :
+                         // default case corresponding to no clock source
+                         0xFFFFFFFF);
+#elif defined(__HAL_RCC_GET_RTC_SUBG_LPAWUR_LCD_LCSC_CLK_CONFIG)
+    uint32_t oldRtcClockSource = __HAL_RCC_GET_RTC_SUBG_LPAWUR_LCD_LCSC_CLK_CONFIG();
+    oldRtcClockSource = ((oldRtcClockSource == RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_LSE) ? LSE_CLOCK :
+                         (oldRtcClockSource == RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_LSI) ? LSI_CLOCK :
+                         (oldRtcClockSource == RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_DIV512) ? HSI_CLOCK :
                          // default case corresponding to no clock source
                          0xFFFFFFFF);
 #else
@@ -1223,7 +1241,7 @@ void RTC_Alarm_IRQHandler(void)
     defined(STM32F030xC) || defined(STM32G0xx) || defined(STM32H5xx) || \
     defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U0xx) ||\
     defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WB0x) || \
-    defined(STM32WBAxx)
+    defined(STM32WBAxx) || defined(STM32WL3x)
   // In some cases, the same vector is used to manage WakeupTimer,
   // but with a dedicated HAL IRQHandler
   HAL_RTCEx_WakeUpTimerIRQHandler(&RtcHandle);
