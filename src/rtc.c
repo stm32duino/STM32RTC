@@ -928,7 +928,8 @@ void RTC_StartAlarm64(alarm_t name, uint8_t day, uint8_t hours, uint8_t minutes,
        */
       if ((initMode == MODE_BINARY_ONLY) || (initMode == MODE_BINARY_MIX)) {
         /* the subsecond is the millisecond to be converted in a subsecond downcounter value */
-        RTC_AlarmStructure.AlarmTime.SubSeconds = UINT32_MAX - ((uint32_t)subSeconds * (predivSync + 1)) / 1000;
+        uint64_t tmp = (subSeconds * (uint64_t)(predivSync + 1)) / (uint64_t)1000;
+        RTC_AlarmStructure.AlarmTime.SubSeconds = (uint32_t)UINT32_MAX - (uint32_t)tmp;
       } else {
         RTC_AlarmStructure.AlarmTime.SubSeconds = predivSync - ((uint32_t)subSeconds * (predivSync + 1)) / 1000;
       }
