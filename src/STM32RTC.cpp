@@ -42,6 +42,34 @@
 bool STM32RTC::_timeSet = false;
 
 /**
+  * @brief  Convert a UTC broken-down time (struct tm) to a Unix epoch without
+  *         applying any timezone offset.  This is the UTC equivalent of mktime()
+  *         (analogous to the non-standard timegm()), needed because the RTC
+  *         always stores and returns UTC calendar fields regardless of the
+  *         system timezone.
+  * @param  tm: pointer to a UTC broken-down time
+  * @retval Unix epoch (seconds since 1970-01-01 00:00:00 UTC)
+  */
+static time_t _utc_mktime(struct tm *tm)
+{
+  static const int days_before_month[12] = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+  int year = tm->tm_year + 1900;
+  /* Days from epoch to start of this year */
+  int days = (year - 1970) * 365
+             + (year - 1969) / 4      /* leap years */
+             - (year - 1901) / 100    /* century exceptions */
+             + (year - 1601) / 400;   /* 400-year exceptions */
+  /* Days within this year up to the start of this month */
+  days += days_before_month[tm->tm_mon];
+  /* Leap day if applicable */
+  if (tm->tm_mon >= 2 && (year % 4 == 0) && (year % 100 != 0 || year % 400 == 0)) {
+    days++;
+  }
+  days += tm->tm_mday - 1;
+  return (time_t)days * 86400 + tm->tm_hour * 3600 + tm->tm_min * 60 + tm->tm_sec;
+}
+
+/**
   * @brief initializes the RTC
   * @param format: hour format: HOUR_12 or HOUR_24(default)
   * @retval None
@@ -1133,11 +1161,7 @@ time_t STM32RTC::getEpoch(uint32_t *subSeconds)
     syncDate();
   }
 
-  tm.tm_isdst = -1;
-  /*
-   * mktime ignores the values supplied by the caller in the
-   * tm_wday and tm_yday fields
-   */
+  tm.tm_isdst = 0;
   tm.tm_yday = 0;
   tm.tm_wday = 0;
   tm.tm_year = _year + EPOCH_TIME_YEAR_OFF;
@@ -1150,7 +1174,10 @@ time_t STM32RTC::getEpoch(uint32_t *subSeconds)
     *subSeconds = _subSeconds;
   }
 
-  return mktime(&tm);
+  /* Use _utc_mktime (not mktime) because the RTC stores UTC calendar fields
+   * (setEpoch uses gmtime to decompose the epoch). mktime would apply the
+   * local timezone offset and return a wrong epoch on non-UTC systems. */
+  return _utc_mktime(&tm);
 }
 
 /**
@@ -1183,11 +1210,7 @@ time_t STM32RTC::getAlarmEpoch(uint32_t *subSeconds, Alarm name)
 {
   struct tm tm;
 
-  tm.tm_isdst = -1;
-  /*
-   * mktime ignores the values supplied by the caller in the
-   * tm_wday and tm_yday fields
-   */
+  tm.tm_isdst = 0;
   tm.tm_yday = 0;
   tm.tm_wday = 0;
   tm.tm_year = _year + EPOCH_TIME_YEAR_OFF;
@@ -1213,7 +1236,7 @@ time_t STM32RTC::getAlarmEpoch(uint32_t *subSeconds, Alarm name)
       *subSeconds = _alarmSubSeconds;
     }
   }
-  return mktime(&tm);
+  return _utc_mktime(&tm);
 }
 
 /**
