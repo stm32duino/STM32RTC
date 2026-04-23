@@ -38,7 +38,7 @@
 #define __STM32_RTC_H
 
 #include "Arduino.h"
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  < 0x02000000)
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  <= 0x020C0000)
   #error "This library is not compatible with core version used. Please update the core."
 #endif
 #include "rtc.h"
