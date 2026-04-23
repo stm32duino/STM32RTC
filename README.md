@@ -2,7 +2,10 @@
 A RTC library for STM32.
 
 ## Requirement
-* [Arduino_Core_STM32](https://github.com/stm32duino/Arduino_Core_STM32) version >= 1.3.0
+ * Library version 1.x.x:
+    * [Arduino_Core_STM32](https://github.com/stm32duino/Arduino_Core_STM32) version >= 1.3.0 and < 3.x.x
+ * Library version 2.x.x:
+    * [Arduino_Core_STM32](https://github.com/stm32duino/Arduino_Core_STM32) version >= 3.x.x
 
 # API
 
