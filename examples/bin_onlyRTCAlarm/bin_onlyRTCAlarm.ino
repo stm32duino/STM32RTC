@@ -49,7 +49,7 @@ void setup()
   rtc.enableAlarm(rtc.MATCH_SUBSEC);
   Serial.printf("Set Alarm A in 12s (at %d ms)\r\n", rtc.getAlarmSubSeconds());
 
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   /* Program ALARM B in 600ms ms from now (keep timeout < 1000ms) */
   timeout = rtc.getSubSeconds() + 600;
 
@@ -58,7 +58,7 @@ void setup()
   rtc.enableAlarm(rtc.MATCH_SUBSEC, STM32RTC::ALARM_B);
   Serial.printf("Set Alarm B (in %d ms) at %d ms\r\n", 600,
           rtc.getAlarmSubSeconds(STM32RTC::ALARM_B));
-#endif /* RTC_ALARM_B */
+#endif /* ALARM_B_AVAILABLE */
 
 }
 
@@ -74,12 +74,12 @@ void alarmAMatch(void *data)
   Serial.printf("Alarm A Match at %d ms \r\n", rtc.getSubSeconds());
 }
 
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
 void alarmBMatch(void *data)
 {
   UNUSED(data);
   rtc.disableAlarm(STM32RTC::ALARM_B); /* Else it will trig again */
   Serial.printf("Alarm B Match at %d ms\r\n", rtc.getSubSeconds());
 }
-#endif /* RTC_ALARM_B */
+#endif /* ALARM_B_AVAILABLE */
 

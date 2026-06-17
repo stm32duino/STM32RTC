@@ -25,7 +25,7 @@ STM32RTC& rtc = STM32RTC::getInstance();
 
 /* Declare it volatile since it's incremented inside an interrupt */
 volatile int alarmMatch_counter = 0;
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
 volatile int alarmBMatch_counter = 0;
 #endif
 
@@ -64,7 +64,7 @@ void setup()
   rtc.setAlarmTime(16, 0, 10, 567);
   rtc.enableAlarm(rtc.MATCH_DHHMMSS);
 
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   rtc.attachInterrupt(alarmBMatch, STM32RTC::ALARM_B);
   rtc.setAlarmDay(day, STM32RTC::ALARM_B);
   rtc.setAlarmTime(16, 0, 11, 567, STM32RTC::ALARM_B);
@@ -110,7 +110,7 @@ void alarmMatch(void *data)
   rtc.setAlarmEpoch(epoc + sec, STM32RTC::MATCH_SS, epoc_ms);
 }
 
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
 void alarmBMatch(void *data)
 {
   (void)data;
