@@ -46,7 +46,7 @@ const byte day = 25;
 const byte month = 11;
 const byte year = 21;
 
-bool toggling = false; // changed each second by the CallBack function
+PinStatus toggling = LOW; // changed each second by the CallBack function
 
 static STM32RTC::Hour_Format hourFormat = STM32RTC::HOUR_24;
 static STM32RTC::AM_PM period = STM32RTC::AM;
@@ -109,5 +109,5 @@ void loop()
 void rtc_SecondsCB(void *data)
 {
   UNUSED(data);
-  toggling = !toggling;
+  toggling = (toggling == LOW) ? HIGH : LOW;
 }

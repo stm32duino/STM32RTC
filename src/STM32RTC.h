@@ -38,7 +38,7 @@
 #define __STM32_RTC_H
 
 #include "Arduino.h"
-#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  < 0x02000000)
+#if defined(STM32_CORE_VERSION) && (STM32_CORE_VERSION  <= 0x020C0000)
   #error "This library is not compatible with core version used. Please update the core."
 #endif
 #include "rtc.h"
@@ -51,8 +51,8 @@
 /**
  * @brief STM32 RTC library version number
  */
-#define STM32_RTC_VERSION_MAJOR    (0x01U) /*!< [31:24] major version */
-#define STM32_RTC_VERSION_MINOR    (0x04U) /*!< [23:16] minor version */
+#define STM32_RTC_VERSION_MAJOR    (0x02U) /*!< [31:24] major version */
+#define STM32_RTC_VERSION_MINOR    (0x00U) /*!< [23:16] minor version */
 #define STM32_RTC_VERSION_PATCH    (0x00U) /*!< [15:8]  patch version */
 /*
  * Extra label for development:
@@ -66,7 +66,6 @@
                                         |(STM32_RTC_VERSION_PATCH << 8U )\
                                         |(STM32_RTC_VERSION_EXTRA))
 
-typedef void(*voidFuncPtr)(void *);
 
 #if defined(RCC_RTC_WDG_BLEWKUP_CLKSOURCE_HSI64M_DIV2048) || defined(RCC_RTC_WDG_SUBG_LPAWUR_LCD_LCSC_CLKSOURCE_DIV512)
 #define IS_CLOCK_SOURCE(SRC) (((SRC) == STM32RTC::LSI_CLOCK) || ((SRC) == STM32RTC::LSE_CLOCK) ||\
@@ -158,19 +157,19 @@ class STM32RTC {
     void enableAlarm(Alarm_Match match, Alarm name = ALARM_A);
     void disableAlarm(Alarm name = ALARM_A);
 
-    void attachInterrupt(voidFuncPtr callback, Alarm name);
-    void attachInterrupt(voidFuncPtr callback, void *data = nullptr, Alarm name = ALARM_A);
+    void attachInterrupt(voidFuncPtrParam callback, Alarm name);
+    void attachInterrupt(voidFuncPtrParam callback, void *data = nullptr, Alarm name = ALARM_A);
     void detachInterrupt(Alarm name = ALARM_A);
 
 #ifdef ONESECOND_IRQn
     // Other mcu than stm32F1 will use the WakeUp feature to interrupt each second.
-    void attachSecondsInterrupt(voidFuncPtr callback);
+    void attachSecondsInterrupt(voidFuncPtrParam callback);
     void detachSecondsInterrupt(void);
 
 #endif /* ONESECOND_IRQn */
 #ifdef STM32WLxx
     // STM32WLxx has a dedicated IRQ
-    void attachSubSecondsUnderflowInterrupt(voidFuncPtr callback);
+    void attachSubSecondsUnderflowInterrupt(voidFuncPtrParam callback);
     void detachSubSecondsUnderflowInterrupt(void);
 #endif /* STM32WLxx */
     // Kept for compatibility: use STM32LowPower library.
