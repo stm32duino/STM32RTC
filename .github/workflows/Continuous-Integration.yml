@@ -30,6 +30,8 @@ jobs:
       uses: stm32duino/actions/compile-examples@main
       with:
         custom-config: "./extras/rtc_cores_config.json"
+        additional-url: 'https://github.com/stm32duino/BoardManagerFiles/raw/dev/package_stmicroelectronics_index.json'
+        use-core-repo: 'true'
 
     # Use the output from the `Compile` step
     - name: Compilation Errors
