@@ -144,7 +144,7 @@ To know if a time has already been set use:
 ### Since STM32RTC version higher than 1.3.4
 _Second alarm (Alarm B)_
 
-Some STM32 RTC have a second alarm named `RTC_ALARM_B`.
+Some STM32 RTC have a second alarm named `ALARM_B`.
 It is possible to use it thanks all alarm API with an extra argument:
   - `STM32RTC::ALARM_A`
   - `STM32RTC::ALARM_B`
@@ -158,7 +158,8 @@ It is possible to use it thanks all alarm API with an extra argument:
 
 ### Since STM32RTC version higher than 1.3.7
 _Get the RTC handle_
-
+> [!NOTE]
+> Only available for the STM32 HAL driver version 1
 * **`RTC_HandleTypeDef *RTC_GetHandle(void)`**
 
 _binary and mix modes_

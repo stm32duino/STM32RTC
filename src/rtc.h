@@ -43,11 +43,19 @@
 #include "backup.h"
 #include "clock.h"
 
-#if defined(HAL_RTC_MODULE_ENABLED) && !defined(HAL_RTC_MODULE_ONLY)
+#if !defined(HAL_RTC_MODULE_ONLY) && \
+    (defined(HAL_RTC_MODULE_ENABLED) || (defined(USE_HAL_RTC_MODULE) && (USE_HAL_RTC_MODULE == 1)))
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if defined(RTC_CR_ALRBE)
+#if defined(RTC_ALARM_B) && (RTC_ALARM_B != RTC_CR_ALRBE)
+#error "RTC_ALARM_B is not equal to RTC_CR_ALRBE"
+#endif
+#define ALARM_B_AVAILABLE
+#endif /* RTC_CR_ALRBE */
 
 /* Exported types ------------------------------------------------------------*/
 typedef enum {
@@ -82,16 +90,20 @@ typedef enum {
 } alarmMask_t;
 
 typedef enum {
+#if defined(USE_HALV2_DRIVER)
+  ALARM_A = HAL_RTC_ALARM_A,
+  ALARM_B = HAL_RTC_ALARM_B
+#else
   ALARM_A = RTC_ALARM_A,
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   ALARM_B = RTC_ALARM_B
+#endif
 #endif
 } alarm_t;
 
 typedef void(*voidCallbackPtr)(void *);
 
 /* Exported constants --------------------------------------------------------*/
-
 #if defined(STM32F1xx)
 /* select 32 bits in backup memory to store date.
    2 consecutive 16bit reg. are reserved: RTC_BKP_DATE & RTC_BKP_DATE + 1 */
@@ -128,10 +140,10 @@ typedef void(*voidCallbackPtr)(void *);
 #define PREDIVS_MAX 0xFFFFFFFFU /* Unused for STM32F1xx series */
 #endif /* !STM32F1xx */
 
-#if defined(STM32C0xx) || defined(STM32F0xx) || defined(STM32H5xx) || \
-    defined(STM32L0xx) || defined(STM32L5xx) || defined(STM32U3xx) || \
-    defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WB0x) || \
-    defined(STM32WBAxx) || defined(STM32WL3x)
+#if defined(STM32C0xx) || defined(STM32C5xx) || defined(STM32F0xx) || \
+    defined(STM32H5xx) || defined(STM32L0xx) || defined(STM32L5xx) || \
+    defined(STM32U3xx) || defined(STM32U3xx) || defined(STM32U5xx) || \
+    defined(STM32WB0x) || defined(STM32WBAxx) || defined(STM32WL3x)
 #define RTC_Alarm_IRQn RTC_IRQn
 #define RTC_Alarm_IRQHandler RTC_IRQHandler
 #endif
@@ -141,7 +153,8 @@ typedef void(*voidCallbackPtr)(void *);
 #endif
 
 /* mapping the IRQn for the one-second interrupt depending on the soc */
-#if defined(STM32F1xx) || (defined(STM32F0xx) && defined(RTC_CR_WUTE)) || \
+#if defined(STM32C5xx) || defined(STM32F1xx) || \
+    (defined(STM32F0xx) && defined(RTC_CR_WUTE)) || \
     defined(STM32H5xx) || defined(STM32L0xx) || defined(STM32L5xx) || \
     defined(STM32U3xx) || defined(STM32U5xx) || defined(STM32WB0x) || \
     defined(STM32WBAxx) || defined(STM32WL3x)
@@ -178,9 +191,32 @@ typedef void(*voidCallbackPtr)(void *);
 #define IS_RTC_HOUR12(HOUR)      IS_RTC_HOUR24(HOUR)
 #endif /* !STM32F1xx && !IS_RTC_WEEKDAY */
 
+#if defined(USE_HALV2_DRIVER)
+/* HALv2 provides equivalent macro checks when assert is enabled but
+ * they are private and not available when assert is disabled.
+ * So public macro checks are provided for the RTC driver.
+ */
+#define IS_RTC_YEAR(YEAR)              ((YEAR) <= 99U)
+#define IS_RTC_MONTH(MONTH)            (((MONTH) >= 1U) && ((MONTH) <= 12U))
+#define IS_RTC_WEEKDAY(WEEKDAY) (((WEEKDAY) == HAL_RTC_WEEKDAY_MONDAY)       \
+                              || ((WEEKDAY) == HAL_RTC_WEEKDAY_TUESDAY)   \
+                              || ((WEEKDAY) == HAL_RTC_WEEKDAY_WEDNESDAY) \
+                              || ((WEEKDAY) == HAL_RTC_WEEKDAY_THURSDAY)  \
+                              || ((WEEKDAY) == HAL_RTC_WEEKDAY_FRIDAY)    \
+                              || ((WEEKDAY) == HAL_RTC_WEEKDAY_SATURDAY)  \
+                              || ((WEEKDAY) == HAL_RTC_WEEKDAY_SUNDAY))
+#define IS_RTC_DATE(DATE)              (((DATE) >= 1U) && ((DATE) <= 31U))
+#define IS_RTC_HOUR12(HOUR)            (((HOUR) > 0U) && ((HOUR) <= 12U))
+#define IS_RTC_HOUR24(HOUR)            ((HOUR) <= 23U)
+#define IS_RTC_MINUTES(MINUTES)        ((MINUTES) <= 59U)
+#define IS_RTC_SECONDS(SECONDS)        ((SECONDS) <= 59U)
+#endif /* USE_HALV2_DRIVER */
+
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
+#if !defined(USE_HALV2_DRIVER)
 RTC_HandleTypeDef *RTC_GetHandle(void);
+#endif
 void RTC_SetClockSource(sourceClock_t source);
 void RTC_getPrediv(uint32_t *asynch, uint32_t *synch);
 void RTC_setPrediv(uint32_t asynch, uint32_t synch);
@@ -218,7 +254,7 @@ void RTC_StoreDate(void);
 }
 #endif
 
-#endif /* HAL_RTC_MODULE_ENABLED  && !HAL_RTC_MODULE_ONLY */
+#endif /* !HAL_RTC_MODULE_ONLY && (HAL_RTC_MODULE_ENABLED || (USE_HAL_RTC_MODULE...) */
 
 #endif /* __RTC_H */
 

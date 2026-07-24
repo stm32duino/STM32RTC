@@ -96,7 +96,7 @@ void STM32RTC::begin(bool resetTime, Hour_Format format)
     _alarmSubSeconds = _subSeconds;
     _alarmPeriod = _hoursPeriod;
   }
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   syncAlarmTime(ALARM_B);
   if (!IS_RTC_DATE(_alarmBDay)) {
     // Use current time to init alarm members,
@@ -173,13 +173,13 @@ STM32RTC::Binary_Mode STM32RTC::getBinaryMode(void)
   */
 void STM32RTC::setBinaryMode(Binary_Mode mode)
 {
-#if defined(RTC_BINARY_NONE)
+#if defined(LL_RTC_BINARY_NONE)
   _mode = mode;
 #else
 #warning "only BCD mode is supported"
   UNUSED(mode);
   _mode = MODE_BCD;
-#endif /* RTC_BINARY_NONE */
+#endif /* LL_RTC_BINARY_NONE */
 }
 
 /**
@@ -224,7 +224,7 @@ void STM32RTC::setPrediv(uint32_t predivA, uint32_t predivS)
   */
 void STM32RTC::enableAlarm(Alarm_Match match, Alarm name)
 {
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     _alarmBMatch = match;
   } else
@@ -236,7 +236,7 @@ void STM32RTC::enableAlarm(Alarm_Match match, Alarm name)
   }
   switch (match) {
     case MATCH_OFF:
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
       if (name == ALARM_B) {
         RTC_StopAlarm(::ALARM_B);
       } else
@@ -247,7 +247,7 @@ void STM32RTC::enableAlarm(Alarm_Match match, Alarm name)
       break;
     case MATCH_SUBSEC:
       /* force _alarmday to 0 to go to the right alarm config in MIX mode */
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
       if (name == ALARM_B) {
         RTC_StartAlarm(::ALARM_B, 0, 0, 0, 0,
                        _alarmBSubSeconds, (_alarmBPeriod == AM) ? HOUR_AM : HOUR_PM,
@@ -266,7 +266,7 @@ void STM32RTC::enableAlarm(Alarm_Match match, Alarm name)
     case MATCH_HHMMSS:
     case MATCH_MMSS:
     case MATCH_SS:
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
       if (name == ALARM_B) {
         RTC_StartAlarm(::ALARM_B, _alarmBDay, _alarmBHours, _alarmBMinutes, _alarmBSeconds,
                        _alarmBSubSeconds, (_alarmBPeriod == AM) ? HOUR_AM : HOUR_PM,
@@ -538,7 +538,7 @@ uint32_t STM32RTC::getAlarmSubSeconds(Alarm name)
 {
   uint32_t alarmSubSeconds = 0;
   syncAlarmTime(name);
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     alarmSubSeconds =  _alarmBSubSeconds;
   } else
@@ -559,7 +559,7 @@ uint8_t STM32RTC::getAlarmSeconds(Alarm name)
 {
   uint8_t alarmSeconds = 0;
   syncAlarmTime(name);
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     alarmSeconds =  _alarmBSeconds;
   } else
@@ -580,7 +580,7 @@ uint8_t STM32RTC::getAlarmMinutes(Alarm name)
 {
   uint8_t alarmMinutes = 0;
   syncAlarmTime(name);
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     alarmMinutes =  _alarmBMinutes;
   } else
@@ -614,7 +614,7 @@ uint8_t STM32RTC::getAlarmHours(AM_PM *period, Alarm name)
 {
   uint8_t alarmHours = 0;
   syncAlarmTime(name);
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     if (period != nullptr) {
       *period = _alarmBPeriod;
@@ -641,7 +641,7 @@ uint8_t STM32RTC::getAlarmDay(Alarm name)
 {
   uint8_t alarmDay = 0;
   syncAlarmTime(name);
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     alarmDay =  _alarmBDay;
   } else
@@ -892,11 +892,11 @@ void STM32RTC::setDate(uint8_t weekDay, uint8_t day, uint8_t month, uint8_t year
   */
 void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 {
-#ifndef RTC_ALARM_B
+#if !defined(RTC_ALARM_B) && !defined(USE_HALV2_DRIVER)
   UNUSED(name);
 #endif
   if ((_mode == MODE_BIN) || (subSeconds < 1000)) {
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
     if (name == ALARM_B) {
       _alarmBSubSeconds = subSeconds;
     } else
@@ -917,7 +917,7 @@ void STM32RTC::setAlarmSubSeconds(uint32_t subSeconds, Alarm name)
 void STM32RTC::setAlarmSeconds(uint8_t seconds, Alarm name)
 {
   if (seconds < 60) {
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
     if (name == ALARM_B) {
       _alarmBSeconds = seconds;
     } else
@@ -940,7 +940,7 @@ void STM32RTC::setAlarmSeconds(uint8_t seconds, Alarm name)
 void STM32RTC::setAlarmMinutes(uint8_t minutes, Alarm name)
 {
   if (minutes < 60) {
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
     if (name == ALARM_B) {
       _alarmBMinutes = minutes;
     } else
@@ -976,7 +976,7 @@ void STM32RTC::setAlarmHours(uint8_t hours, Alarm name)
 void STM32RTC::setAlarmHours(uint8_t hours, AM_PM period, Alarm name)
 {
   if (hours < 24) {
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
     if (name == ALARM_B) {
       _alarmBHours = hours;
       if (_format == HOUR_12) {
@@ -1063,7 +1063,7 @@ void STM32RTC::setAlarmTime(uint8_t hours, uint8_t minutes, uint8_t seconds, uin
 void STM32RTC::setAlarmDay(uint8_t day, Alarm name)
 {
   if ((day >= 1) && (day <= 31)) {
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
     if (name == ALARM_B) {
       _alarmBDay = day;
     }
@@ -1193,7 +1193,7 @@ time_t STM32RTC::getAlarmEpoch(uint32_t *subSeconds, Alarm name)
   tm.tm_year = _year + EPOCH_TIME_YEAR_OFF;
   tm.tm_mon = _month - 1;
   syncAlarmTime(name);
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     tm.tm_mday = _alarmBDay;
     tm.tm_hour = _alarmBHours;
@@ -1274,7 +1274,11 @@ void STM32RTC::setEpoch(time_t ts, uint32_t subSeconds)
   _month = tmp->tm_mon + 1;
   _day = tmp->tm_mday;
   if (tmp->tm_wday == 0) {
+#if defined(USE_HALV2_DRIVER)
+    _wday = HAL_RTC_WEEKDAY_SUNDAY;
+#else
     _wday = RTC_WEEKDAY_SUNDAY;
+#endif
   } else {
     _wday = tmp->tm_wday;
   }
@@ -1303,7 +1307,10 @@ void STM32RTC::setY2kEpoch(time_t ts)
   */
 void STM32RTC::configForLowPower(Source_Clock source)
 {
-#if defined(HAL_PWR_MODULE_ENABLED)
+#if defined(HAL_PWR_MODULE_ENABLED) || (defined(USE_HAL_PWR_MODULE) && (USE_HAL_PWR_MODULE == 1))
+#if defined(USE_HALV2_DRIVER)
+  HAL_RCC_LP_RTCAPB_EnableClockInStopMode();
+#else
 #ifdef __HAL_RCC_RTCAPB_CLKAM_ENABLE
   __HAL_RCC_RTCAPB_CLKAM_ENABLE();
 #endif
@@ -1319,6 +1326,7 @@ void STM32RTC::configForLowPower(Source_Clock source)
 #if defined(PWR_WAKEUP_PIN7_HIGH_3)
   HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN7_HIGH_3);
 #endif
+#endif /* USE_HALV2_DRIVER */
   setClockSource(source);
   begin();
 
@@ -1373,7 +1381,7 @@ void STM32RTC::syncAlarmTime(Alarm name)
 {
   hourAM_PM_t p = HOUR_AM;
   uint8_t match;
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
   if (name == ALARM_B) {
     RTC_GetAlarm(::ALARM_B, &_alarmBDay, &_alarmBHours, &_alarmBMinutes, &_alarmBSeconds,
                  &_alarmBSubSeconds, &p, &match);
@@ -1395,7 +1403,7 @@ void STM32RTC::syncAlarmTime(Alarm name)
     case MATCH_HHMMSS:
     case MATCH_MMSS:
     case MATCH_SS:
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
       if (name == ALARM_B) {
         _alarmBMatch = static_cast<Alarm_Match>(match);
       } else
@@ -1405,7 +1413,7 @@ void STM32RTC::syncAlarmTime(Alarm name)
       }
       break;
     default:
-#ifdef RTC_ALARM_B
+#if defined(ALARM_B_AVAILABLE)
       if (name == ALARM_B) {
         _alarmBMatch = MATCH_OFF;
       } else
