@@ -43,8 +43,8 @@
 #endif
 #include "rtc.h"
 // Check if RTC HAL is enabled
-#if (!defined(HAL_RTC_MODULE_ENABLED) && (!defined(USE_HAL_ADC_MODULE) || \
-    (defined(USE_HAL_ADC_MODULE) && (USE_HAL_ADC_MODULE == 0))))
+#if (!defined(HAL_RTC_MODULE_ENABLED) && (!defined(USE_HAL_RTC_MODULE) || \
+    (defined(USE_HAL_RTC_MODULE) && (USE_HAL_RTC_MODULE == 0))))
 #error "HAL RTC module is not enabled."
 #endif
 #include <time.h>
