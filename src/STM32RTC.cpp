@@ -176,7 +176,6 @@ void STM32RTC::setBinaryMode(Binary_Mode mode)
 #if defined(LL_RTC_BINARY_NONE)
   _mode = mode;
 #else
-#warning "only BCD mode is supported"
   UNUSED(mode);
   _mode = MODE_BCD;
 #endif /* LL_RTC_BINARY_NONE */
